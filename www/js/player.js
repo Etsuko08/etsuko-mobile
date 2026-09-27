@@ -9,7 +9,8 @@ class MobilePlayer {
 
     this.ytPlayer = null;
     this.ytReady = false;
-    this.activeEngine = 'audio'; // 'audio' | 'youtube'
+    this.pendingVideoId = null;
+    this.activeEngine = 'youtube'; // 'audio' | 'youtube'
 
     this.currentTrack = null;
     this.queue = [];
@@ -42,6 +43,7 @@ class MobilePlayer {
 
     // Full Player Sheet
     this.playerSheet = document.getElementById('player-sheet');
+    this.sheetVideoContainer = document.getElementById('yt-player-container');
     this.sheetCover = document.getElementById('sheet-cover');
     this.sheetTitle = document.getElementById('sheet-title');
     this.sheetArtist = document.getElementById('sheet-artist');
@@ -83,20 +85,28 @@ class MobilePlayer {
       if (window.YT && window.YT.Player) {
         try {
           this.ytPlayer = new window.YT.Player('yt-player', {
-            height: '1',
-            width: '1',
+            height: '100%',
+            width: '100%',
+            host: 'https://www.youtube-nocookie.com',
             playerVars: {
               'autoplay': 1,
-              'controls': 0,
+              'controls': 1,
               'disablekb': 1,
               'fs': 0,
               'playsinline': 1,
-              'rel': 0
+              'rel': 0,
+              'modestbranding': 1,
+              'enablejsapi': 1,
+              'origin': window.location.origin
             },
             events: {
               'onReady': () => {
                 this.ytReady = true;
                 console.log('[Etsuko] YouTube Neural Engine connected');
+                if (this.pendingVideoId) {
+                  this.playYouTubeTrack(this.pendingVideoId);
+                  this.pendingVideoId = null;
+                }
               },
               'onStateChange': (e) => this.onYTStateChange(e),
               'onError': (e) => this.onYTError(e)
@@ -115,6 +125,24 @@ class MobilePlayer {
     }
   }
 
+  playYouTubeTrack(videoId) {
+    if (!this.ytReady || !this.ytPlayer || !this.ytPlayer.loadVideoById) {
+      this.pendingVideoId = videoId;
+      return;
+    }
+    try {
+      this.userPaused = false;
+      this.ytPlayer.loadVideoById({
+        videoId: videoId,
+        startSeconds: 0
+      });
+      this.ytPlayer.playVideo();
+      this.onPlayState(true);
+    } catch (e) {
+      console.warn('[Player] YouTube stream error:', e);
+    }
+  }
+
   onYTStateChange(event) {
     // 1: Playing, 2: Paused, 0: Ended
     if (event.data === 1) {
@@ -127,9 +155,11 @@ class MobilePlayer {
   }
 
   onYTError(e) {
-    console.warn('[Etsuko] YouTube Player code:', e.data);
-    // Auto proceed on unplayable item
-    setTimeout(() => this.next(), 1000);
+    console.warn('[Etsuko] YouTube Player error code:', e.data);
+    if (window.app && window.app.showToast) {
+      window.app.showToast('Transmission restricted by owner, skipping to next...');
+    }
+    setTimeout(() => this.next(), 800);
   }
 
   startProgressTicker() {
@@ -240,7 +270,6 @@ class MobilePlayer {
     }
 
     this.currentTrack = track;
-    this.updateTrackUI(track);
     this.updateMediaSession(track);
 
     // Direct stream resolution (JioSaavn or Desktop custom server proxy)
@@ -251,6 +280,8 @@ class MobilePlayer {
       if (this.ytReady && this.ytPlayer && this.ytPlayer.pauseVideo) {
         try { this.ytPlayer.pauseVideo(); } catch (e) {}
       }
+
+      this.updateTrackUI(track);
 
       try {
         this.userPaused = false;
@@ -268,26 +299,9 @@ class MobilePlayer {
       // YouTube Engine
       this.activeEngine = 'youtube';
       this.audio.pause();
+      this.updateTrackUI(track);
 
-      if (this.ytReady && this.ytPlayer && this.ytPlayer.loadVideoById) {
-        try {
-          this.userPaused = false;
-          this.ytPlayer.loadVideoById(track.videoId);
-          this.ytPlayer.playVideo();
-          this.onPlayState(true);
-        } catch (e) {
-          console.warn('[Player] YouTube stream error:', e);
-        }
-      } else {
-        // Wait briefly for YT API
-        setTimeout(() => {
-          if (this.ytPlayer && this.ytPlayer.loadVideoById) {
-            this.ytPlayer.loadVideoById(track.videoId);
-            this.ytPlayer.playVideo();
-            this.onPlayState(true);
-          }
-        }, 1000);
-      }
+      this.playYouTubeTrack(track.videoId);
     }
 
     window.dispatchEvent(new CustomEvent('etsuko:mobile-track-started', { detail: track }));
@@ -304,11 +318,21 @@ class MobilePlayer {
     if (this.miniArtist) this.miniArtist.textContent = artist;
     if (this.miniPlayer) this.miniPlayer.style.display = 'flex';
 
-    // Sheet Player
-    if (this.sheetCover) this.sheetCover.src = thumb;
+    // Sheet Player Visual Engine: Video Player vs Artwork Cover
+    if (this.sheetCover) {
+      this.sheetCover.src = thumb;
+      this.sheetCover.style.opacity = this.activeEngine === 'youtube' ? '0' : '1';
+      this.sheetCover.style.pointerEvents = this.activeEngine === 'youtube' ? 'none' : 'auto';
+    }
+
+    if (this.sheetVideoContainer) {
+      this.sheetVideoContainer.style.display = this.activeEngine === 'youtube' ? 'block' : 'none';
+      this.sheetVideoContainer.style.zIndex = this.activeEngine === 'youtube' ? '2' : '0';
+    }
+
     if (this.sheetTitle) this.sheetTitle.textContent = title;
     if (this.sheetArtist) this.sheetArtist.textContent = artist;
-    if (this.sheetAlbum) this.sheetAlbum.textContent = track.album || (track.source === 'saavn' ? 'Lossless 320kbps' : 'Etsuko Neural Audio');
+    if (this.sheetAlbum) this.sheetAlbum.textContent = track.album || (track.source === 'saavn' ? 'Lossless 320kbps' : 'YouTube Music Master');
     if (this.sheetLikeBtn) {
       this.sheetLikeBtn.classList.toggle('liked', !!track.isLiked);
       const svg = this.sheetLikeBtn.querySelector('svg');
@@ -376,9 +400,9 @@ class MobilePlayer {
   }
 
   prev() {
-    const curTime = this.activeEngine === 'youtube' && this.ytPlayer && this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : this.audio.currentTime;
+    const curTime = this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : this.audio.currentTime;
     if (curTime > 3) {
-      if (this.activeEngine === 'youtube' && this.ytPlayer) this.ytPlayer.seekTo(0, true);
+      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) this.ytPlayer.seekTo(0, true);
       else this.audio.currentTime = 0;
       return;
     }
@@ -386,14 +410,14 @@ class MobilePlayer {
       this.queueIndex--;
       this.playTrack(this.queue[this.queueIndex]);
     } else {
-      if (this.activeEngine === 'youtube' && this.ytPlayer) this.ytPlayer.seekTo(0, true);
+      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) this.ytPlayer.seekTo(0, true);
       else this.audio.currentTime = 0;
     }
   }
 
   onEnded() {
     if (this.repeatMode === 2) {
-      if (this.activeEngine === 'youtube' && this.ytPlayer) {
+      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
         this.ytPlayer.seekTo(0, true);
         this.ytPlayer.playVideo();
       } else {

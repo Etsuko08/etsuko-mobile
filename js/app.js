@@ -34,6 +34,7 @@ class EtsukoMobileApp {
     this.btnHeroSurprise = document.getElementById('btn-hero-surprise');
 
     // Search
+    this.btnSearchBack = document.getElementById('btn-search-back');
     this.searchInput = document.getElementById('mobile-search-input');
     this.btnSearchClear = document.getElementById('btn-search-clear');
     this.searchChips = document.querySelectorAll('.chip-btn');
@@ -180,12 +181,29 @@ class EtsukoMobileApp {
       }
     });
 
-    // Search Input & Chips
+    // Search Header Back Button & Input
+    this.btnSearchBack?.addEventListener('click', () => {
+      window.touch.vibrate(10);
+      this.switchView('view-discover');
+    });
+
     this.searchInput?.addEventListener('input', (e) => {
       const q = e.target.value.trim();
       if (this.btnSearchClear) this.btnSearchClear.style.display = q ? 'flex' : 'none';
       clearTimeout(this.searchDebounceTimer);
-      this.searchDebounceTimer = setTimeout(() => this.executeSearch(q), 280);
+      if (q) {
+        this.searchDebounceTimer = setTimeout(() => this.executeSearch(q), 120);
+      }
+    });
+
+    this.searchInput?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        clearTimeout(this.searchDebounceTimer);
+        const q = this.searchInput.value.trim();
+        if (q) this.executeSearch(q);
+        this.searchInput.blur();
+      }
     });
 
     this.btnSearchClear?.addEventListener('click', () => {
@@ -320,6 +338,52 @@ class EtsukoMobileApp {
       const track = e.detail;
       this.loadTrackLyrics(track);
     });
+
+    // Android Hardware & Gesture Back Handler
+    window.handleHardwareBack = () => {
+      // 1. Close open modal if any
+      const openModal = document.querySelector('.mobile-modal-backdrop.open');
+      if (openModal) {
+        openModal.classList.remove('open');
+        return;
+      }
+
+      // 2. Close player sheet if open
+      if (this.playerSheet && this.playerSheet.classList.contains('open')) {
+        this.closePlayerSheet();
+        return;
+      }
+
+      // 3. Close playlist detail view in Library
+      if (this.playlistDetailView && this.playlistDetailView.style.display !== 'none') {
+        this.btnBackToCrates?.click();
+        return;
+      }
+
+      // 4. Return to Discover view from any other view
+      if (this.currentView !== 'view-discover') {
+        this.switchView('view-discover');
+        return;
+      }
+
+      // 5. Clear search input if filled
+      if (this.searchInput && this.searchInput.value) {
+        this.searchInput.value = '';
+        this.btnSearchClear?.click();
+        return;
+      }
+
+      // 6. Double back press to exit
+      const now = Date.now();
+      if (this._lastBackPress && (now - this._lastBackPress < 2000)) {
+        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+          window.Capacitor.Plugins.App.exitApp();
+        }
+      } else {
+        this._lastBackPress = now;
+        this.showToast('Press back again to exit');
+      }
+    };
   }
 
   initPWA() {

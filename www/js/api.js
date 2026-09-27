@@ -1,5 +1,5 @@
 // Etsuko Mobile Neural API Engine
-// Supports zero-configuration standalone mobile streaming & optional LAN desktop sync
+// Pure YouTube Music Catalog + Direct Cloud Audio Streaming
 
 const DEFAULT_TRENDING_TRACKS = [
   {
@@ -133,14 +133,20 @@ const DEFAULT_TRENDING_TRACKS = [
 ];
 
 const DEFAULT_CATEGORIES = [
-  { id: "pop", name: "Pop Hits", query: "Pop Hits", color: "#a855f7", colorEnd: "#581c87", image: "assets/genres/pop.jpg", sub: "Global Chart Toppers" },
+  { id: "pop", name: "Pop Hits", query: "Top Pop Hits", color: "#a855f7", colorEnd: "#581c87", image: "assets/genres/pop.jpg", sub: "Global Chart Toppers" },
   { id: "hiphop", name: "Hip-Hop & Rap", query: "Hip Hop Hits", color: "#d97706", colorEnd: "#78350f", image: "assets/genres/hiphop.jpg", sub: "Beats, Bars & Traps" },
-  { id: "lofi", name: "Lo-Fi Beats", query: "Lo-Fi Chill Beats", color: "#0ea5e9", colorEnd: "#0c4a6e", image: "assets/genres/lofi.jpg", sub: "Deep Chill & Study" },
-  { id: "rock", name: "Rock Classics", query: "Rock Classics", color: "#ef4444", colorEnd: "#7f1d1d", image: "assets/genres/rock.jpg", sub: "Riffs & Heavy Anthems" },
-  { id: "electronic", name: "EDM & Dance", query: "EDM Dance Hits", color: "#06b6d4", colorEnd: "#164e63", image: "assets/genres/edm.jpg", sub: "Club Drops & Synths" },
-  { id: "anime", name: "Anime & J-Pop", query: "Anime Openings", color: "#f43f5e", colorEnd: "#881337", image: "assets/genres/anime.jpg", sub: "OSTs & J-Rock Energy" },
-  { id: "gaming", name: "Gaming Soundtrack", query: "Gaming Soundtrack", color: "#8b5cf6", colorEnd: "#3b0764", image: "assets/genres/gaming.jpg", sub: "Cyberpunk & Epic Scores" },
-  { id: "rnb", name: "R&B / Soul", query: "R&B Soul", color: "#f97316", colorEnd: "#7c2d12", image: "assets/genres/rnb.jpg", sub: "Smooth Night Grooves" }
+  { id: "lofi", name: "Lo-Fi Beats", query: "Lo-Fi Chill Study Beats", color: "#0ea5e9", colorEnd: "#0c4a6e", image: "assets/genres/lofi.jpg", sub: "Deep Chill & Study" },
+  { id: "rock", name: "Rock Classics", query: "Rock Classics Greatest Hits", color: "#ef4444", colorEnd: "#7f1d1d", image: "assets/genres/rock.jpg", sub: "Riffs & Heavy Anthems" },
+  { id: "electronic", name: "EDM & Dance", query: "EDM Dance Club Hits", color: "#06b6d4", colorEnd: "#164e63", image: "assets/genres/edm.jpg", sub: "Club Drops & Synths" },
+  { id: "anime", name: "Anime & J-Pop", query: "Anime Openings OST", color: "#f43f5e", colorEnd: "#881337", image: "assets/genres/anime.jpg", sub: "OSTs & J-Rock Energy" },
+  { id: "gaming", name: "Gaming Soundtrack", query: "Cyberpunk Gaming Soundtrack", color: "#8b5cf6", colorEnd: "#3b0764", image: "assets/genres/gaming.jpg", sub: "Cyberpunk & Epic Scores" },
+  { id: "rnb", name: "R&B / Soul", query: "R&B Soul Night", color: "#f97316", colorEnd: "#7c2d12", image: "assets/genres/rnb.jpg", sub: "Smooth Night Grooves" }
+];
+
+const YOUTUBE_SEARCH_MIRRORS = [
+  'https://api.piped.private.coffee',
+  'https://pipedapi.tokhmi.xyz',
+  'https://pipedapi.leptons.xyz'
 ];
 
 class EtsukoAPI {
@@ -216,7 +222,7 @@ class EtsukoAPI {
     if (this.baseUrl) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch(`${this.baseUrl}/api/home`, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) {
@@ -245,12 +251,12 @@ class EtsukoAPI {
     };
   }
 
-  // --- Global Music Search Engine ---
+  // --- Fast YouTube Music Search Engine ---
   async search(query, filter = 'songs', signal = null) {
     if (!query || !query.trim()) return { results: [] };
     const q = query.trim();
 
-    // 1. If custom server is configured, try it first
+    // 1. Custom server prioritized if configured
     if (this.baseUrl) {
       try {
         const params = new URLSearchParams({ q: q, filter: filter });
@@ -259,81 +265,39 @@ class EtsukoAPI {
           const data = await res.json();
           if (data && data.results && data.results.length > 0) {
             return {
-              results: data.results.map(r => ({
-                ...r,
-                isLiked: this.isLiked(r.videoId)
-              }))
+              results: data.results.map(r => ({ ...r, isLiked: this.isLiked(r.videoId) }))
             };
           }
         }
       } catch (e) {
         if (e.name === 'AbortError') throw e;
-        console.warn('[API] Custom server search failed, engaging standalone search engine.');
       }
     }
 
-    // 2. Standalone Cloud Search: JioSaavn 320kbps + Piped/YouTube Music
-    const combinedResults = [];
-    const seenIds = new Set();
+    // 2. Standalone YouTube Music Search (Concurrent Fast Race across mirrors)
+    const ytPromises = YOUTUBE_SEARCH_MIRRORS.map(async mirror => {
+      const url = `${mirror}/search?q=${encodeURIComponent(q)}&filter=music_songs`;
+      const res = await fetch(url, { signal: signal || AbortSignal.timeout(3500) });
+      if (!res.ok) throw new Error(`${mirror} status ${res.status}`);
+      const data = await res.json();
+      if (!data || !data.items || data.items.length === 0) throw new Error('No items');
+      return data.items;
+    });
 
-    // A. Query JioSaavn (Direct 320kbps lossless streams)
     try {
-      const saavnUrl = `https://jiosaavn-api-2.vercel.app/search/songs?query=${encodeURIComponent(q)}&limit=20`;
-      const saavnData = await this.unifiedFetch(saavnUrl, { signal });
-      const items = saavnData?.results || (Array.isArray(saavnData) ? saavnData : []);
-
-      items.forEach(item => {
-        const id = item.id || `saavn_${Math.random()}`;
-        if (!seenIds.has(id)) {
-          seenIds.add(id);
-          const durSec = parseInt(item.duration, 10) || 210;
-          const mins = Math.floor(durSec / 60);
-          const secs = durSec % 60;
-          const durStr = `${mins}:${String(secs).padStart(2, '0')}`;
-
-          const streamUrl = (item.downloadUrl && (
-            item.downloadUrl.find(d => d.quality === '320kbps')?.link ||
-            item.downloadUrl.find(d => d.quality === '160kbps')?.link ||
-            item.downloadUrl[item.downloadUrl.length - 1]?.link
-          )) || item.url || '';
-
-          const thumb = (item.image && (
-            item.image[2]?.link || item.image[1]?.link || item.image[0]?.link
-          )) || 'assets/default_cover.png';
-
-          combinedResults.push({
-            videoId: id,
-            title: item.name || item.title || 'Unknown Title',
-            artist: item.primaryArtists || item.artist || item.artists || 'Unknown Artist',
-            album: item.album?.name || item.album || 'Lossless Master',
-            duration: durStr,
-            thumbnail: thumb,
-            streamUrl: streamUrl,
-            source: 'saavn',
-            isLiked: this.isLiked(id)
-          });
-        }
-      });
-    } catch (err) {
-      if (err.name === 'AbortError') throw err;
-      console.warn('[API] JioSaavn search error:', err.message);
-    }
-
-    // B. Query Piped / YouTube Music search for complete international coverage
-    try {
-      const pipedUrl = `https://api.piped.private.coffee/search?q=${encodeURIComponent(q)}&filter=music_songs`;
-      const pipedData = await this.unifiedFetch(pipedUrl, { signal });
-      const items = pipedData?.items || [];
+      const items = await Promise.any(ytPromises);
+      const results = [];
+      const seen = new Set();
 
       items.forEach(item => {
         const vid = item.url ? item.url.replace('/watch?v=', '') : null;
-        if (vid && !seenIds.has(vid)) {
-          seenIds.add(vid);
-          const durSec = parseInt(item.duration, 10) || 200;
+        if (vid && !seen.has(vid)) {
+          seen.add(vid);
+          const durSec = parseInt(item.duration, 10) || 210;
           const mins = Math.floor(durSec / 60);
           const secs = durSec % 60;
 
-          combinedResults.push({
+          results.push({
             videoId: vid,
             title: item.title || 'Unknown Track',
             artist: item.uploaderName || 'YouTube Artist',
@@ -345,12 +309,56 @@ class EtsukoAPI {
           });
         }
       });
+
+      if (results.length > 0) {
+        return { results };
+      }
     } catch (err) {
-      if (err.name === 'AbortError') throw err;
-      console.warn('[API] Piped search error:', err.message);
+      console.warn('[Search] Piped race note:', err.message);
     }
 
-    return { results: combinedResults };
+    // 3. Fallback: Query JioSaavn if YouTube mirrors are unreachable
+    try {
+      const saavnUrl = `https://jiosaavn-api-2.vercel.app/search/songs?query=${encodeURIComponent(q)}&limit=25`;
+      const saavnData = await this.unifiedFetch(saavnUrl, { signal });
+      const items = saavnData?.results || (Array.isArray(saavnData) ? saavnData : []);
+      const results = [];
+
+      items.forEach(item => {
+        const id = item.id || `s_${Math.random()}`;
+        const durSec = parseInt(item.duration, 10) || 210;
+        const mins = Math.floor(durSec / 60);
+        const secs = durSec % 60;
+
+        const streamUrl = (item.downloadUrl && (
+          item.downloadUrl.find(d => d.quality === '320kbps')?.link ||
+          item.downloadUrl.find(d => d.quality === '160kbps')?.link ||
+          item.downloadUrl[item.downloadUrl.length - 1]?.link
+        )) || item.url || '';
+
+        const thumb = (item.image && (
+          item.image[2]?.link || item.image[1]?.link || item.image[0]?.link
+        )) || 'assets/default_cover.png';
+
+        results.push({
+          videoId: id,
+          title: item.name || item.title || 'Unknown Title',
+          artist: item.primaryArtists || item.artist || 'Unknown Artist',
+          album: item.album?.name || 'Studio Master',
+          duration: `${mins}:${String(secs).padStart(2, '0')}`,
+          thumbnail: thumb,
+          streamUrl: streamUrl,
+          source: 'saavn',
+          isLiked: this.isLiked(id)
+        });
+      });
+
+      return { results };
+    } catch (err2) {
+      console.warn('[Search] JioSaavn fallback note:', err2.message);
+    }
+
+    return { results: [] };
   }
 
   // --- Audio Stream Resolver ---

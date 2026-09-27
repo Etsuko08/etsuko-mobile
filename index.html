@@ -75,12 +75,17 @@
 
       <!-- 2. Search View -->
       <section class="page-view" id="view-search">
-        <div class="mobile-search-box">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-          <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Search tracks, artists, albums..." autocomplete="off">
-          <button class="btn-icon-top" id="btn-search-clear" style="display:none; width: 28px; height: 28px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <button class="btn-icon-top" id="btn-search-back" title="Back to Home" style="flex-shrink: 0; width: 40px; height: 40px; background: rgba(255,255,255,0.06); border-radius: 12px;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
+          <div class="mobile-search-box" style="flex: 1; margin-bottom: 0;">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Search YouTube Music, artists, albums..." autocomplete="off">
+            <button class="btn-icon-top" id="btn-search-clear" style="display:none; width: 28px; height: 28px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+          </div>
         </div>
 
         <div class="search-filter-chips">
@@ -193,8 +198,11 @@
         <div style="width: 36px;"></div>
       </div>
 
-      <div class="sheet-artwork-box">
-        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art">
+      <div class="sheet-artwork-box" id="sheet-artwork-box" style="position: relative; overflow: hidden; background: #000; border-radius: 20px;">
+        <div id="yt-player-container" class="sheet-video-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;">
+          <div id="yt-player"></div>
+        </div>
+        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
       </div>
 
       <div class="sheet-track-details">
@@ -352,10 +360,6 @@
     <!-- Audio Element -->
     <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
 
-    <!-- YouTube Player Background Engine -->
-    <div id="yt-player-container" style="position: absolute; width: 1px; height: 1px; left: -9999px; top: -9999px; opacity: 0; pointer-events: none; overflow: hidden;">
-      <div id="yt-player"></div>
-    </div>
   </div>
 
   <!-- Scripts -->
