@@ -6,7 +6,6 @@ Thumbs.db
 
 # Dependencies
 node_modules/
-package-lock.json
 
 # Android Build
 android/.gradle/
