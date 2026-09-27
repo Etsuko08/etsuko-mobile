@@ -10,18 +10,17 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaMetadata;
+import android.media.session.MediaSession;
+import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
-import android.support.v4.media.session.MediaSessionCompat;
-import android.support.v4.media.session.PlaybackStateCompat;
 import android.webkit.CookieManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
-import androidx.core.app.NotificationCompat;
-import androidx.core.content.ContextCompat;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -38,7 +37,7 @@ public class MainActivity extends BridgeActivity {
     public static final String ACTION_NEXT = "com.etsuko.music.ACTION_NEXT";
 
     private NotificationManager notificationManager;
-    private MediaSessionCompat mediaSession;
+    private MediaSession mediaSession;
     private PowerManager.WakeLock wakeLock;
     private boolean isMediaPlaying = false;
     private BroadcastReceiver mediaButtonReceiver;
@@ -51,6 +50,7 @@ public class MainActivity extends BridgeActivity {
         initNotificationChannel();
         initMediaSession();
         registerMediaReceiver();
+        checkNotificationPermission();
 
         if (bridge != null && bridge.getWebView() != null) {
             WebSettings settings = bridge.getWebView().getSettings();
@@ -62,17 +62,16 @@ public class MainActivity extends BridgeActivity {
             settings.setAllowFileAccess(true);
             settings.setAllowContentAccess(true);
 
-            // Clean modern Mobile user agent
             String customUa = "Mozilla/5.0 (Linux; Android 14; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Mobile Safari/537.36";
             settings.setUserAgentString(customUa);
 
             CookieManager.getInstance().setAcceptThirdPartyCookies(bridge.getWebView(), true);
 
-            // Expose native media controls bridge to JavaScript
+            // Native Media Bridge for JavaScript
             bridge.getWebView().addJavascriptInterface(new AndroidMediaBridge(), "AndroidMedia");
         }
 
-        // Modern Android gesture navigation & back button handler
+        // Modern gesture navigation & back button handler
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
@@ -81,6 +80,14 @@ public class MainActivity extends BridgeActivity {
                 }
             }
         });
+    }
+
+    private void checkNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1001);
+            }
+        }
     }
 
     private void initWakeLock() {
@@ -96,6 +103,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     private void initNotificationChannel() {
+        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID,
@@ -106,19 +114,16 @@ public class MainActivity extends BridgeActivity {
             channel.setShowBadge(false);
             channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
 
-            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
             }
-        } else {
-            notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         }
     }
 
     private void initMediaSession() {
-        mediaSession = new MediaSessionCompat(this, "EtsukoMediaSession");
-        mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        mediaSession.setCallback(new MediaSessionCompat.Callback() {
+        mediaSession = new MediaSession(this, "EtsukoMediaSession");
+        mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
+        mediaSession.setCallback(new MediaSession.Callback() {
             @Override
             public void onPlay() {
                 handleAction(ACTION_PLAY_PAUSE);
@@ -195,11 +200,13 @@ public class MainActivity extends BridgeActivity {
         }
 
         // Update MediaSession state
-        long state = isPlaying ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
-        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
-                .setActions(PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE |
-                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS)
-                .setState(state, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1.0f)
+        int state = isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED;
+        long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
+                PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+
+        mediaSession.setPlaybackState(new PlaybackState.Builder()
+                .setActions(actions)
+                .setState(state, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1.0f)
                 .build());
 
         // Run background thread for artwork loading
@@ -249,7 +256,35 @@ public class MainActivity extends BridgeActivity {
         int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
         String playPauseTitle = isPlaying ? "Pause" : "Play";
 
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
+        // Update MediaSession metadata for Android 11+ quick settings and lockscreen media player
+        if (mediaSession != null) {
+            try {
+                MediaMetadata.Builder metaBuilder = new MediaMetadata.Builder()
+                        .putString(MediaMetadata.METADATA_KEY_TITLE, title != null && !title.isEmpty() ? title : "Etsuko Music")
+                        .putString(MediaMetadata.METADATA_KEY_ARTIST, artist != null && !artist.isEmpty() ? artist : "Playing")
+                        .putString(MediaMetadata.METADATA_KEY_ALBUM, album != null && !album.isEmpty() ? album : "Etsuko Neural Audio");
+                if (cover != null) {
+                    metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, cover);
+                    metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, cover);
+                }
+                mediaSession.setMetadata(metaBuilder.build());
+            } catch (Exception ignored) {}
+        }
+
+        Notification.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(this, CHANNEL_ID);
+        } else {
+            builder = new Notification.Builder(this);
+        }
+
+        Notification.MediaStyle mediaStyle = new Notification.MediaStyle();
+        if (mediaSession != null) {
+            mediaStyle.setMediaSession(mediaSession.getSessionToken());
+        }
+        mediaStyle.setShowActionsInCompactView(0, 1, 2);
+
+        Notification notification = builder
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setLargeIcon(cover)
                 .setContentTitle(title != null && !title.isEmpty() ? title : "Etsuko Music")
@@ -257,17 +292,15 @@ public class MainActivity extends BridgeActivity {
                 .setSubText(album != null && !album.isEmpty() ? album : "Etsuko Neural Audio")
                 .setContentIntent(contentIntent)
                 .setOngoing(isPlaying)
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
                 .addAction(android.R.drawable.ic_media_previous, "Previous", pPrev)
                 .addAction(playPauseIcon, playPauseTitle, pPlay)
                 .addAction(android.R.drawable.ic_media_next, "Next", pNext)
-                .setStyle(new androidx.media.app.NotificationCompat.MediaStyle()
-                        .setMediaSession(mediaSession.getSessionToken())
-                        .setShowActionsInCompactView(0, 1, 2));
+                .setStyle(mediaStyle)
+                .build();
 
         if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, builder.build());
+            notificationManager.notify(NOTIFICATION_ID, notification);
         }
     }
 
@@ -287,7 +320,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        // Prevent Android WebView from pausing timers when playing background music
         if (isMediaPlaying && bridge != null && bridge.getWebView() != null) {
             bridge.getWebView().resumeTimers();
         }
