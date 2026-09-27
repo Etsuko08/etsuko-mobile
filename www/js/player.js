@@ -1,4 +1,5 @@
-// Etsuko Mobile Hybrid Audio Engine (HTML5 Audio + YouTube IFrame Engine)
+// Etsuko Mobile Pure Audio Engine
+// Direct HTML5 Audio, Background Playback, Native Lockscreen Notification & Playback Mode Controls
 
 class MobilePlayer {
   constructor() {
@@ -7,15 +8,9 @@ class MobilePlayer {
     this.audio.setAttribute('webkit-playsinline', '');
     this.audio.preload = 'auto';
 
-    this.ytPlayer = null;
-    this.ytReady = false;
-    this.pendingVideoId = null;
-    this.activeEngine = 'youtube'; // 'audio' | 'youtube'
-
     this.currentTrack = null;
     this.queue = [];
     this.queueIndex = -1;
-    this.autoplayTracks = [];
     this.isPlaying = false;
     this.userPaused = false;
     this.repeatMode = 0; // 0: off, 1: all, 2: one
@@ -25,8 +20,7 @@ class MobilePlayer {
     this.initElements();
     this.initAudioEvents();
     this.initMediaSession();
-    this.initYouTube();
-    this.startProgressTicker();
+    this.initDownloadEvents();
   }
 
   initElements() {
@@ -48,8 +42,7 @@ class MobilePlayer {
     this.sheetArtist = document.getElementById('sheet-artist');
     this.sheetAlbum = document.getElementById('sheet-album');
     this.sheetLikeBtn = document.getElementById('sheet-like-btn');
-    this.sheetPlaylistBtn = document.getElementById('sheet-playlist-btn');
-    this.sheetLyricsBtn = document.getElementById('sheet-lyrics-btn');
+    this.sheetDownloadBtn = document.getElementById('sheet-download-btn');
 
     this.btnSheetPlay = document.getElementById('btn-sheet-play');
     this.iconSheetPlay = document.getElementById('icon-sheet-play');
@@ -65,6 +58,23 @@ class MobilePlayer {
     this.scrubberTrack = document.getElementById('sheet-scrubber-track');
     this.scrubberFill = document.getElementById('sheet-scrubber-fill');
     this.scrubberThumb = document.getElementById('sheet-scrubber-thumb');
+
+    // Controls listeners
+    if (this.btnMiniPlay) this.btnMiniPlay.addEventListener('click', (e) => { e.stopPropagation(); this.togglePlay(); });
+    if (this.btnMiniNext) this.btnMiniNext.addEventListener('click', (e) => { e.stopPropagation(); this.next(); });
+    if (this.btnSheetPlay) this.btnSheetPlay.addEventListener('click', () => this.togglePlay());
+    if (this.btnSheetPrev) this.btnSheetPrev.addEventListener('click', () => this.prev());
+    if (this.btnSheetNext) this.btnSheetNext.addEventListener('click', () => this.next());
+    if (this.btnSheetShuffle) this.btnSheetShuffle.addEventListener('click', () => this.toggleShuffle());
+    if (this.btnSheetRepeat) this.btnSheetRepeat.addEventListener('click', () => this.toggleRepeat());
+
+    if (this.sheetDownloadBtn) {
+      this.sheetDownloadBtn.addEventListener('click', () => {
+        if (this.currentTrack && window.downloader) {
+          window.downloader.startDownload(this.currentTrack);
+        }
+      });
+    }
   }
 
   unlockAudioContext() {
@@ -79,142 +89,25 @@ class MobilePlayer {
     }
   }
 
-  initYouTube() {
-    const setupYT = () => {
-      if (window.YT && window.YT.Player) {
-        try {
-          this.ytPlayer = new window.YT.Player('yt-player', {
-            height: '100%',
-            width: '100%',
-            host: 'https://www.youtube.com',
-            playerVars: {
-              'autoplay': 1,
-              'controls': 1,
-              'disablekb': 1,
-              'fs': 0,
-              'playsinline': 1,
-              'rel': 0,
-              'modestbranding': 1,
-              'enablejsapi': 1
-            },
-            events: {
-              'onReady': () => {
-                this.ytReady = true;
-                console.log('[Etsuko] YouTube Neural Engine connected');
-                if (this.pendingVideoId) {
-                  this.playYouTubeTrack(this.pendingVideoId);
-                  this.pendingVideoId = null;
-                }
-              },
-              'onStateChange': (e) => this.onYTStateChange(e),
-              'onError': (e) => this.onYTError(e)
-            }
-          });
-        } catch (err) {
-          console.warn('[Etsuko] YouTube init notice:', err);
-        }
-      }
-    };
-
-    if (window.YT && window.YT.Player) {
-      setupYT();
-    } else {
-      window.onYouTubeIframeAPIReady = setupYT;
-    }
-  }
-
-  playYouTubeTrack(videoId) {
-    if (!this.ytReady || !this.ytPlayer || !this.ytPlayer.loadVideoById) {
-      this.pendingVideoId = videoId;
-      return;
-    }
-    try {
-      this.userPaused = false;
-      this.ytPlayer.loadVideoById({
-        videoId: videoId,
-        startSeconds: 0
-      });
-      this.ytPlayer.playVideo();
-      this.onPlayState(true);
-    } catch (e) {
-      console.warn('[Player] YouTube stream error:', e);
-    }
-  }
-
-  onYTStateChange(event) {
-    // 1: Playing, 2: Paused, 0: Ended
-    if (event.data === 1) {
-      this.onPlayState(true);
-    } else if (event.data === 2) {
-      this.onPlayState(false);
-    } else if (event.data === 0) {
-      this.onEnded();
-    }
-  }
-
-  onYTError(e) {
-    console.warn('[Etsuko] YouTube Player error code:', e.data);
-    if (this._errorThrottleTimer) return;
-    this._errorThrottleTimer = setTimeout(() => { this._errorThrottleTimer = null; }, 2000);
-    if (window.app && window.app.showToast) {
-      window.app.showToast('Playback restricted, trying next track...');
-    }
-    setTimeout(() => {
-      if (!this.userPaused) this.next();
-    }, 1200);
-  }
-
-  startProgressTicker() {
-    setInterval(() => {
-      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && this.isPlaying) {
-        try {
-          const cur = this.ytPlayer.getCurrentTime() || 0;
-          const dur = this.ytPlayer.getDuration() || 0;
-          if (dur > 0) {
-            const pct = (cur / dur) * 100;
-            if (this.miniProgress) this.miniProgress.style.width = `${pct}%`;
-            if (this.scrubberFill) this.scrubberFill.style.width = `${pct}%`;
-            if (this.scrubberThumb) this.scrubberThumb.style.left = `${pct}%`;
-            if (this.timeCurrent) this.timeCurrent.textContent = this.formatTime(cur);
-            if (this.timeTotal) this.timeTotal.textContent = this.formatTime(dur);
-
-            window.dispatchEvent(new CustomEvent('etsuko:mobile-time-update', {
-              detail: { currentTime: cur, duration: dur }
-            }));
-          }
-        } catch (err) {}
-      }
-    }, 250);
-  }
-
   initAudioEvents() {
-    this.audio.addEventListener('play', () => {
-      if (this.activeEngine === 'audio') this.onPlayState(true);
-    });
-    this.audio.addEventListener('pause', () => {
-      if (this.activeEngine === 'audio') this.onPlayState(false);
-    });
-    this.audio.addEventListener('timeupdate', () => {
-      if (this.activeEngine === 'audio') this.onTimeUpdate();
-    });
-    this.audio.addEventListener('ended', () => {
-      if (this.activeEngine === 'audio') this.onEnded();
-    });
+    this.audio.addEventListener('play', () => this.onPlayState(true));
+    this.audio.addEventListener('pause', () => this.onPlayState(false));
+    this.audio.addEventListener('timeupdate', () => this.onTimeUpdate());
+    this.audio.addEventListener('ended', () => this.onEnded());
+    this.audio.addEventListener('error', (e) => this.onAudioError(e));
 
-    // Touch seeking on Scrubber
+    // Scrubber drag / click handling
     if (this.scrubberTrack) {
       const doSeek = (e) => {
         const rect = this.scrubberTrack.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
         const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
         const pct = x / rect.width;
-        this.scrubberFill.style.width = `${pct * 100}%`;
+
+        if (this.scrubberFill) this.scrubberFill.style.width = `${pct * 100}%`;
         if (this.scrubberThumb) this.scrubberThumb.style.left = `${pct * 100}%`;
 
-        if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
-          const dur = this.ytPlayer.getDuration() || 0;
-          this.ytPlayer.seekTo(dur * pct, true);
-        } else if (this.audio.duration) {
+        if (this.audio.duration && !isNaN(this.audio.duration)) {
           this.audio.currentTime = this.audio.duration * pct;
         }
       };
@@ -232,15 +125,27 @@ class MobilePlayer {
       navigator.mediaSession.setActionHandler('previoustrack', () => this.prev());
       navigator.mediaSession.setActionHandler('nexttrack', () => this.next());
       navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (details.seekTime) {
-          if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
-            this.ytPlayer.seekTo(details.seekTime, true);
-          } else if (this.audio.duration) {
-            this.audio.currentTime = details.seekTime;
-          }
+        if (details.seekTime && this.audio.duration) {
+          this.audio.currentTime = details.seekTime;
         }
       });
     }
+  }
+
+  initDownloadEvents() {
+    window.addEventListener('etsuko:download-complete', (e) => {
+      const track = e.detail?.track;
+      if (this.currentTrack && track && this.currentTrack.videoId === track.videoId) {
+        this.updateDownloadButtonState(true);
+      }
+    });
+
+    window.addEventListener('etsuko:download-deleted', (e) => {
+      const vid = e.detail?.videoId;
+      if (this.currentTrack && this.currentTrack.videoId === vid) {
+        this.updateDownloadButtonState(false);
+      }
+    });
   }
 
   updateMediaSession(track) {
@@ -253,6 +158,22 @@ class MobilePlayer {
           { src: track.thumbnail || 'assets/default_cover.png', sizes: '512x512', type: 'image/jpeg' }
         ]
       });
+    }
+  }
+
+  updateNativeMedia(track, isPlaying) {
+    if (window.AndroidMedia && window.AndroidMedia.updatePlaybackState) {
+      try {
+        window.AndroidMedia.updatePlaybackState(
+          track.title || 'Unknown Title',
+          track.artist || 'Unknown Artist',
+          track.album || 'Etsuko Neural Audio',
+          track.thumbnail || '',
+          isPlaying
+        );
+      } catch (err) {
+        console.warn('[Player] AndroidMedia bridge notice:', err);
+      }
     }
   }
 
@@ -272,38 +193,45 @@ class MobilePlayer {
     }
 
     this.currentTrack = track;
+    this.updateTrackUI(track);
     this.updateMediaSession(track);
+    this.updateNativeMedia(track, true);
 
-    // Direct stream resolution (JioSaavn or Desktop custom server proxy)
-    const directStream = track.streamUrl || (window.api && window.api.baseUrl ? window.api.getStreamUrl(track.videoId) : null);
+    try {
+      let stream = track.streamUrl;
 
-    if (directStream) {
-      this.activeEngine = 'audio';
-      if (this.ytReady && this.ytPlayer && this.ytPlayer.pauseVideo) {
-        try { this.ytPlayer.pauseVideo(); } catch (e) {}
+      // Check if track is downloaded offline first
+      if (!stream && window.downloader) {
+        const offline = await window.downloader.getOfflineTrack(track.videoId);
+        if (offline && offline.streamUrl) {
+          stream = offline.streamUrl;
+          track.isOffline = true;
+        }
       }
 
-      this.updateTrackUI(track);
+      // If not offline, resolve stream URL from neural resolver
+      if (!stream && window.api && window.api.resolveAudioStream) {
+        stream = await window.api.resolveAudioStream(track.videoId);
+      }
 
+      if (!stream) {
+        throw new Error('Audio stream unavailable');
+      }
+
+      this.userPaused = false;
+      this.audio.src = stream;
+      await this.audio.play();
+      this.onPlayState(true);
+    } catch (err) {
+      console.warn('[Player] Playback attempt error:', err);
+      if (window.app && window.app.showToast) {
+        window.app.showToast('Connecting audio stream...');
+      }
+      // Quick retry with fallback
       try {
-        this.userPaused = false;
-        this.audio.src = directStream;
+        await new Promise(r => setTimeout(r, 600));
         await this.audio.play();
-        this.onPlayState(true);
-      } catch (err) {
-        console.warn('[Player] Direct stream playback retry:', err);
-        try {
-          await new Promise(r => setTimeout(r, 400));
-          await this.audio.play();
-        } catch (e2) {}
-      }
-    } else {
-      // YouTube Engine
-      this.activeEngine = 'youtube';
-      this.audio.pause();
-      this.updateTrackUI(track);
-
-      this.playYouTubeTrack(track.videoId);
+      } catch (e2) {}
     }
 
     window.dispatchEvent(new CustomEvent('etsuko:mobile-track-started', { detail: track }));
@@ -320,7 +248,7 @@ class MobilePlayer {
     if (this.miniArtist) this.miniArtist.textContent = artist;
     if (this.miniPlayer) this.miniPlayer.style.display = 'flex';
 
-    // Full Sheet Player: ALWAYS display clean album cover art (Music Only, No Video)
+    // Full Player Sheet (Pure Album Art Cover, ZERO Video UI)
     if (this.sheetCover) {
       this.sheetCover.src = thumb;
       this.sheetCover.style.opacity = '1';
@@ -328,11 +256,34 @@ class MobilePlayer {
 
     if (this.sheetTitle) this.sheetTitle.textContent = title;
     if (this.sheetArtist) this.sheetArtist.textContent = artist;
-    if (this.sheetAlbum) this.sheetAlbum.textContent = track.album || (track.source === 'saavn' ? 'Lossless 320kbps' : 'YouTube Music Master');
+    if (this.sheetAlbum) this.sheetAlbum.textContent = track.isOffline ? '⚡ Offline Master' : (track.album || 'YouTube Music Master');
+
     if (this.sheetLikeBtn) {
       this.sheetLikeBtn.classList.toggle('liked', !!track.isLiked);
       const svg = this.sheetLikeBtn.querySelector('svg');
       if (svg) svg.setAttribute('fill', track.isLiked ? '#ec4899' : 'none');
+    }
+
+    // Update Download Button State
+    if (window.downloader) {
+      window.downloader.isDownloaded(track.videoId).then(isDl => {
+        this.updateDownloadButtonState(isDl);
+      });
+    }
+  }
+
+  updateDownloadButtonState(isDownloaded) {
+    if (!this.sheetDownloadBtn) return;
+    this.sheetDownloadBtn.classList.toggle('downloaded', isDownloaded);
+    const svg = this.sheetDownloadBtn.querySelector('svg');
+    if (svg) {
+      if (isDownloaded) {
+        svg.innerHTML = '<path d="M20 6L9 17l-5-5"></path>';
+        this.sheetDownloadBtn.style.color = '#10b981';
+      } else {
+        svg.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>';
+        this.sheetDownloadBtn.style.color = 'var(--text-sub)';
+      }
     }
   }
 
@@ -343,27 +294,14 @@ class MobilePlayer {
       return;
     }
 
-    if (this.activeEngine === 'youtube') {
-      if (this.ytReady && this.ytPlayer && this.ytPlayer.getPlayerState) {
-        const state = this.ytPlayer.getPlayerState();
-        if (state === 1) { // playing
-          this.ytPlayer.pauseVideo();
-          this.userPaused = true;
-          this.onPlayState(false);
-        } else {
-          this.ytPlayer.playVideo();
-          this.userPaused = false;
-          this.onPlayState(true);
-        }
-      }
+    if (this.audio.paused) {
+      this.userPaused = false;
+      this.audio.play().catch(() => {});
+      this.onPlayState(true);
     } else {
-      if (this.audio.paused) {
-        this.userPaused = false;
-        this.audio.play().catch(() => {});
-      } else {
-        this.userPaused = true;
-        this.audio.pause();
-      }
+      this.userPaused = true;
+      this.audio.pause();
+      this.onPlayState(false);
     }
   }
 
@@ -377,56 +315,68 @@ class MobilePlayer {
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';
     }
+
+    if (this.currentTrack) {
+      this.updateNativeMedia(this.currentTrack, playing);
+    }
   }
 
   next() {
     if (this.queue.length === 0) return;
+
     if (this.isShuffle) {
-      this.queueIndex = Math.floor(Math.random() * this.queue.length);
+      let randIdx = Math.floor(Math.random() * this.queue.length);
+      if (this.queue.length > 1 && randIdx === this.queueIndex) {
+        randIdx = (randIdx + 1) % this.queue.length;
+      }
+      this.queueIndex = randIdx;
       this.playTrack(this.queue[this.queueIndex]);
       return;
     }
+
     if (this.queueIndex < this.queue.length - 1) {
       this.queueIndex++;
       this.playTrack(this.queue[this.queueIndex]);
     } else if (this.repeatMode === 1) {
+      // Repeat All
       this.queueIndex = 0;
       this.playTrack(this.queue[0]);
     }
   }
 
   prev() {
-    const curTime = this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : this.audio.currentTime;
-    if (curTime > 3) {
-      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) this.ytPlayer.seekTo(0, true);
-      else this.audio.currentTime = 0;
+    if (this.audio.currentTime > 3) {
+      this.audio.currentTime = 0;
       return;
     }
+
     if (this.queueIndex > 0) {
       this.queueIndex--;
       this.playTrack(this.queue[this.queueIndex]);
     } else {
-      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) this.ytPlayer.seekTo(0, true);
-      else this.audio.currentTime = 0;
+      this.audio.currentTime = 0;
     }
   }
 
   onEnded() {
     if (this.repeatMode === 2) {
-      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
-        this.ytPlayer.seekTo(0, true);
-        this.ytPlayer.playVideo();
-      } else {
-        this.audio.currentTime = 0;
-        this.audio.play().catch(() => {});
-      }
+      // Repeat One
+      this.audio.currentTime = 0;
+      this.audio.play().catch(() => {});
     } else {
       this.next();
     }
   }
 
+  onAudioError(e) {
+    console.warn('[Player] Audio error event:', e);
+    if (!this.userPaused && this.queue.length > 1) {
+      setTimeout(() => this.next(), 1000);
+    }
+  }
+
   onTimeUpdate() {
-    if (!this.audio.duration) return;
+    if (!this.audio.duration || isNaN(this.audio.duration)) return;
     const cur = this.audio.currentTime;
     const dur = this.audio.duration;
     const pct = (cur / dur) * 100;
@@ -443,7 +393,7 @@ class MobilePlayer {
   }
 
   formatTime(secs) {
-    if (isNaN(secs)) return '0:00';
+    if (isNaN(secs) || secs < 0) return '0:00';
     const m = Math.floor(secs / 60);
     const s = Math.floor(secs % 60);
     return `${m}:${s < 10 ? '0' : ''}${s}`;
@@ -451,16 +401,19 @@ class MobilePlayer {
 
   toggleRepeat() {
     this.repeatMode = (this.repeatMode + 1) % 3;
-    if (this.repeatBadge) {
+    if (this.btnSheetRepeat && this.repeatBadge) {
       if (this.repeatMode === 0) {
         this.repeatBadge.textContent = '';
         this.btnSheetRepeat.classList.remove('active');
+        if (window.app && window.app.showToast) window.app.showToast('Repeat Off');
       } else if (this.repeatMode === 1) {
         this.repeatBadge.textContent = 'ALL';
         this.btnSheetRepeat.classList.add('active');
+        if (window.app && window.app.showToast) window.app.showToast('Repeat All');
       } else {
         this.repeatBadge.textContent = '1';
         this.btnSheetRepeat.classList.add('active');
+        if (window.app && window.app.showToast) window.app.showToast('Repeat One');
       }
     }
   }
@@ -469,8 +422,14 @@ class MobilePlayer {
     this.isShuffle = !this.isShuffle;
     if (this.btnSheetShuffle) {
       this.btnSheetShuffle.classList.toggle('active', this.isShuffle);
+      if (window.app && window.app.showToast) {
+        window.app.showToast(this.isShuffle ? 'Shuffle On' : 'Shuffle Off');
+      }
     }
   }
 }
 
-window.player = new MobilePlayer();
+// Global Player Singleton
+if (typeof window !== 'undefined') {
+  window.player = new MobilePlayer();
+}

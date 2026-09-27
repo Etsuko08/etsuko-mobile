@@ -134,15 +134,31 @@
         </div>
       </section>
 
-      <!-- 4. Synced Lyrics View -->
-      <section class="page-view" id="view-lyrics">
-        <div class="section-header" style="margin-bottom: 16px;">
-          <h3 class="section-title" id="lyrics-track-title">No Track Playing</h3>
-          <span style="font-size: 10px; color: var(--accent-cyan); font-weight: 700; letter-spacing: 1px;">KARAOKE SYNC</span>
+      <!-- 4. Offline Downloads View -->
+      <section class="page-view" id="view-downloads">
+        <div class="section-header" style="margin-bottom: 14px;">
+          <h3 class="section-title">Offline Music</h3>
+          <span id="downloads-count-badge" class="hero-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">0 SONGS</span>
         </div>
-        <div class="lyrics-container" id="lyrics-container">
-          <p class="lyric-line" style="color: var(--text-muted); font-size: 16px;">Play a song to view live synced lyrics.</p>
+
+        <!-- Active Downloads Queue Container (Visible when downloading) -->
+        <div id="active-downloads-card" style="display: none; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">Downloading Song</div>
+            <div id="download-speed-tag" style="font-size: 11px; font-weight: 700; color: var(--text-sub);">0 KB/s</div>
+          </div>
+          <div id="download-active-title" style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;">Song Title</div>
+          <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 8px; overflow: hidden; position: relative;">
+            <div id="download-progress-bar" style="background: linear-gradient(90deg, var(--accent-cyan), #10b981); height: 100%; width: 0%; transition: width 0.2s ease;"></div>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: var(--text-muted);">
+            <span id="download-percent-tag">0%</span>
+            <span style="color: #10b981;">⚡ Offline Storage</span>
+          </div>
         </div>
+
+        <!-- Downloaded Tracks List -->
+        <div class="track-list" id="downloaded-tracks-list"></div>
       </section>
     </main>
 
@@ -179,9 +195,9 @@
         <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         <span class="nav-tab-label">Library</span>
       </button>
-      <button class="nav-tab-btn" data-view="view-lyrics">
-        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-        <span class="nav-tab-label">Lyrics</span>
+      <button class="nav-tab-btn" data-view="view-downloads">
+        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span class="nav-tab-label">Downloads</span>
       </button>
     </nav>
 
@@ -248,9 +264,9 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
           <span>Add to Crate</span>
         </button>
-        <button class="btn-sheet-subaction" id="sheet-lyrics-btn">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-          <span>Lyrics</span>
+        <button class="btn-sheet-subaction" id="sheet-download-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <span id="sheet-download-text">Download</span>
         </button>
       </div>
     </div>
@@ -330,19 +346,14 @@
     <!-- Toast Notification -->
     <div class="mobile-toast" id="mobile-toast"></div>
 
-    <!-- Audio Element -->
+    <!-- Pure Audio Engine Element -->
     <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
-
-    <!-- Invisible Background Audio Engine (Zero Video UI) -->
-    <div id="yt-audio-carrier" style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.001; pointer-events: none; overflow: hidden; z-index: -999;">
-      <div id="yt-player"></div>
-    </div>
 
   </div>
 
   <!-- Scripts -->
-  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="js/api.js"></script>
+  <script src="js/downloader.js"></script>
   <script src="js/touch.js"></script>
   <script src="js/player.js"></script>
   <script src="js/app.js"></script>

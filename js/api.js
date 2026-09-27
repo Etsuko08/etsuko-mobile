@@ -1,5 +1,5 @@
 // Etsuko Mobile Neural API Engine
-// Pure YouTube Music Catalog & Local Persistent Library
+// Pure YouTube Music Catalog, Direct Audio Stream Resolver & Local Persistent Library
 
 const DEFAULT_TRENDING_TRACKS = [
   {
@@ -104,94 +104,78 @@ const CURATED_MOOD_STATIONS = {
   trending: DEFAULT_TRENDING_TRACKS,
   phonk: [
     {
-      videoId: "w-sQRS-zTZg",
-      title: "Murder In My Mind",
-      artist: "KORDHELL",
-      album: "Phonk Killer",
-      duration: "2:25",
-      thumbnail: "https://i.ytimg.com/vi/w-sQRS-zTZg/hqdefault.jpg"
-    },
-    {
       videoId: "1-xGerv5FOk",
       title: "Close Eyes",
       artist: "DVRST",
       album: "Close Eyes",
       duration: "2:12",
-      thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hq720.jpg"
     },
     {
-      videoId: "mK9nE0mQoas",
-      title: "Flare",
-      artist: "Hensonn",
-      album: "Flare Phonk",
-      duration: "2:31",
-      thumbnail: "https://i.ytimg.com/vi/mK9nE0mQoas/hqdefault.jpg"
+      videoId: "Ct0VuYnOVoA",
+      title: "Phonk Drift",
+      artist: "VØJ & Lastfragment",
+      album: "Phonk Drift",
+      duration: "2:35",
+      thumbnail: "https://yt3.googleusercontent.com/_ISr3vLZVPP2tBFSfQFrw1cSI4jDaOS7-sSmZwMksdSZadvcF8yCTy50HnB-fI0IcH9jl4SBz9uA-ho=w544-h544-l90-rj"
     },
     {
-      videoId: "M1fA8q-rP6o",
-      title: "North Memphis",
-      artist: "Pharmacist",
-      album: "North Memphis",
-      duration: "2:22",
-      thumbnail: "https://i.ytimg.com/vi/M1fA8q-rP6o/hqdefault.jpg"
+      videoId: "sOHVMObuR3Q",
+      title: "Aggressive Phonk Supernova",
+      artist: "NOMINAL",
+      album: "Rave Drift",
+      duration: "2:45",
+      thumbnail: "https://yt3.googleusercontent.com/y9oGVaSvE0nU6d_6YysWNhIqav0m3H55cBV166OkTGvUs3X1JXgV7Vq2K8bwmqvHgIFDNTrHEAd60p0=w544-h544-l90-rj"
     },
     {
-      videoId: "49H5e3Bf97M",
-      title: "COWBELL WARRIOR!",
-      artist: "SXMPRA",
-      album: "COWBELL WARRIOR",
-      duration: "1:48",
-      thumbnail: "https://i.ytimg.com/vi/49H5e3Bf97M/hqdefault.jpg"
+      videoId: "XV7JPAasdY4",
+      title: "Demon Drift",
+      artist: "glexks & $werve",
+      album: "Demon Drift",
+      duration: "2:18",
+      thumbnail: "https://yt3.googleusercontent.com/0DBds5EDBJMYe6WLbq3qOvmSSBqZJJbC-9vPLfHaSyocxcGko5GcV38sBiQkdt39BzCVdGu5hSMV0zIl=w544-h544-l90-rj"
     },
     {
-      videoId: "dZ8Zg2pA5-c",
-      title: "Why Not",
-      artist: "Ghostface Playa",
-      album: "Why Not",
-      duration: "2:46",
-      thumbnail: "https://i.ytimg.com/vi/dZ8Zg2pA5-c/hqdefault.jpg"
+      videoId: "Z8INzXR0J_8",
+      title: "Keraunos",
+      artist: "PlayaPhonk",
+      album: "Keraunos",
+      duration: "2:26",
+      thumbnail: "https://yt3.googleusercontent.com/io8ZF55p1O25OypVwAo7TJIfom01UsDKljwP6G_cQ0qt3V0gCfzE6p0Ld5VA2QP8pXEx53xWIMC0o6BwHQ=w544-h544-l90-rj"
     }
   ],
   lofi: [
     {
-      videoId: "iXp2ekn8l2k",
-      title: "Snowman",
-      artist: "Lofi Fruit Music",
-      album: "Chill Study Beats",
-      duration: "2:40",
-      thumbnail: "https://i.ytimg.com/vi/iXp2ekn8l2k/hqdefault.jpg"
+      videoId: "kAw9xGI8vgk",
+      title: "Deep Chill Lofi Study",
+      artist: "Lumosound",
+      album: "Lofi Study Session",
+      duration: "3:40",
+      thumbnail: "https://yt3.googleusercontent.com/Bx7K_CPa195NNoHTdC18w3oip9PPnt7TMChxTrWk3ZpDEqaQqqUyK-TWM1lmJrIjAL8ILp5-n9FrTc2Y=w544-h544-l90-rj"
     },
     {
-      videoId: "_tV5LEBDs7w",
-      title: "Kingdom in Blue",
-      artist: "Kupla",
-      album: "Kingdom in Blue",
-      duration: "2:20",
-      thumbnail: "https://i.ytimg.com/vi/_tV5LEBDs7w/hqdefault.jpg"
+      videoId: "1N8hOpMqvYs",
+      title: "Lofi Rain Beats",
+      artist: "Zyra Music",
+      album: "Rain Relax",
+      duration: "3:15",
+      thumbnail: "https://yt3.googleusercontent.com/vXfnFWskeAHfnuLRZKmWu-KKisRGP0yGWI2CUl2eaR9kZrocb-qeyOW9TFG5Z0lpN_MDQLq8A_dATGqT=w544-h544-l90-rj"
     },
     {
-      videoId: "5qxPqZ3N20M",
-      title: "im closing my eyes",
-      artist: "potsu",
-      album: "closing eyes",
-      duration: "2:07",
-      thumbnail: "https://i.ytimg.com/vi/5qxPqZ3N20M/hqdefault.jpg"
+      videoId: "CLeZyIID9Bo",
+      title: "Chill Lofi Mix",
+      artist: "Settle Beats",
+      album: "Lo-Fi Hip Hop",
+      duration: "3:20",
+      thumbnail: "https://i.ytimg.com/vi/CLeZyIID9Bo/hq720.jpg"
     },
     {
-      videoId: "hUfK4_36l88",
-      title: "controlla",
-      artist: "Idealism",
-      album: "rainy nights",
-      duration: "2:15",
-      thumbnail: "https://i.ytimg.com/vi/hUfK4_36l88/hqdefault.jpg"
-    },
-    {
-      videoId: "v0T3z4g3B4M",
-      title: "Losing Interest",
-      artist: "Shiloh Dynasty",
-      album: "Losing Interest",
-      duration: "2:10",
-      thumbnail: "https://i.ytimg.com/vi/v0T3z4g3B4M/hqdefault.jpg"
+      videoId: "7lZMSNFPsPY",
+      title: "Chill Study Beats",
+      artist: "EvergreeN LoFi",
+      album: "Night Lo-Fi",
+      duration: "2:55",
+      thumbnail: "https://i.ytimg.com/vi/7lZMSNFPsPY/hq720.jpg"
     }
   ],
   synth: [
@@ -201,7 +185,7 @@ const CURATED_MOOD_STATIONS = {
       artist: "Kavinsky",
       album: "OutRun",
       duration: "4:19",
-      thumbnail: "https://i.ytimg.com/vi/MV_3Dpw-BRY/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/MV_3Dpw-BRY/hq720.jpg"
     },
     {
       videoId: "8GW6sLrK40k",
@@ -209,31 +193,23 @@ const CURATED_MOOD_STATIONS = {
       artist: "HOME",
       album: "Odyssey",
       duration: "3:32",
-      thumbnail: "https://i.ytimg.com/vi/8GW6sLrK40k/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/8GW6sLrK40k/hq720.jpg"
     },
     {
-      videoId: "oTN6ceOVdyE",
-      title: "Future Club",
-      artist: "Perturbator",
-      album: "Dangerous Days",
-      duration: "4:51",
-      thumbnail: "https://i.ytimg.com/vi/oTN6ceOVdyE/hqdefault.jpg"
+      videoId: "1wBNgz8ciZQ",
+      title: "Synthwave Cyberpunk",
+      artist: "MrSuicideSheep",
+      album: "Volume Three",
+      duration: "3:50",
+      thumbnail: "https://i.ytimg.com/vi/1wBNgz8ciZQ/hq720.jpg"
     },
     {
-      videoId: "qFfybn_W8Ak",
-      title: "Roller Mobster",
-      artist: "Carpenter Brut",
-      album: "Trilogy",
-      duration: "3:34",
-      thumbnail: "https://i.ytimg.com/vi/qFfybn_W8Ak/hqdefault.jpg"
-    },
-    {
-      videoId: "rDBbaGCCIhk",
-      title: "Sunset",
-      artist: "The Midnight",
-      album: "Endless Summer",
-      duration: "5:26",
-      thumbnail: "https://i.ytimg.com/vi/rDBbaGCCIhk/hqdefault.jpg"
+      videoId: "qHJ7WkkV0AY",
+      title: "Cyberpunk Cadence",
+      artist: "Virzy Guns",
+      album: "Cyberpunk Synth",
+      duration: "3:10",
+      thumbnail: "https://yt3.googleusercontent.com/FYPd5KQFDvHzf73YQDvIQa5Bx9-bAYSR9kFuTPk-o0OgYYne8Yy3qNfWhIj7gYMhZ6QJ0O8JJpO5v1A=w544-h544-l90-rj"
     }
   ],
   gaming: [
@@ -243,23 +219,31 @@ const CURATED_MOOD_STATIONS = {
       artist: "Mick Gordon",
       album: "DOOM OST",
       duration: "5:02",
-      thumbnail: "https://i.ytimg.com/vi/QHRuTYtSbJQ/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/QHRuTYtSbJQ/hq720.jpg"
     },
     {
-      videoId: "9ayYeLLT8qs",
-      title: "Spoiler",
-      artist: "Hyper",
-      album: "Lies",
-      duration: "4:30",
-      thumbnail: "https://i.ytimg.com/vi/9ayYeLLT8qs/hqdefault.jpg"
+      videoId: "2kqzTUrC5B4",
+      title: "Aggressive Fight Epic Hip Hop",
+      artist: "RTTWLR",
+      album: "Fight Motivation",
+      duration: "3:30",
+      thumbnail: "https://yt3.googleusercontent.com/kIHXQCTM5QauC58mf8JOolps0v6VuQNvTkSdn0Cmi19BlT5wZcifzPw5cc-MuMyMekjEUclP6onnqdf8=w544-h544-l90-rj"
     },
     {
-      videoId: "wN27j9q4D7g",
-      title: "Into the Void",
-      artist: "Celldweller",
-      album: "End of an Empire",
-      duration: "4:31",
-      thumbnail: "https://i.ytimg.com/vi/wN27j9q4D7g/hqdefault.jpg"
+      videoId: "nOmx4ePpuRM",
+      title: "Epic Gaming Music",
+      artist: "Brainwave Music",
+      album: "Intense Focus",
+      duration: "4:15",
+      thumbnail: "https://i.ytimg.com/vi/nOmx4ePpuRM/hq720.jpg"
+    },
+    {
+      videoId: "PP2Uvesx4ls",
+      title: "Cool Gaming EDM",
+      artist: "Freeme Music",
+      album: "Best of EDM",
+      duration: "3:45",
+      thumbnail: "https://i.ytimg.com/vi/PP2Uvesx4ls/hq720.jpg"
     }
   ],
   rock: [
@@ -269,7 +253,7 @@ const CURATED_MOOD_STATIONS = {
       artist: "Linkin Park",
       album: "Hybrid Theory",
       duration: "3:36",
-      thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hq720.jpg"
     },
     {
       videoId: "QJJYpsA5tv8",
@@ -277,7 +261,7 @@ const CURATED_MOOD_STATIONS = {
       artist: "Bring Me The Horizon",
       album: "Sempiternal",
       duration: "3:47",
-      thumbnail: "https://i.ytimg.com/vi/QJJYpsA5tv8/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/QJJYpsA5tv8/hq720.jpg"
     },
     {
       videoId: "hTWKbfoikeg",
@@ -285,7 +269,7 @@ const CURATED_MOOD_STATIONS = {
       artist: "Nirvana",
       album: "Nevermind",
       duration: "5:01",
-      thumbnail: "https://i.ytimg.com/vi/hTWKbfoikeg/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/hTWKbfoikeg/hq720.jpg"
     },
     {
       videoId: "bpOSxM0rNPM",
@@ -293,7 +277,7 @@ const CURATED_MOOD_STATIONS = {
       artist: "Arctic Monkeys",
       album: "AM",
       duration: "4:32",
-      thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hqdefault.jpg"
+      thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hq720.jpg"
     }
   ]
 };
@@ -307,17 +291,15 @@ const DEFAULT_CATEGORIES = [
   { id: "rock", name: "🎸 Rock & Metal" }
 ];
 
-const PIPED_SEARCH_MIRRORS = [
-  'https://api.piped.private.coffee',
-  'https://pipedapi.ducks.party'
-];
-
 function formatHighResThumbnail(videoId, url) {
   if (url && url.includes('googleusercontent.com')) {
     return url.replace(/=w\d+-h\d+[^&]*/, '=w544-h544-l90-rj');
   }
+  if (url && (url.includes('ytimg.com') || url.includes('youtube.com'))) {
+    return url.replace(/\/(hqdefault|mqdefault|default|sddefault)\.jpg/, '/hq720.jpg');
+  }
   if (videoId) {
-    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    return `https://i.ytimg.com/vi/${videoId}/hq720.jpg`;
   }
   return url || 'assets/default_cover.png';
 }
@@ -331,7 +313,7 @@ function isSpamMix(title) {
 
 class EtsukoAPI {
   constructor() {
-    this.baseUrl = '';
+    this.streamCache = new Map();
     this.localLikesKey = 'etsuko_library_likes_v1';
     this.localCratesKey = 'etsuko_library_crates_v1';
     this.initLocalStorage();
@@ -365,6 +347,7 @@ class EtsukoAPI {
     const list = CURATED_MOOD_STATIONS[category] || CURATED_MOOD_STATIONS.trending;
     return list.map(t => ({
       ...t,
+      thumbnail: formatHighResThumbnail(t.videoId, t.thumbnail),
       isLiked: this.isLiked(t.videoId)
     }));
   }
@@ -374,13 +357,13 @@ class EtsukoAPI {
     if (!query || !query.trim()) return { results: [] };
     const q = query.trim();
 
-    // 1. Direct YouTube Music InnerTube Search (WEB_REMIX client)
     try {
       const ytResults = await this.searchInnerTube(q, signal);
       if (ytResults && ytResults.length > 0) {
         return {
           results: ytResults.map(r => ({
             ...r,
+            thumbnail: formatHighResThumbnail(r.videoId, r.thumbnail),
             isLiked: this.isLiked(r.videoId)
           }))
         };
@@ -388,22 +371,6 @@ class EtsukoAPI {
     } catch (err) {
       if (err.name === 'AbortError') throw err;
       console.warn('[Search] InnerTube notice:', err.message);
-    }
-
-    // 2. Piped Mirrors Fallback Race
-    try {
-      const pipedResults = await this.searchPiped(q, signal);
-      if (pipedResults && pipedResults.length > 0) {
-        return {
-          results: pipedResults.map(r => ({
-            ...r,
-            isLiked: this.isLiked(r.videoId)
-          }))
-        };
-      }
-    } catch (err) {
-      if (err.name === 'AbortError') throw err;
-      console.warn('[Search] Piped fallback notice:', err.message);
     }
 
     return { results: [] };
@@ -436,7 +403,6 @@ class EtsukoAPI {
     const seen = new Set();
 
     for (const s of sections) {
-      // Top result card
       if (s.musicCardShelfRenderer) {
         const c = s.musicCardShelfRenderer;
         const title = c.title?.runs?.[0]?.text;
@@ -457,7 +423,6 @@ class EtsukoAPI {
         }
       }
 
-      // Track rows in shelf or section
       const items = s.itemSectionRenderer?.contents || s.musicShelfRenderer?.contents || [];
       for (const item of items) {
         const r = item.musicResponsiveListItemRenderer;
@@ -487,72 +452,92 @@ class EtsukoAPI {
     return results;
   }
 
-  async searchPiped(query, signal = null) {
-    const promises = PIPED_SEARCH_MIRRORS.map(async mirror => {
-      const url = `${mirror}/search?q=${encodeURIComponent(query)}&filter=music_songs`;
-      const res = await fetch(url, { signal: signal || AbortSignal.timeout(3500) });
-      if (!res.ok) throw new Error(`${mirror} status ${res.status}`);
-      const data = await res.json();
-      if (!data || !data.items || data.items.length === 0) throw new Error('No items');
-      return data.items;
-    });
+  // --- Pure Audio Stream Resolver (VisionOS Neural Audio Extractor) ---
+  async resolveAudioStream(videoId) {
+    if (!videoId) return null;
 
-    const items = await Promise.any(promises);
-    const results = [];
-    const seen = new Set();
-
-    items.forEach(item => {
-      const vid = item.url ? item.url.replace('/watch?v=', '') : null;
-      const title = item.title || 'Unknown Track';
-      const durSec = parseInt(item.duration, 10) || 210;
-
-      // Filter out long compilation videos
-      if (vid && !seen.has(vid) && durSec <= 540 && !isSpamMix(title)) {
-        seen.add(vid);
-        const mins = Math.floor(durSec / 60);
-        const secs = durSec % 60;
-
-        results.push({
-          videoId: vid,
-          title: title,
-          artist: item.uploaderName || 'YouTube Artist',
-          album: 'YouTube Music Master',
-          duration: `${mins}:${String(secs).padStart(2, '0')}`,
-          thumbnail: formatHighResThumbnail(vid, item.thumbnail),
-          source: 'youtube'
-        });
-      }
-    });
-
-    return results;
-  }
-
-  // --- Synced Lyrics (LRCLIB) ---
-  async getLyrics(title, artist = '') {
-    try {
-      const cleanTitle = title.replace(/\([^)]*\)|\[[^\]]*\]/g, '').trim();
-      const cleanArtist = artist.split(/[,&feat•]/i)[0].trim();
-      const lrcUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}`;
-      const res = await fetch(lrcUrl, { signal: AbortSignal.timeout(3500) });
-      if (res.ok) {
-        const data = await res.json();
-        if (data && (data.syncedLyrics || data.plainLyrics)) {
-          return {
-            syncedLyrics: data.syncedLyrics || '',
-            plainLyrics: data.plainLyrics || '',
-            source: 'LRCLIB'
-          };
+    // 1. Check local offline storage first (Zero internet required)
+    if (typeof window !== 'undefined' && window.downloader) {
+      try {
+        const offline = await window.downloader.getOfflineTrack(videoId);
+        if (offline && offline.streamUrl) {
+          console.log('[API] Playing from offline storage:', videoId);
+          return offline.streamUrl;
         }
-      }
-    } catch (e) {
-      console.warn('[API] Lyrics notice:', e.message);
+      } catch (err) {}
     }
 
-    return {
-      syncedLyrics: '',
-      plainLyrics: 'No synchronized neural lyrics available for this track.',
-      source: 'offline'
+    // 2. Check in-memory stream cache
+    const cached = this.streamCache.get(videoId);
+    if (cached && Date.now() < cached.expires) {
+      return cached.url;
+    }
+
+    // 3. VisionOS High-Definition Audio Stream Extractor
+    const ua = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15';
+    const visitorId = 'CgtZeFE2NTBEbTlFZyjq6OXVBjIKCgJJThIEGgAgTWLfAgrcAjIyLllUPXRGSnlfVm0ySUhaWDQyS3NuVkFkWDVnc1IxQWZfdGFISEZvNExRLWZsam05OVllWnhYMEE0Rk5tYnY1TlBFQ3pMa3ZVcFlQUkdxUWRtRi1JVHZZaG94SE9mOXJHRWVVM29rWngteVdUaEppY3NaLWNMZUMyUy1FeUxJcnpNU19XaHFuQTI3WVlRdGdPZ0lKblgzWmNtcFp3MjUwZ1JlUHV1UnZ4TWVWSExVT3ZrREI3RkFLd1FnaWZjbGZ1M2JZaHZoTFR0UHF5Q0swUm9jV3E2aG1HMms4S1ROOUVvN1lkeHpJRWFrQmcxdklzWEQ5VVo0Q184WGVGVHhhdVlsVFA5LUZsczdveHl4eXJoNko1T1gtckJ0ZTQzN3BYTUc2dEthWHRaOFpBSEhTQjF6VXh1S3JqaWQ5d2JqcE4xUzRzUGV1WVhTamlHRGdNUGxUYUxhbFozdw%3D%3D';
+
+    const payload = {
+      context: {
+        client: {
+          clientName: 'VISIONOS',
+          clientVersion: '1.02',
+          deviceMake: 'Apple',
+          deviceModel: 'RealityDevice17,1',
+          userAgent: ua,
+          osName: 'visionOS',
+          osVersion: '26.5.23O471',
+          hl: 'en',
+          timeZone: 'UTC',
+          utcOffsetMinutes: 0
+        }
+      },
+      videoId: videoId,
+      playbackContext: {
+        contentPlaybackContext: {
+          html5Preference: 'HTML5_PREF_WANTS',
+          signatureTimestamp: 20717
+        }
+      },
+      contentCheckOk: true,
+      racyCheckOk: true
     };
+
+    try {
+      const res = await fetch('https://www.youtube.com/youtubei/v1/player', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': ua,
+          'Origin': 'https://www.youtube.com',
+          'X-YouTube-Client-Name': '101',
+          'X-YouTube-Client-Version': '1.02',
+          'X-Goog-Visitor-Id': visitorId
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const formats = data.streamingData?.adaptiveFormats || [];
+        const audios = formats.filter(f => f.mimeType && f.mimeType.startsWith('audio/'));
+        // Sort descending by bitrate to select the highest fidelity audio stream
+        audios.sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+        const best = audios.find(a => a.url);
+        if (best && best.url) {
+          this.streamCache.set(videoId, { url: best.url, expires: Date.now() + 10800000 });
+          return best.url;
+        }
+        if (data.streamingData?.hlsManifestUrl) {
+          this.streamCache.set(videoId, { url: data.streamingData.hlsManifestUrl, expires: Date.now() + 10800000 });
+          return data.streamingData.hlsManifestUrl;
+        }
+      }
+    } catch (err) {
+      console.warn('[API] Audio resolution error:', err);
+    }
+
+    return null;
   }
 
   // --- Persistent Library (Likes & Crates) ---

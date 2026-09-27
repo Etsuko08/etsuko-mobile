@@ -971,26 +971,73 @@ body {
   opacity: 1;
 }
 
-/* Synced Lyrics Full Screen View */
-.lyrics-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 20px 0;
-}
-
-.lyric-line {
-  font-size: 19px;
+/* Offline Downloads Section Styles */
+.offline-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-size: 9.5px;
   font-weight: 700;
-  color: var(--text-muted);
-  line-height: 1.4;
-  transition: color 0.2s ease, font-size 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
-.lyric-line.active {
-  color: #fff;
-  font-size: 23px;
-  text-shadow: 0 0 16px var(--accent-cyan);
+.btn-delete-download {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.btn-delete-download:hover, .btn-delete-download:active {
+  color: #ef4444;
+}
+
+.track-card-download-btn {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.track-card-download-btn:active {
+  transform: scale(0.9);
+  color: var(--accent-cyan);
+}
+
+.track-card-download-btn.downloaded {
+  color: #10b981;
+  border-color: #10b981;
+}
+
+.btn-track-download {
+  color: var(--text-muted);
+}
+
+.btn-track-download.downloaded {
+  color: #10b981;
 }
 
 /* Modals */

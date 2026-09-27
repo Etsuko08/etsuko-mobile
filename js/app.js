@@ -34,7 +34,7 @@ class EtsukoMobileApp {
       'view-discover': document.getElementById('view-discover'),
       'view-search': document.getElementById('view-search'),
       'view-library': document.getElementById('view-library'),
-      'view-lyrics': document.getElementById('view-lyrics')
+      'view-downloads': document.getElementById('view-downloads')
     };
     this.navBtns = document.querySelectorAll('.nav-tab-btn');
 
@@ -80,9 +80,14 @@ class EtsukoMobileApp {
     this.inputCrateDesc = document.getElementById('input-crate-desc');
     this.btnConfirmCreateCrate = document.getElementById('btn-confirm-create-crate');
 
-    // Lyrics
-    this.lyricsContainer = document.getElementById('lyrics-container');
-    this.lyricsTrackTitle = document.getElementById('lyrics-track-title');
+    // Downloads
+    this.downloadsCountBadge = document.getElementById('downloads-count-badge');
+    this.activeDownloadsCard = document.getElementById('active-downloads-card');
+    this.downloadActiveTitle = document.getElementById('download-active-title');
+    this.downloadSpeedTag = document.getElementById('download-speed-tag');
+    this.downloadProgressBar = document.getElementById('download-progress-bar');
+    this.downloadPercentTag = document.getElementById('download-percent-tag');
+    this.downloadedTracksList = document.getElementById('downloaded-tracks-list');
 
     // Toast
     this.toast = document.getElementById('mobile-toast');
@@ -158,10 +163,11 @@ class EtsukoMobileApp {
       this.openAddToPlaylistModal(window.player.currentTrack);
     });
 
-    // Lyrics Shortcut in Sheet
-    document.getElementById('sheet-lyrics-btn')?.addEventListener('click', () => {
-      this.closePlayerSheet();
-      this.switchView('view-lyrics');
+    // Download Shortcut in Sheet
+    document.getElementById('sheet-download-btn')?.addEventListener('click', () => {
+      if (window.player && window.player.currentTrack && window.downloader) {
+        window.downloader.startDownload(window.player.currentTrack);
+      }
     });
 
     // Mood Pills
@@ -317,16 +323,8 @@ class EtsukoMobileApp {
       this.saveUserProfile();
     });
 
-    // Lyrics Time Sync Event Listener
-    window.addEventListener('etsuko:mobile-time-update', (e) => {
-      this.syncLyrics(e.detail.currentTime);
-    });
-
-    // When track starts, fetch lyrics
-    window.addEventListener('etsuko:mobile-track-started', (e) => {
-      const track = e.detail;
-      this.loadTrackLyrics(track);
-    });
+    // Offline Downloader Event Listeners
+    this.initDownloaderEvents();
   }
 
   // --- Modern Android Gesture & Hardware Back Button Routing ---
@@ -403,6 +401,10 @@ class EtsukoMobileApp {
 
     this.currentView = viewId;
     window.scrollTo({ top: 0, behavior: 'instant' });
+
+    if (viewId === 'view-downloads') {
+      this.renderDownloadsView();
+    }
   }
 
   openPlayerSheet() {
@@ -492,6 +494,9 @@ class EtsukoMobileApp {
       card.innerHTML = `
         <div class="track-card-thumb-wrap">
           <img src="${track.thumbnail || 'assets/default_cover.png'}" loading="lazy" alt="Cover" onerror="this.src='assets/default_cover.png'">
+          <button class="track-card-download-btn" data-vid="${track.videoId}" title="Download">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </button>
           <button class="track-card-like-btn ${isLiked ? 'liked' : ''}" data-vid="${track.videoId}" title="Like">
             <svg viewBox="0 0 24 24" width="15" height="15" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
@@ -499,6 +504,17 @@ class EtsukoMobileApp {
         <div class="track-card-title">${this.escapeHtml(track.title)}</div>
         <div class="track-card-artist">${this.escapeHtml(track.artist)}</div>
       `;
+
+      if (window.downloader) {
+        window.downloader.isDownloaded(track.videoId).then(isDl => {
+          if (isDl) card.querySelector('.track-card-download-btn')?.classList.add('downloaded');
+        });
+      }
+
+      card.querySelector('.track-card-download-btn')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.downloader) window.downloader.startDownload(track);
+      });
 
       card.querySelector('.track-card-like-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -590,6 +606,9 @@ class EtsukoMobileApp {
           <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.duration || '3:30'}</div>
         </div>
         <div class="track-row-actions">
+          <button class="btn-track-action btn-track-download" title="Download Offline">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </button>
           <button class="btn-track-action btn-track-like ${isLiked ? 'liked' : ''}" data-vid="${item.videoId}" title="Like">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="${isLiked ? '#ec4899' : 'none'}" stroke="${isLiked ? '#ec4899' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
@@ -598,6 +617,17 @@ class EtsukoMobileApp {
           </button>
         </div>
       `;
+
+      if (window.downloader) {
+        window.downloader.isDownloaded(item.videoId).then(isDl => {
+          if (isDl) row.querySelector('.btn-track-download')?.classList.add('downloaded');
+        });
+      }
+
+      row.querySelector('.btn-track-download')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (window.downloader) window.downloader.startDownload(item);
+      });
 
       row.querySelector('.btn-track-like').addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -827,101 +857,105 @@ class EtsukoMobileApp {
     }
   }
 
-  // --- Synced Lyrics Engine ---
-  async loadTrackLyrics(track) {
-    this.lyricsTrackTitle.textContent = `${track.title} — ${track.artist}`;
-    this.lyricsContainer.innerHTML = '<p class="lyric-line" style="color: var(--text-muted);">Fetching synced lyrics...</p>';
-    this.syncedLyrics = [];
+  // --- Offline Downloads Engine ---
+  initDownloaderEvents() {
+    window.addEventListener('etsuko:download-started', (e) => {
+      const task = e.detail;
+      if (this.activeDownloadsCard) {
+        this.activeDownloadsCard.style.display = 'block';
+        if (this.downloadActiveTitle) this.downloadActiveTitle.textContent = task.track?.title || 'Downloading...';
+        if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = 'Starting...';
+        if (this.downloadProgressBar) this.downloadProgressBar.style.width = '0%';
+        if (this.downloadPercentTag) this.downloadPercentTag.textContent = '0%';
+      }
+    });
+
+    window.addEventListener('etsuko:download-progress', (e) => {
+      const task = e.detail;
+      if (this.activeDownloadsCard) {
+        this.activeDownloadsCard.style.display = 'block';
+        if (this.downloadActiveTitle) this.downloadActiveTitle.textContent = task.track?.title || 'Downloading...';
+        if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = task.speedText || '0 KB/s';
+        if (this.downloadProgressBar) this.downloadProgressBar.style.width = `${task.progress || 0}%`;
+        if (this.downloadPercentTag) this.downloadPercentTag.textContent = `${task.progress || 0}%`;
+      }
+    });
+
+    window.addEventListener('etsuko:download-complete', () => {
+      if (this.activeDownloadsCard) {
+        this.activeDownloadsCard.style.display = 'none';
+      }
+      this.renderDownloadsView();
+    });
+
+    window.addEventListener('etsuko:download-error', () => {
+      if (this.activeDownloadsCard) {
+        this.activeDownloadsCard.style.display = 'none';
+      }
+      this.renderDownloadsView();
+    });
+
+    window.addEventListener('etsuko:download-deleted', () => {
+      this.renderDownloadsView();
+    });
+  }
+
+  async renderDownloadsView() {
+    if (!this.downloadedTracksList || !window.downloader) return;
 
     try {
-      const data = await window.api.getLyrics(track.title, track.artist);
-      if (data.syncedLyrics) {
-        this.syncedLyrics = this.parseLRC(data.syncedLyrics);
-        this.renderSyncedLyrics(this.syncedLyrics);
-      } else if (data.plainLyrics) {
-        this.renderPlainLyrics(data.plainLyrics);
-      } else {
-        this.lyricsContainer.innerHTML = '<p class="lyric-line" style="color: var(--text-muted);">No lyrics found for this track.</p>';
+      const tracks = await window.downloader.getAllDownloadedTracks();
+      if (this.downloadsCountBadge) {
+        this.downloadsCountBadge.textContent = `${tracks.length} SONG${tracks.length === 1 ? '' : 'S'}`;
       }
+
+      this.downloadedTracksList.innerHTML = '';
+      if (tracks.length === 0) {
+        this.downloadedTracksList.innerHTML = `
+          <div style="text-align: center; padding: 48px 16px; color: var(--text-muted); font-size: 13px;">
+            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; opacity: 0.4; display: block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            No offline music downloaded yet.<br>
+            <span style="font-size: 11.5px; opacity: 0.8; margin-top: 6px; display: block;">Tap the download icon on any song to listen without internet.</span>
+          </div>
+        `;
+        return;
+      }
+
+      tracks.forEach(track => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.innerHTML = `
+          <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Cover" onerror="this.src='assets/default_cover.png'">
+          <div class="track-row-info">
+            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+            <div class="track-row-artist" style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
+              <span class="offline-badge">⚡ Offline</span>
+              <span>${this.escapeHtml(track.artist)} • ${track.duration || '3:30'}</span>
+            </div>
+          </div>
+          <div class="track-row-actions">
+            <button class="btn-delete-download" title="Delete offline song">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+        `;
+
+        row.querySelector('.btn-delete-download')?.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await window.downloader.deleteDownloadedTrack(track.videoId);
+          this.showToast('Removed from offline downloads');
+          this.renderDownloadsView();
+        });
+
+        row.addEventListener('click', () => {
+          window.player.playTrack(track, tracks);
+          this.openPlayerSheet();
+        });
+
+        this.downloadedTracksList.appendChild(row);
+      });
     } catch (e) {
-      this.lyricsContainer.innerHTML = '<p class="lyric-line" style="color: var(--text-muted);">Lyrics unavailable.</p>';
-    }
-  }
-
-  parseLRC(lrcText) {
-    const lines = lrcText.split('\n');
-    const result = [];
-    const timeReg = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
-
-    lines.forEach(line => {
-      let match;
-      const text = line.replace(timeReg, '').trim();
-      while ((match = timeReg.exec(line)) !== null) {
-        const mins = parseInt(match[1], 10);
-        const secs = parseInt(match[2], 10);
-        const ms = match[3] ? parseInt(match[3].padEnd(3, '0').slice(0, 3), 10) : 0;
-        const time = mins * 60 + secs + ms / 1000;
-        if (text) {
-          result.push({ time, text });
-        }
-      }
-    });
-
-    result.sort((a, b) => a.time - b.time);
-    return result;
-  }
-
-  renderSyncedLyrics(lyrics) {
-    this.lyricsContainer.innerHTML = '';
-    lyrics.forEach((line, index) => {
-      const p = document.createElement('p');
-      p.className = 'lyric-line';
-      p.id = `lyric-line-${index}`;
-      p.textContent = line.text;
-      p.addEventListener('click', () => {
-        if (window.player.ytPlayer && window.player.ytPlayer.seekTo) {
-          window.player.ytPlayer.seekTo(line.time, true);
-        } else if (window.player.audio) {
-          window.player.audio.currentTime = line.time;
-        }
-      });
-      this.lyricsContainer.appendChild(p);
-    });
-  }
-
-  renderPlainLyrics(text) {
-    this.lyricsContainer.innerHTML = '';
-    const lines = text.split('\n');
-    lines.forEach(l => {
-      const p = document.createElement('p');
-      p.className = 'lyric-line';
-      p.style.color = 'var(--text-sub)';
-      p.textContent = l || ' ';
-      this.lyricsContainer.appendChild(p);
-    });
-  }
-
-  syncLyrics(currentTime) {
-    if (!this.syncedLyrics || this.syncedLyrics.length === 0) return;
-
-    let activeIndex = -1;
-    for (let i = 0; i < this.syncedLyrics.length; i++) {
-      if (currentTime >= this.syncedLyrics[i].time) {
-        activeIndex = i;
-      } else {
-        break;
-      }
-    }
-
-    if (activeIndex !== -1) {
-      document.querySelectorAll('.lyric-line').forEach((el, idx) => {
-        if (idx === activeIndex) {
-          el.classList.add('active');
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        } else {
-          el.classList.remove('active');
-        }
-      });
+      console.warn('[App] Render downloads error:', e);
     }
   }
 
