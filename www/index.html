@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Etsuko Mobile — Neural Audio</title>
+
+  <!-- PWA & Mobile Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#07080d">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Etsuko">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192.png">
+
+  <link rel="stylesheet" href="css/mobile.css">
+</head>
+<body>
+  <div id="app-root">
+    <!-- Top Mobile Navigation -->
+    <header class="mobile-top-bar">
+      <div class="brand-group">
+        <img src="assets/logo.png" alt="Etsuko" class="brand-logo-img" onerror="this.src='assets/default_cover.png'">
+        <span class="brand-text">ETSUKO</span>
+        <span class="brand-badge">MOBILE</span>
+      </div>
+      <div class="top-actions">
+        <button class="btn-icon-top" id="btn-open-settings" title="Server & Connection Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
+        <div class="user-avatar-btn" id="btn-open-profile">
+          <img src="assets/default_user.png" id="top-avatar-img" alt="User">
+        </div>
+      </div>
+    </header>
+
+    <!-- Scrollable View Area -->
+    <main class="view-viewport" id="view-viewport">
+      <!-- 1. Discover View -->
+      <section class="page-view active" id="view-discover">
+        <div class="mobile-hero-card">
+          <div class="hero-tag">CURATED NEURAL FLOW</div>
+          <h2 class="hero-title" id="greeting-title">Welcome to Etsuko Mobile</h2>
+          <div class="hero-play-row">
+            <button class="btn-mobile-pill primary" id="btn-hero-quick-play">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Quick Flow</span>
+            </button>
+            <button class="btn-mobile-pill secondary" id="btn-hero-surprise">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+              <span>Surprise Me</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <h3 class="section-title">Mood Stations</h3>
+        </div>
+        <div class="category-scroll-row" id="mood-scroll-row">
+          <div class="category-pill active" data-cat="trending">🔥 Global Hits</div>
+          <div class="category-pill" data-cat="phonk">⚡ Phonk & Drift</div>
+          <div class="category-pill" data-cat="lofi">☕ Lo-Fi Study</div>
+          <div class="category-pill" data-cat="synth">🚗 Late Night Synth</div>
+          <div class="category-pill" data-cat="gaming">🎮 Deep Focus</div>
+          <div class="category-pill" data-cat="rock">🎸 Rock & Metal</div>
+        </div>
+
+        <div class="section-header">
+          <h3 class="section-title">Trending Tracks</h3>
+          <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 700;">LIVE FEED</span>
+        </div>
+        <div class="track-grid" id="trending-track-grid">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- 2. Search View -->
+      <section class="page-view" id="view-search">
+        <div class="mobile-search-box">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Search tracks, artists, albums..." autocomplete="off">
+          <button class="btn-icon-top" id="btn-search-clear" style="display:none; width: 28px; height: 28px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+
+        <div class="search-filter-chips">
+          <button class="chip-btn active" data-filter="songs">Tracks</button>
+          <button class="chip-btn" data-filter="albums">Albums</button>
+          <button class="chip-btn" data-filter="artists">Artists</button>
+        </div>
+
+        <div class="track-list" id="search-results-list">
+          <!-- Search results -->
+        </div>
+      </section>
+
+      <!-- 3. Library View -->
+      <section class="page-view" id="view-library">
+        <!-- Liked Tracks Header Card -->
+        <div class="mobile-hero-card" id="card-open-likes" style="background: linear-gradient(135deg, rgba(80, 7, 36, 0.7), rgba(15, 23, 42, 0.8)); border-color: rgba(236, 72, 153, 0.4); cursor: pointer;">
+          <div class="hero-tag" style="color: var(--accent-pink);">COLLECTION</div>
+          <h2 class="hero-title">Liked Songs</h2>
+          <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 12px;" id="likes-count-label">0 tracks stored</p>
+          <button class="btn-mobile-pill primary" id="btn-play-all-likes" style="background: linear-gradient(135deg, var(--accent-pink), #a855f7); color: #fff;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Play All</span>
+          </button>
+        </div>
+
+        <div class="section-header">
+          <h3 class="section-title">Your Playlists & Crates</h3>
+          <button class="btn-mobile-pill secondary" id="btn-create-crate-modal" style="padding: 4px 12px; font-size: 11px;">
+            + New Crate
+          </button>
+        </div>
+        <div class="track-list" id="playlists-list">
+          <!-- Custom Crates -->
+        </div>
+
+        <!-- Active Playlist Content Container (Hidden by default) -->
+        <div id="playlist-detail-view" style="display: none; margin-top: 18px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+            <button class="btn-mobile-pill secondary" id="btn-back-to-crates" style="padding: 6px 12px;">
+              ← Back
+            </button>
+            <h3 id="active-crate-title" style="font-size: 15px; font-weight: 700;">Crate Name</h3>
+            <button class="btn-icon-top" id="btn-delete-active-crate" title="Delete Crate" style="color: #ef4444;">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            </button>
+          </div>
+          <div class="track-list" id="playlist-tracks-list"></div>
+        </div>
+      </section>
+
+      <!-- 4. Synced Lyrics View -->
+      <section class="page-view" id="view-lyrics">
+        <div class="section-header" style="margin-bottom: 16px;">
+          <h3 class="section-title" id="lyrics-track-title">No Track Playing</h3>
+          <span style="font-size: 10px; color: var(--accent-cyan); font-weight: 700; letter-spacing: 1px;">KARAOKE SYNC</span>
+        </div>
+        <div class="lyrics-container" id="lyrics-container">
+          <p class="lyric-line" style="color: var(--text-muted); font-size: 16px;">Play a song to view live synced lyrics.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Floating Mini-Player -->
+    <div class="mini-player" id="mini-player">
+      <img src="assets/default_cover.png" alt="Cover" class="mini-cover-art" id="mini-cover">
+      <div class="mini-info-col" id="mini-info-touch-area">
+        <div class="mini-title" id="mini-title">Ready to Stream</div>
+        <div class="mini-artist" id="mini-artist">Etsuko Studio</div>
+      </div>
+      <div class="mini-controls">
+        <button class="btn-mini-control" id="btn-mini-play" title="Play/Pause">
+          <svg id="icon-mini-play" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+          <svg id="icon-mini-pause" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button class="btn-mini-control" id="btn-mini-next" title="Next Track">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+        </button>
+      </div>
+      <div class="mini-progress-bar" id="mini-progress-bar"></div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="mobile-nav-bar">
+      <button class="nav-tab-btn active" data-view="view-discover">
+        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span class="nav-tab-label">Home</span>
+      </button>
+      <button class="nav-tab-btn" data-view="view-search">
+        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span class="nav-tab-label">Search</span>
+      </button>
+      <button class="nav-tab-btn" data-view="view-library">
+        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+        <span class="nav-tab-label">Library</span>
+      </button>
+      <button class="nav-tab-btn" data-view="view-lyrics">
+        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        <span class="nav-tab-label">Lyrics</span>
+      </button>
+    </nav>
+
+    <!-- Full-Screen Now-Playing Drawer (Sheet Modal) -->
+    <div class="player-sheet" id="player-sheet">
+      <div class="sheet-header">
+        <button class="btn-sheet-dismiss" id="btn-sheet-dismiss" title="Minimize">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        </button>
+        <div class="drawer-handle-bar"></div>
+        <div style="width: 36px;"></div>
+      </div>
+
+      <div class="sheet-artwork-box">
+        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art">
+      </div>
+
+      <div class="sheet-track-details">
+        <div class="sheet-text-col">
+          <h2 class="sheet-title" id="sheet-title">Ready to Stream</h2>
+          <p class="sheet-artist" id="sheet-artist">Etsuko Studio</p>
+          <p class="sheet-album" id="sheet-album">Cyberpunk Edition</p>
+        </div>
+        <button class="btn-sheet-like" id="sheet-like-btn" title="Like Song">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+      </div>
+
+      <div class="sheet-scrubber-section">
+        <div class="sheet-scrubber-track" id="sheet-scrubber-track">
+          <div class="sheet-scrubber-bg">
+            <div class="sheet-scrubber-fill" id="sheet-scrubber-fill"></div>
+            <div class="sheet-scrubber-thumb" id="sheet-scrubber-thumb"></div>
+          </div>
+        </div>
+        <div class="sheet-time-row">
+          <span id="sheet-time-current">0:00</span>
+          <span id="sheet-time-total">0:00</span>
+        </div>
+      </div>
+
+      <div class="sheet-controls-row">
+        <button class="btn-sheet-mode" id="btn-sheet-shuffle" title="Shuffle">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </button>
+        <button class="btn-sheet-step" id="btn-sheet-prev" title="Previous Track">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+        </button>
+        <button class="btn-sheet-play-circle" id="btn-sheet-play" title="Play / Pause">
+          <svg id="icon-sheet-play" viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <svg id="icon-sheet-pause" viewBox="0 0 24 24" width="30" height="30" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        </button>
+        <button class="btn-sheet-step" id="btn-sheet-next" title="Next Track">
+          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+        </button>
+        <button class="btn-sheet-mode" id="btn-sheet-repeat" title="Repeat Mode">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+          <span class="repeat-badge-label" id="sheet-repeat-badge"></span>
+        </button>
+      </div>
+
+      <div class="sheet-actions-row">
+        <button class="btn-sheet-subaction" id="sheet-playlist-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <span>Add to Crate</span>
+        </button>
+        <button class="btn-sheet-subaction" id="sheet-lyrics-btn">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+          <span>Lyrics</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modals -->
+    <!-- 1. Add to Playlist Modal -->
+    <div class="mobile-modal-backdrop" id="modal-add-playlist">
+      <div class="mobile-modal-box">
+        <div class="modal-header-row">
+          <span class="modal-title">Add Track to Crate</span>
+          <button class="btn-icon-top" id="btn-close-playlist-modal">&times;</button>
+        </div>
+        <div class="track-list" id="modal-crates-list"></div>
+      </div>
+    </div>
+
+    <!-- 2. Create Crate Modal -->
+    <div class="mobile-modal-backdrop" id="modal-create-crate">
+      <div class="mobile-modal-box">
+        <div class="modal-header-row">
+          <span class="modal-title">Create New Crate</span>
+          <button class="btn-icon-top" id="btn-close-create-modal">&times;</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          <input type="text" id="input-crate-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);" placeholder="Crate name (e.g. Midnight Drift)...">
+          <input type="text" id="input-crate-desc" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);" placeholder="Description (optional)...">
+          <button class="btn-mobile-pill primary" id="btn-confirm-create-crate" style="justify-content: center; padding: 12px; border-radius: 10px; margin-top: 6px;">
+            Create Crate
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Server Connection & Settings Modal -->
+    <div class="mobile-modal-backdrop" id="modal-settings">
+      <div class="mobile-modal-box">
+        <div class="modal-header-row">
+          <span class="modal-title">Server & Network</span>
+          <button class="btn-icon-top" id="btn-close-settings">&times;</button>
+        </div>
+        <p style="font-size: 12.5px; color: var(--text-sub); margin-bottom: 12px;">
+          If streaming from your phone over Wi-Fi, enter your PC's IP address:
+        </p>
+        <input type="text" id="input-server-url" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); margin-bottom: 14px;" placeholder="http://192.168.1.X:52331">
+        <button class="btn-mobile-pill primary" id="btn-save-server-url" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px;">
+          Connect to Server
+        </button>
+      </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div class="mobile-toast" id="mobile-toast"></div>
+
+    <!-- Audio Element -->
+    <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/api.js"></script>
+  <script src="js/touch.js"></script>
+  <script src="js/player.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

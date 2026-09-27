@@ -3,3 +3,21 @@ Thumbs.db
 *.log
 .vscode/
 .idea/
+
+# Dependencies
+node_modules/
+package-lock.json
+
+# Android Build
+android/.gradle/
+android/app/build/
+android/build/
+*.apk
+*.aab
+
+# iOS Build
+ios/Pods/
+ios/DerivedData/
+*.xcworkspace/xcuserdata
+*.xcodeproj/xcuserdata
+
