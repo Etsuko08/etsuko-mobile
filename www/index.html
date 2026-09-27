@@ -195,11 +195,8 @@
         <div style="width: 36px;"></div>
       </div>
 
-      <div class="sheet-artwork-box" id="sheet-artwork-box" style="position: relative; overflow: hidden; background: #000; border-radius: 20px;">
-        <div id="yt-player-container" class="sheet-video-container" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2;">
-          <div id="yt-player"></div>
-        </div>
-        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1;">
+      <div class="sheet-artwork-box" id="sheet-artwork-box">
+        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art" class="sheet-cover-img" onerror="this.src='assets/default_cover.png'">
       </div>
 
       <div class="sheet-track-details">
@@ -335,6 +332,11 @@
 
     <!-- Audio Element -->
     <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
+
+    <!-- Invisible Background Audio Engine (Zero Video UI) -->
+    <div id="yt-audio-carrier" style="position: fixed; top: -9999px; left: -9999px; width: 1px; height: 1px; opacity: 0.001; pointer-events: none; overflow: hidden; z-index: -999;">
+      <div id="yt-player"></div>
+    </div>
 
   </div>
 

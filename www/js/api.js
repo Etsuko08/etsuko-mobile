@@ -100,19 +100,234 @@ const DEFAULT_TRENDING_TRACKS = [
   }
 ];
 
+const CURATED_MOOD_STATIONS = {
+  trending: DEFAULT_TRENDING_TRACKS,
+  phonk: [
+    {
+      videoId: "w-sQRS-zTZg",
+      title: "Murder In My Mind",
+      artist: "KORDHELL",
+      album: "Phonk Killer",
+      duration: "2:25",
+      thumbnail: "https://i.ytimg.com/vi/w-sQRS-zTZg/hqdefault.jpg"
+    },
+    {
+      videoId: "1-xGerv5FOk",
+      title: "Close Eyes",
+      artist: "DVRST",
+      album: "Close Eyes",
+      duration: "2:12",
+      thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg"
+    },
+    {
+      videoId: "mK9nE0mQoas",
+      title: "Flare",
+      artist: "Hensonn",
+      album: "Flare Phonk",
+      duration: "2:31",
+      thumbnail: "https://i.ytimg.com/vi/mK9nE0mQoas/hqdefault.jpg"
+    },
+    {
+      videoId: "M1fA8q-rP6o",
+      title: "North Memphis",
+      artist: "Pharmacist",
+      album: "North Memphis",
+      duration: "2:22",
+      thumbnail: "https://i.ytimg.com/vi/M1fA8q-rP6o/hqdefault.jpg"
+    },
+    {
+      videoId: "49H5e3Bf97M",
+      title: "COWBELL WARRIOR!",
+      artist: "SXMPRA",
+      album: "COWBELL WARRIOR",
+      duration: "1:48",
+      thumbnail: "https://i.ytimg.com/vi/49H5e3Bf97M/hqdefault.jpg"
+    },
+    {
+      videoId: "dZ8Zg2pA5-c",
+      title: "Why Not",
+      artist: "Ghostface Playa",
+      album: "Why Not",
+      duration: "2:46",
+      thumbnail: "https://i.ytimg.com/vi/dZ8Zg2pA5-c/hqdefault.jpg"
+    }
+  ],
+  lofi: [
+    {
+      videoId: "iXp2ekn8l2k",
+      title: "Snowman",
+      artist: "Lofi Fruit Music",
+      album: "Chill Study Beats",
+      duration: "2:40",
+      thumbnail: "https://i.ytimg.com/vi/iXp2ekn8l2k/hqdefault.jpg"
+    },
+    {
+      videoId: "_tV5LEBDs7w",
+      title: "Kingdom in Blue",
+      artist: "Kupla",
+      album: "Kingdom in Blue",
+      duration: "2:20",
+      thumbnail: "https://i.ytimg.com/vi/_tV5LEBDs7w/hqdefault.jpg"
+    },
+    {
+      videoId: "5qxPqZ3N20M",
+      title: "im closing my eyes",
+      artist: "potsu",
+      album: "closing eyes",
+      duration: "2:07",
+      thumbnail: "https://i.ytimg.com/vi/5qxPqZ3N20M/hqdefault.jpg"
+    },
+    {
+      videoId: "hUfK4_36l88",
+      title: "controlla",
+      artist: "Idealism",
+      album: "rainy nights",
+      duration: "2:15",
+      thumbnail: "https://i.ytimg.com/vi/hUfK4_36l88/hqdefault.jpg"
+    },
+    {
+      videoId: "v0T3z4g3B4M",
+      title: "Losing Interest",
+      artist: "Shiloh Dynasty",
+      album: "Losing Interest",
+      duration: "2:10",
+      thumbnail: "https://i.ytimg.com/vi/v0T3z4g3B4M/hqdefault.jpg"
+    }
+  ],
+  synth: [
+    {
+      videoId: "MV_3Dpw-BRY",
+      title: "Nightcall",
+      artist: "Kavinsky",
+      album: "OutRun",
+      duration: "4:19",
+      thumbnail: "https://i.ytimg.com/vi/MV_3Dpw-BRY/hqdefault.jpg"
+    },
+    {
+      videoId: "8GW6sLrK40k",
+      title: "Resonance",
+      artist: "HOME",
+      album: "Odyssey",
+      duration: "3:32",
+      thumbnail: "https://i.ytimg.com/vi/8GW6sLrK40k/hqdefault.jpg"
+    },
+    {
+      videoId: "oTN6ceOVdyE",
+      title: "Future Club",
+      artist: "Perturbator",
+      album: "Dangerous Days",
+      duration: "4:51",
+      thumbnail: "https://i.ytimg.com/vi/oTN6ceOVdyE/hqdefault.jpg"
+    },
+    {
+      videoId: "qFfybn_W8Ak",
+      title: "Roller Mobster",
+      artist: "Carpenter Brut",
+      album: "Trilogy",
+      duration: "3:34",
+      thumbnail: "https://i.ytimg.com/vi/qFfybn_W8Ak/hqdefault.jpg"
+    },
+    {
+      videoId: "rDBbaGCCIhk",
+      title: "Sunset",
+      artist: "The Midnight",
+      album: "Endless Summer",
+      duration: "5:26",
+      thumbnail: "https://i.ytimg.com/vi/rDBbaGCCIhk/hqdefault.jpg"
+    }
+  ],
+  gaming: [
+    {
+      videoId: "QHRuTYtSbJQ",
+      title: "BFG 9000",
+      artist: "Mick Gordon",
+      album: "DOOM OST",
+      duration: "5:02",
+      thumbnail: "https://i.ytimg.com/vi/QHRuTYtSbJQ/hqdefault.jpg"
+    },
+    {
+      videoId: "9ayYeLLT8qs",
+      title: "Spoiler",
+      artist: "Hyper",
+      album: "Lies",
+      duration: "4:30",
+      thumbnail: "https://i.ytimg.com/vi/9ayYeLLT8qs/hqdefault.jpg"
+    },
+    {
+      videoId: "wN27j9q4D7g",
+      title: "Into the Void",
+      artist: "Celldweller",
+      album: "End of an Empire",
+      duration: "4:31",
+      thumbnail: "https://i.ytimg.com/vi/wN27j9q4D7g/hqdefault.jpg"
+    }
+  ],
+  rock: [
+    {
+      videoId: "eVTXPUF4Oz4",
+      title: "In the End",
+      artist: "Linkin Park",
+      album: "Hybrid Theory",
+      duration: "3:36",
+      thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hqdefault.jpg"
+    },
+    {
+      videoId: "QJJYpsA5tv8",
+      title: "Can You Feel My Heart",
+      artist: "Bring Me The Horizon",
+      album: "Sempiternal",
+      duration: "3:47",
+      thumbnail: "https://i.ytimg.com/vi/QJJYpsA5tv8/hqdefault.jpg"
+    },
+    {
+      videoId: "hTWKbfoikeg",
+      title: "Smells Like Teen Spirit",
+      artist: "Nirvana",
+      album: "Nevermind",
+      duration: "5:01",
+      thumbnail: "https://i.ytimg.com/vi/hTWKbfoikeg/hqdefault.jpg"
+    },
+    {
+      videoId: "bpOSxM0rNPM",
+      title: "Do I Wanna Know?",
+      artist: "Arctic Monkeys",
+      album: "AM",
+      duration: "4:32",
+      thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hqdefault.jpg"
+    }
+  ]
+};
+
 const DEFAULT_CATEGORIES = [
-  { id: "trending", name: "🔥 Global Hits", query: "Top Global Hits" },
-  { id: "phonk", name: "⚡ Phonk & Drift", query: "Brazilian Phonk Drift" },
-  { id: "lofi", name: "☕ Lo-Fi Study", query: "Lofi Chill Study Beats" },
-  { id: "synth", name: "🚗 Late Night Synth", query: "Synthwave Retro Electro" },
-  { id: "gaming", name: "🎮 Deep Focus", query: "Gaming Focus Electronic" },
-  { id: "rock", name: "🎸 Rock & Metal", query: "Modern Rock Hardcore" }
+  { id: "trending", name: "🔥 Global Hits" },
+  { id: "phonk", name: "⚡ Phonk & Drift" },
+  { id: "lofi", name: "☕ Lo-Fi Study" },
+  { id: "synth", name: "🚗 Late Night Synth" },
+  { id: "gaming", name: "🎮 Deep Focus" },
+  { id: "rock", name: "🎸 Rock & Metal" }
 ];
 
 const PIPED_SEARCH_MIRRORS = [
   'https://api.piped.private.coffee',
   'https://pipedapi.ducks.party'
 ];
+
+function formatHighResThumbnail(videoId, url) {
+  if (url && url.includes('googleusercontent.com')) {
+    return url.replace(/=w\d+-h\d+[^&]*/, '=w544-h544-l90-rj');
+  }
+  if (videoId) {
+    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  }
+  return url || 'assets/default_cover.png';
+}
+
+function isSpamMix(title) {
+  const t = (title || '').toLowerCase();
+  return t.includes('1 hour') || t.includes('2 hour') || t.includes('3 hour') ||
+         t.includes('10 hour') || t.includes('non stop') || t.includes('non-stop') ||
+         t.includes('compilation') || t.includes('playlist mix') || t.includes('full album mix');
+}
 
 class EtsukoAPI {
   constructor() {
@@ -138,16 +353,20 @@ class EtsukoAPI {
     }
   }
 
-  // --- Home Feed ---
+  // --- Home Feed & Mood Stations ---
   async getHomeFeed() {
-    const trending = DEFAULT_TRENDING_TRACKS.map(t => ({
+    return {
+      trending: this.getMoodTracks('trending'),
+      categories: DEFAULT_CATEGORIES
+    };
+  }
+
+  getMoodTracks(category) {
+    const list = CURATED_MOOD_STATIONS[category] || CURATED_MOOD_STATIONS.trending;
+    return list.map(t => ({
       ...t,
       isLiked: this.isLiked(t.videoId)
     }));
-    return {
-      trending: trending,
-      categories: DEFAULT_CATEGORIES
-    };
   }
 
   // --- Pure YouTube Music Search Engine ---
@@ -224,7 +443,7 @@ class EtsukoAPI {
         const vid = c.title?.runs?.[0]?.navigationEndpoint?.watchEndpoint?.videoId || c.onTap?.watchEndpoint?.videoId;
         const artist = (c.subtitle?.runs || []).map(r => r.text).join('').replace(/^[•\s]+|[•\s]+$/g, '');
         const thumb = c.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
-        if (vid && title && !seen.has(vid)) {
+        if (vid && title && !seen.has(vid) && !isSpamMix(title)) {
           seen.add(vid);
           results.push({
             videoId: vid,
@@ -232,7 +451,7 @@ class EtsukoAPI {
             artist: artist || 'YouTube Music',
             album: 'Official Release',
             duration: '3:30',
-            thumbnail: thumb || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+            thumbnail: formatHighResThumbnail(vid, thumb),
             source: 'youtube'
           });
         }
@@ -251,7 +470,7 @@ class EtsukoAPI {
         const artist = (cols[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || []).map(x => x.text).join('').replace(/^[•\s]+|[•\s]+$/g, '');
         const thumb = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
 
-        if (vid && title && !seen.has(vid)) {
+        if (vid && title && !seen.has(vid) && !isSpamMix(title)) {
           seen.add(vid);
           results.push({
             videoId: vid,
@@ -259,7 +478,7 @@ class EtsukoAPI {
             artist: artist || 'YouTube Artist',
             album: 'YouTube Music Master',
             duration: '3:30',
-            thumbnail: thumb || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+            thumbnail: formatHighResThumbnail(vid, thumb),
             source: 'youtube'
           });
         }
@@ -284,19 +503,22 @@ class EtsukoAPI {
 
     items.forEach(item => {
       const vid = item.url ? item.url.replace('/watch?v=', '') : null;
-      if (vid && !seen.has(vid)) {
+      const title = item.title || 'Unknown Track';
+      const durSec = parseInt(item.duration, 10) || 210;
+
+      // Filter out long compilation videos
+      if (vid && !seen.has(vid) && durSec <= 540 && !isSpamMix(title)) {
         seen.add(vid);
-        const durSec = parseInt(item.duration, 10) || 210;
         const mins = Math.floor(durSec / 60);
         const secs = durSec % 60;
 
         results.push({
           videoId: vid,
-          title: item.title || 'Unknown Track',
+          title: title,
           artist: item.uploaderName || 'YouTube Artist',
           album: 'YouTube Music Master',
           duration: `${mins}:${String(secs).padStart(2, '0')}`,
-          thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+          thumbnail: formatHighResThumbnail(vid, item.thumbnail),
           source: 'youtube'
         });
       }
@@ -441,4 +663,6 @@ class EtsukoAPI {
 }
 
 // Global API Singleton
-window.api = new EtsukoAPI();
+if (typeof window !== 'undefined') {
+  window.api = new EtsukoAPI();
+}

@@ -43,7 +43,6 @@ class MobilePlayer {
 
     // Full Player Sheet
     this.playerSheet = document.getElementById('player-sheet');
-    this.sheetVideoContainer = document.getElementById('yt-player-container');
     this.sheetCover = document.getElementById('sheet-cover');
     this.sheetTitle = document.getElementById('sheet-title');
     this.sheetArtist = document.getElementById('sheet-artist');
@@ -321,16 +320,10 @@ class MobilePlayer {
     if (this.miniArtist) this.miniArtist.textContent = artist;
     if (this.miniPlayer) this.miniPlayer.style.display = 'flex';
 
-    // Sheet Player Visual Engine: Video Player vs Artwork Cover
+    // Full Sheet Player: ALWAYS display clean album cover art (Music Only, No Video)
     if (this.sheetCover) {
       this.sheetCover.src = thumb;
-      this.sheetCover.style.opacity = this.activeEngine === 'youtube' ? '0' : '1';
-      this.sheetCover.style.pointerEvents = this.activeEngine === 'youtube' ? 'none' : 'auto';
-    }
-
-    if (this.sheetVideoContainer) {
-      this.sheetVideoContainer.style.display = this.activeEngine === 'youtube' ? 'block' : 'none';
-      this.sheetVideoContainer.style.zIndex = this.activeEngine === 'youtube' ? '2' : '0';
+      this.sheetCover.style.opacity = '1';
     }
 
     if (this.sheetTitle) this.sheetTitle.textContent = title;

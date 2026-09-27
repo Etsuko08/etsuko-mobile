@@ -141,7 +141,8 @@ body {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--nav-height) + var(--mini-player-height) + var(--safe-bottom) + 16px);
+  padding-top: calc(var(--header-height) + var(--safe-top) + 12px);
+  padding-bottom: calc(var(--nav-height) + var(--mini-player-height) + var(--safe-bottom) + 20px);
 }
 
 .page-view {
@@ -160,14 +161,14 @@ body {
 
 /* Home / Discover View */
 .mobile-hero-card {
-  background: linear-gradient(135deg, rgba(30, 27, 75, 0.7), rgba(15, 23, 42, 0.8));
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.7), rgba(15, 23, 42, 0.85));
   border: 1px solid rgba(139, 92, 246, 0.3);
-  border-radius: 18px;
-  padding: 20px 18px;
-  margin-bottom: 24px;
+  border-radius: 16px;
+  padding: 16px 14px;
+  margin-bottom: 18px;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .mobile-hero-card::after {
@@ -191,10 +192,10 @@ body {
 }
 
 .hero-title {
-  font-size: 22px;
+  font-size: 19px;
   font-weight: 800;
   line-height: 1.25;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .hero-play-row {
@@ -242,18 +243,18 @@ body {
 
 .category-scroll-row {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-x;
-  padding-bottom: 12px;
-  padding-top: 4px;
+  padding-bottom: 10px;
+  padding-top: 2px;
   margin-left: -16px;
   margin-right: -16px;
   padding-left: 16px;
   padding-right: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
   scrollbar-width: none;
 }
 
@@ -263,16 +264,16 @@ body {
 
 .category-pill {
   flex-shrink: 0;
-  padding: 9px 16px;
+  padding: 7px 14px;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
-  border-radius: 14px;
-  font-size: 13px;
+  border-radius: 20px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--text-sub);
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
   white-space: nowrap;
   user-select: none;
@@ -294,18 +295,26 @@ body {
 /* Track Grids & Rows */
 .track-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 24px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .track-card {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
   background: var(--bg-surface);
   border: 1px solid var(--border-subtle);
   border-radius: 14px;
-  padding: 10px;
+  padding: 8px;
   cursor: pointer;
   transition: transform 0.15s ease, border-color 0.15s ease;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .track-card:active {
@@ -320,17 +329,19 @@ body {
   overflow: hidden;
   position: relative;
   margin-bottom: 8px;
-  background: #111;
+  background: #0f172a;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .track-card-thumb-wrap img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .track-card-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
@@ -339,7 +350,7 @@ body {
 }
 
 .track-card-artist {
-  font-size: 11.5px;
+  font-size: 10.5px;
   color: var(--text-sub);
   white-space: nowrap;
   overflow: hidden;
@@ -646,19 +657,22 @@ body {
 
 .sheet-artwork-box {
   width: 100%;
-  max-width: 320px;
+  max-width: 270px;
   aspect-ratio: 1;
-  margin: 0 auto 28px auto;
-  border-radius: 20px;
+  margin: 0 auto 22px auto;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px var(--accent-glow);
-  background: #111;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(0, 240, 255, 0.2);
+  background: #0f172a;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  position: relative;
 }
 
 .sheet-artwork-box img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 
 .sheet-track-details {

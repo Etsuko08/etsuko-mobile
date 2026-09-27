@@ -521,28 +521,10 @@ class EtsukoMobileApp {
   }
 
   async filterMoodStation(mood) {
-    const queries = {
-      'trending': 'Top Global Hits',
-      'phonk': 'Brazilian Phonk Drift',
-      'lofi': 'Lofi Chill Study Beats',
-      'synth': 'Synthwave Retro Electro',
-      'gaming': 'Gaming Focus Electronic',
-      'rock': 'Modern Rock Hardcore'
-    };
-    const q = queries[mood] || 'Trending Hits';
-    this.trendingGrid.innerHTML = `
-      <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        Loading ${q}...
-      </div>
-    `;
-
     try {
-      const res = await window.api.search(q, 'songs');
-      if (res.results && res.results.length > 0) {
-        this.renderTrendingGrid(res.results);
-      } else {
-        this.loadHomeFeed();
-      }
+      const tracks = window.api.getMoodTracks(mood);
+      this.trendingTracks = tracks;
+      this.renderTrendingGrid(tracks);
     } catch (e) {
       this.loadHomeFeed();
     }
