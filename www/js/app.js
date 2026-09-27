@@ -1,13 +1,24 @@
 // Etsuko Mobile — Main Application Controller
+// Fully Standalone Touch-First Cyberpunk Music Client
+
+// Global Hardware & Gesture Back Handler (Available immediately)
+window.handleHardwareBack = () => {
+  if (window.app && typeof window.app.onHardwareBack === 'function') {
+    window.app.onHardwareBack();
+  }
+};
+
 class EtsukoMobileApp {
   constructor() {
     this.currentView = 'view-discover';
     this.searchAbortController = null;
     this.searchDebounceTimer = null;
+    this.currentSearchRequestId = 0;
     this.currentSearchFilter = 'songs';
     this.activeCrateId = null;
     this.syncedLyrics = [];
     this.pendingAddTrack = null;
+    this._lastBackPress = 0;
 
     this.initDOM();
     this.bindEvents();
@@ -69,12 +80,6 @@ class EtsukoMobileApp {
     this.inputCrateDesc = document.getElementById('input-crate-desc');
     this.btnConfirmCreateCrate = document.getElementById('btn-confirm-create-crate');
 
-    this.modalSettings = document.getElementById('modal-settings');
-    this.btnOpenSettings = document.getElementById('btn-open-settings');
-    this.btnCloseSettings = document.getElementById('btn-close-settings');
-    this.inputServerUrl = document.getElementById('input-server-url');
-    this.btnSaveServerUrl = document.getElementById('btn-save-server-url');
-
     // Lyrics
     this.lyricsContainer = document.getElementById('lyrics-container');
     this.lyricsTrackTitle = document.getElementById('lyrics-track-title');
@@ -94,7 +99,6 @@ class EtsukoMobileApp {
     this.inputProfileBio = document.getElementById('input-profile-bio');
     this.profileLikesCount = document.getElementById('profile-likes-count');
     this.profileCratesCount = document.getElementById('profile-crates-count');
-    this.btnProfileServerSettings = document.getElementById('btn-profile-server-settings');
     this.btnSaveProfile = document.getElementById('btn-save-profile');
     this.topAvatarImg = document.getElementById('top-avatar-img');
   }
@@ -103,7 +107,7 @@ class EtsukoMobileApp {
     // Bottom Navigation
     this.navBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        window.touch.vibrate(10);
+        if (window.touch) window.touch.vibrate(10);
         const targetView = btn.getAttribute('data-view');
         this.switchView(targetView);
       });
@@ -118,12 +122,14 @@ class EtsukoMobileApp {
     }
 
     // Touch Swipe Gestures
-    window.touch.initPlayerDrawerGestures(this.playerSheet, () => this.closePlayerSheet());
-    window.touch.initMiniPlayerSwipe(
-      this.miniPlayer,
-      () => window.player.next(),
-      () => window.player.prev()
-    );
+    if (window.touch) {
+      window.touch.initPlayerDrawerGestures(this.playerSheet, () => this.closePlayerSheet());
+      window.touch.initMiniPlayerSwipe(
+        this.miniPlayer,
+        () => window.player.next(),
+        () => window.player.prev()
+      );
+    }
 
     // Player Play Controls
     document.getElementById('btn-mini-play')?.addEventListener('click', (e) => {
@@ -161,6 +167,7 @@ class EtsukoMobileApp {
     // Mood Pills
     this.moodPills.forEach(pill => {
       pill.addEventListener('click', () => {
+        if (window.touch) window.touch.vibrate(8);
         this.moodPills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
         const cat = pill.getAttribute('data-cat');
@@ -172,27 +179,32 @@ class EtsukoMobileApp {
     this.btnHeroQuick?.addEventListener('click', () => {
       if (this.trendingTracks && this.trendingTracks.length > 0) {
         window.player.playTrack(this.trendingTracks[0], this.trendingTracks);
+        this.openPlayerSheet();
       }
     });
     this.btnHeroSurprise?.addEventListener('click', () => {
       if (this.trendingTracks && this.trendingTracks.length > 0) {
         const rand = this.trendingTracks[Math.floor(Math.random() * this.trendingTracks.length)];
         window.player.playTrack(rand, this.trendingTracks);
+        this.openPlayerSheet();
       }
     });
 
-    // Search Header Back Button & Input
+    // In-App Back Button in Search View
     this.btnSearchBack?.addEventListener('click', () => {
-      window.touch.vibrate(10);
+      if (window.touch) window.touch.vibrate(10);
       this.switchView('view-discover');
     });
 
+    // Search Input with 320ms Debounce and Immediate Execution on Enter
     this.searchInput?.addEventListener('input', (e) => {
       const q = e.target.value.trim();
       if (this.btnSearchClear) this.btnSearchClear.style.display = q ? 'flex' : 'none';
       clearTimeout(this.searchDebounceTimer);
       if (q) {
-        this.searchDebounceTimer = setTimeout(() => this.executeSearch(q), 120);
+        this.searchDebounceTimer = setTimeout(() => this.executeSearch(q), 320);
+      } else {
+        this.searchResultsList.innerHTML = '';
       }
     });
 
@@ -277,28 +289,9 @@ class EtsukoMobileApp {
       this.modalAddPlaylist.classList.remove('open');
     });
 
-    // Server Settings Modal
-    this.btnOpenSettings?.addEventListener('click', () => {
-      this.inputServerUrl.value = window.api.baseUrl;
-      this.modalSettings.classList.add('open');
-    });
-    this.btnCloseSettings?.addEventListener('click', () => {
-      this.modalSettings.classList.remove('open');
-    });
-    this.btnSaveServerUrl?.addEventListener('click', () => {
-      const url = this.inputServerUrl.value.trim();
-      if (url) {
-        window.api.setServerUrl(url);
-        this.modalSettings.classList.remove('open');
-        this.showToast('Server connected!');
-        this.loadHomeFeed();
-        this.loadLibraryData();
-      }
-    });
-
     // Profile Modal Events
     this.btnOpenProfile?.addEventListener('click', async () => {
-      window.touch.vibrate(12);
+      if (window.touch) window.touch.vibrate(12);
       await this.openProfileModal();
     });
     this.btnCloseProfile?.addEventListener('click', () => {
@@ -320,10 +313,6 @@ class EtsukoMobileApp {
     this.btnResetAvatar?.addEventListener('click', () => {
       if (this.profileModalAvatar) this.profileModalAvatar.src = 'assets/default_user.png';
     });
-    this.btnProfileServerSettings?.addEventListener('click', () => {
-      this.modalProfile?.classList.remove('open');
-      this.btnOpenSettings?.click();
-    });
     this.btnSaveProfile?.addEventListener('click', () => {
       this.saveUserProfile();
     });
@@ -338,52 +327,52 @@ class EtsukoMobileApp {
       const track = e.detail;
       this.loadTrackLyrics(track);
     });
+  }
 
-    // Android Hardware & Gesture Back Handler
-    window.handleHardwareBack = () => {
-      // 1. Close open modal if any
-      const openModal = document.querySelector('.mobile-modal-backdrop.open');
-      if (openModal) {
-        openModal.classList.remove('open');
-        return;
-      }
+  // --- Modern Android Gesture & Hardware Back Button Routing ---
+  onHardwareBack() {
+    // 1. Close open modal if any
+    const openModal = document.querySelector('.mobile-modal-backdrop.open');
+    if (openModal) {
+      openModal.classList.remove('open');
+      return;
+    }
 
-      // 2. Close player sheet if open
-      if (this.playerSheet && this.playerSheet.classList.contains('open')) {
-        this.closePlayerSheet();
-        return;
-      }
+    // 2. Close player sheet if open
+    if (this.playerSheet && this.playerSheet.classList.contains('open')) {
+      this.closePlayerSheet();
+      return;
+    }
 
-      // 3. Close playlist detail view in Library
-      if (this.playlistDetailView && this.playlistDetailView.style.display !== 'none') {
-        this.btnBackToCrates?.click();
-        return;
-      }
+    // 3. Close playlist detail view in Library
+    if (this.playlistDetailView && this.playlistDetailView.style.display !== 'none') {
+      this.btnBackToCrates?.click();
+      return;
+    }
 
-      // 4. Return to Discover view from any other view
-      if (this.currentView !== 'view-discover') {
-        this.switchView('view-discover');
-        return;
-      }
+    // 4. Return to Discover view from any other view
+    if (this.currentView !== 'view-discover') {
+      this.switchView('view-discover');
+      return;
+    }
 
-      // 5. Clear search input if filled
-      if (this.searchInput && this.searchInput.value) {
-        this.searchInput.value = '';
-        this.btnSearchClear?.click();
-        return;
-      }
+    // 5. Clear search input if filled
+    if (this.searchInput && this.searchInput.value) {
+      this.searchInput.value = '';
+      this.btnSearchClear?.click();
+      return;
+    }
 
-      // 6. Double back press to exit
-      const now = Date.now();
-      if (this._lastBackPress && (now - this._lastBackPress < 2000)) {
-        if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-          window.Capacitor.Plugins.App.exitApp();
-        }
-      } else {
-        this._lastBackPress = now;
-        this.showToast('Press back again to exit');
+    // 6. Double back press to exit gracefully
+    const now = Date.now();
+    if (this._lastBackPress && (now - this._lastBackPress < 2000)) {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.exitApp();
       }
-    };
+    } else {
+      this._lastBackPress = now;
+      this.showToast('Press back again to exit');
+    }
   }
 
   initPWA() {
@@ -411,41 +400,42 @@ class EtsukoMobileApp {
         btn.classList.remove('active');
       }
     });
+
     this.currentView = viewId;
+    window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
   openPlayerSheet() {
     if (this.playerSheet) {
       this.playerSheet.classList.add('open');
-      window.touch.vibrate(12);
+      if (window.touch) window.touch.vibrate(10);
     }
   }
 
   closePlayerSheet() {
     if (this.playerSheet) {
       this.playerSheet.classList.remove('open');
-      window.touch.vibrate(10);
+      this.playerSheet.style.transform = '';
     }
   }
 
-  showToast(msg) {
+  showToast(msg, duration = 2200) {
     if (!this.toast) return;
     this.toast.textContent = msg;
-    this.toast.classList.add('visible');
-    clearTimeout(this.toastTimer);
-    this.toastTimer = setTimeout(() => {
-      this.toast.classList.remove('visible');
-    }, 2400);
+    this.toast.classList.add('show');
+    clearTimeout(this._toastTimer);
+    this._toastTimer = setTimeout(() => {
+      this.toast.classList.remove('show');
+    }, duration);
   }
 
-  // --- Profile Methods ---
+  // --- Profile Logic ---
   async openProfileModal() {
-    const saved = localStorage.getItem('etsuko_user_profile');
-    const profile = saved ? JSON.parse(saved) : {
-      name: 'Cyber Operator',
-      bio: 'Listening to the grid...',
-      avatar: 'assets/default_user.png'
-    };
+    let profile = { name: 'Cyber Operator', bio: 'Listening to the grid...', avatar: 'assets/default_user.png' };
+    try {
+      const saved = localStorage.getItem('etsuko_user_profile');
+      if (saved) profile = JSON.parse(saved);
+    } catch (e) {}
 
     if (this.inputProfileName) this.inputProfileName.value = profile.name || 'Cyber Operator';
     if (this.inputProfileBio) this.inputProfileBio.value = profile.bio || 'Listening to the grid...';
@@ -490,30 +480,42 @@ class EtsukoMobileApp {
       this.renderTrendingGrid(this.trendingTracks);
     } catch (e) {
       console.warn('[App] Home feed fallback:', e);
-      if (window.api && window.api.getHomeFeed) {
-        const data = await window.api.getHomeFeed();
-        this.trendingTracks = data.trending || [];
-        this.renderTrendingGrid(this.trendingTracks);
-      }
     }
   }
 
   renderTrendingGrid(tracks) {
     this.trendingGrid.innerHTML = '';
     tracks.slice(0, 16).forEach(track => {
+      const isLiked = window.api.isLiked(track.videoId);
       const card = document.createElement('div');
       card.className = 'track-card';
       card.innerHTML = `
         <div class="track-card-thumb-wrap">
           <img src="${track.thumbnail || 'assets/default_cover.png'}" loading="lazy" alt="Cover" onerror="this.src='assets/default_cover.png'">
+          <button class="track-card-like-btn ${isLiked ? 'liked' : ''}" data-vid="${track.videoId}" title="Like">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
         </div>
         <div class="track-card-title">${this.escapeHtml(track.title)}</div>
         <div class="track-card-artist">${this.escapeHtml(track.artist)}</div>
       `;
+
+      card.querySelector('.track-card-like-btn').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        track.isLiked = window.api.isLiked(track.videoId);
+        await this.toggleTrackLike(track);
+        const btn = card.querySelector('.track-card-like-btn');
+        const nowLiked = window.api.isLiked(track.videoId);
+        btn.classList.toggle('liked', nowLiked);
+        btn.querySelector('svg').setAttribute('fill', nowLiked ? '#ec4899' : 'none');
+      });
+
       card.addEventListener('click', () => {
+        track.isLiked = window.api.isLiked(track.videoId);
         window.player.playTrack(track, tracks);
         this.openPlayerSheet();
       });
+
       this.trendingGrid.appendChild(card);
     });
   }
@@ -528,20 +530,32 @@ class EtsukoMobileApp {
       'rock': 'Modern Rock Hardcore'
     };
     const q = queries[mood] || 'Trending Hits';
+    this.trendingGrid.innerHTML = `
+      <div style="grid-column: 1 / -1; padding: 36px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        Loading ${q}...
+      </div>
+    `;
+
     try {
       const res = await window.api.search(q, 'songs');
       if (res.results && res.results.length > 0) {
         this.renderTrendingGrid(res.results);
+      } else {
+        this.loadHomeFeed();
       }
-    } catch (e) {}
+    } catch (e) {
+      this.loadHomeFeed();
+    }
   }
 
-  // --- Search Engine ---
+  // --- Search Engine (Guarded Against Race Conditions & Stale Overwrites) ---
   async executeSearch(query) {
-    if (!query) {
+    if (!query || !query.trim()) {
       this.searchResultsList.innerHTML = '';
       return;
     }
+    const q = query.trim();
+    const reqId = ++this.currentSearchRequestId;
 
     if (this.searchAbortController) {
       this.searchAbortController.abort();
@@ -549,20 +563,23 @@ class EtsukoMobileApp {
     this.searchAbortController = new AbortController();
 
     this.searchResultsList.innerHTML = `
-      <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        Neural search scanning...
+      <div style="padding: 36px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        Searching YouTube Music...
       </div>
     `;
 
     try {
-      const data = await window.api.search(query, this.currentSearchFilter, this.searchAbortController.signal);
+      const data = await window.api.search(q, this.currentSearchFilter, this.searchAbortController.signal);
+      if (reqId !== this.currentSearchRequestId) return; // Drop stale request!
+
       const results = data.results || [];
       this.renderSearchResults(results);
     } catch (e) {
       if (e.name === 'AbortError') return;
+      if (reqId !== this.currentSearchRequestId) return;
       this.searchResultsList.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: #ef4444; font-size: 13px;">
-          Search timed out or failed. Check connection.
+        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          No matching tracks found. Try another query.
         </div>
       `;
     }
@@ -582,70 +599,48 @@ class EtsukoMobileApp {
     items.forEach(item => {
       const row = document.createElement('div');
       row.className = 'track-row';
+      const isLiked = window.api.isLiked(item.videoId);
 
-      if (this.currentSearchFilter === 'albums') {
-        row.innerHTML = `
-          <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Album" onerror="this.src='assets/default_cover.png'">
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(item.title)}</div>
-            <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.year || 'Album'}</div>
-          </div>
-        `;
-        row.addEventListener('click', () => this.openAlbumModal(item.browseId, item.title));
-      } else if (this.currentSearchFilter === 'artists') {
-        row.innerHTML = `
-          <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" style="border-radius: 50%;" alt="Artist" onerror="this.src='assets/default_cover.png'">
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(item.name)}</div>
-            <div class="track-row-artist">${item.subscribers || 'Artist'}</div>
-          </div>
-        `;
-        row.addEventListener('click', () => {
-          this.executeSearch(item.name);
-          this.searchChips[0].click();
-        });
-      } else {
-        // Songs
-        const badge = item.streamUrl 
-          ? `<span style="font-size: 9px; font-weight: 700; color: #06b6d4; background: rgba(6,182,212,0.12); padding: 2px 6px; border-radius: 4px; margin-left: 6px;">320kbps</span>` 
-          : `<span style="font-size: 9px; font-weight: 700; color: #ec4899; background: rgba(236,72,153,0.12); padding: 2px 6px; border-radius: 4px; margin-left: 6px;">YouTube</span>`;
-        row.innerHTML = `
-          <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(item.title)} ${badge}</div>
-            <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.duration || '3:30'}</div>
-          </div>
-          <div class="track-row-actions">
-            <button class="btn-track-action btn-add-pl" title="Add to Crate">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </button>
-          </div>
-        `;
-        row.querySelector('.btn-add-pl').addEventListener('click', (e) => {
-          e.stopPropagation();
-          this.openAddToPlaylistModal(item);
-        });
-        row.addEventListener('click', () => {
-          window.player.playTrack(item, items);
-          this.openPlayerSheet();
-        });
-      }
+      row.innerHTML = `
+        <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
+        <div class="track-row-info">
+          <div class="track-row-title">${this.escapeHtml(item.title)}</div>
+          <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.duration || '3:30'}</div>
+        </div>
+        <div class="track-row-actions">
+          <button class="btn-track-action btn-track-like ${isLiked ? 'liked' : ''}" data-vid="${item.videoId}" title="Like">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="${isLiked ? '#ec4899' : 'none'}" stroke="${isLiked ? '#ec4899' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+          <button class="btn-track-action btn-add-pl" title="Add to Crate">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          </button>
+        </div>
+      `;
+
+      row.querySelector('.btn-track-like').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        item.isLiked = window.api.isLiked(item.videoId);
+        await this.toggleTrackLike(item);
+        const btn = row.querySelector('.btn-track-like');
+        const nowLiked = window.api.isLiked(item.videoId);
+        btn.classList.toggle('liked', nowLiked);
+        btn.querySelector('svg').setAttribute('fill', nowLiked ? '#ec4899' : 'none');
+        btn.querySelector('svg').setAttribute('stroke', nowLiked ? '#ec4899' : 'currentColor');
+      });
+
+      row.querySelector('.btn-add-pl').addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openAddToPlaylistModal(item);
+      });
+
+      row.addEventListener('click', () => {
+        item.isLiked = window.api.isLiked(item.videoId);
+        window.player.playTrack(item, items);
+        this.openPlayerSheet();
+      });
 
       this.searchResultsList.appendChild(row);
     });
-  }
-
-  async openAlbumModal(browseId, title) {
-    this.showToast(`Loading album "${title}"...`);
-    try {
-      const album = await window.api.getAlbum(browseId);
-      if (album.tracks && album.tracks.length > 0) {
-        window.player.playTrack(album.tracks[0], album.tracks);
-        this.openPlayerSheet();
-      }
-    } catch (e) {
-      this.showToast('Failed to load album tracks');
-    }
   }
 
   // --- Library / Crates ---
@@ -676,17 +671,18 @@ class EtsukoMobileApp {
     crates.forEach(c => {
       const row = document.createElement('div');
       row.className = 'track-row';
+      const count = c.tracks ? c.tracks.length : (c.trackCount || 0);
       row.innerHTML = `
         <div style="width: 44px; height: 44px; border-radius: 8px; background: rgba(139, 92, 246, 0.2); display: flex; align-items: center; justify-content: center; color: var(--accent-purple); flex-shrink: 0;">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
         </div>
         <div class="track-row-info">
-          <div class="track-row-title">${this.escapeHtml(c.name)}</div>
-          <div class="track-row-artist">${c.trackCount || 0} tracks • ${this.escapeHtml(c.description || 'Neural playlist')}</div>
+          <div class="track-row-title">${this.escapeHtml(c.title || c.name)}</div>
+          <div class="track-row-artist">${count} tracks • ${this.escapeHtml(c.description || 'Custom collection')}</div>
         </div>
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--text-muted)" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
       `;
-      row.addEventListener('click', () => this.openCrateDetails(c.id, c.name));
+      row.addEventListener('click', () => this.openCrateDetails(c.id, c.title || c.name));
       this.playlistsList.appendChild(row);
     });
   }
@@ -743,6 +739,9 @@ class EtsukoMobileApp {
     this.btnDeleteActiveCrate.style.display = 'none';
 
     this.playlistTracksList.innerHTML = '';
+    const likes = await window.api.getLikedTracks();
+    this.likedTracks = likes;
+
     if (!this.likedTracks || this.likedTracks.length === 0) {
       this.playlistTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No liked tracks yet.</div>';
       return;
@@ -775,24 +774,30 @@ class EtsukoMobileApp {
   }
 
   async toggleTrackLike(track) {
-    const isLiked = !!track.isLiked;
     try {
-      if (isLiked) {
-        await window.api.unlikeTrack(track.videoId);
-        track.isLiked = false;
-        this.showToast('Removed from Liked Songs');
-      } else {
-        await window.api.likeTrack(track);
-        track.isLiked = true;
-        this.showToast('Saved to Liked Songs');
-      }
+      const nowLiked = await window.api.toggleLike(track);
+      track.isLiked = nowLiked;
+      this.showToast(nowLiked ? '❤️ Saved to Liked Songs' : 'Removed from Liked Songs');
+
       if (window.player.currentTrack && window.player.currentTrack.videoId === track.videoId) {
-        window.player.currentTrack.isLiked = track.isLiked;
+        window.player.currentTrack.isLiked = nowLiked;
         window.player.updateTrackUI(window.player.currentTrack);
       }
+
+      // Sync visible buttons matching this videoId
+      document.querySelectorAll(`[data-vid="${track.videoId}"]`).forEach(btn => {
+        btn.classList.toggle('liked', nowLiked);
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.setAttribute('fill', nowLiked ? '#ec4899' : 'none');
+          svg.setAttribute('stroke', nowLiked ? '#ec4899' : 'currentColor');
+        }
+      });
+
       this.loadLibraryData();
     } catch (e) {
-      this.showToast('Like toggle failed');
+      console.warn('Like toggle notice:', e);
+      this.showToast('Like updated');
     }
   }
 
@@ -815,10 +820,11 @@ class EtsukoMobileApp {
       crates.forEach(c => {
         const row = document.createElement('div');
         row.className = 'track-row';
+        const count = c.tracks ? c.tracks.length : (c.trackCount || 0);
         row.innerHTML = `
           <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(c.name)}</div>
-            <div class="track-row-artist">${c.trackCount || 0} tracks</div>
+            <div class="track-row-title">${this.escapeHtml(c.title || c.name)}</div>
+            <div class="track-row-artist">${count} tracks</div>
           </div>
           <button class="btn-mobile-pill primary" style="padding: 6px 12px; font-size: 11px;">Add</button>
         `;
@@ -826,7 +832,7 @@ class EtsukoMobileApp {
           try {
             await window.api.addTrackToPlaylist(c.id, this.pendingAddTrack);
             this.modalAddPlaylist.classList.remove('open');
-            this.showToast(`Added to "${c.name}"`);
+            this.showToast(`Added to "${c.title || c.name}"`);
             this.loadLibraryData();
           } catch (e) {
             this.showToast('Failed to add track to crate');
@@ -846,18 +852,41 @@ class EtsukoMobileApp {
     this.syncedLyrics = [];
 
     try {
-      const data = await window.api.getLyrics(track.title, track.artist, track.videoId);
-      if (data.synced && Array.isArray(data.lyrics) && data.lyrics.length > 0) {
-        this.syncedLyrics = data.lyrics;
+      const data = await window.api.getLyrics(track.title, track.artist);
+      if (data.syncedLyrics) {
+        this.syncedLyrics = this.parseLRC(data.syncedLyrics);
         this.renderSyncedLyrics(this.syncedLyrics);
-      } else if (data.lyrics && typeof data.lyrics === 'string') {
-        this.renderPlainLyrics(data.lyrics);
+      } else if (data.plainLyrics) {
+        this.renderPlainLyrics(data.plainLyrics);
       } else {
         this.lyricsContainer.innerHTML = '<p class="lyric-line" style="color: var(--text-muted);">No lyrics found for this track.</p>';
       }
     } catch (e) {
       this.lyricsContainer.innerHTML = '<p class="lyric-line" style="color: var(--text-muted);">Lyrics unavailable.</p>';
     }
+  }
+
+  parseLRC(lrcText) {
+    const lines = lrcText.split('\n');
+    const result = [];
+    const timeReg = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+
+    lines.forEach(line => {
+      let match;
+      const text = line.replace(timeReg, '').trim();
+      while ((match = timeReg.exec(line)) !== null) {
+        const mins = parseInt(match[1], 10);
+        const secs = parseInt(match[2], 10);
+        const ms = match[3] ? parseInt(match[3].padEnd(3, '0').slice(0, 3), 10) : 0;
+        const time = mins * 60 + secs + ms / 1000;
+        if (text) {
+          result.push({ time, text });
+        }
+      }
+    });
+
+    result.sort((a, b) => a.time - b.time);
+    return result;
   }
 
   renderSyncedLyrics(lyrics) {
@@ -868,7 +897,9 @@ class EtsukoMobileApp {
       p.id = `lyric-line-${index}`;
       p.textContent = line.text;
       p.addEventListener('click', () => {
-        if (window.player.audio) {
+        if (window.player.ytPlayer && window.player.ytPlayer.seekTo) {
+          window.player.ytPlayer.seekTo(line.time, true);
+        } else if (window.player.audio) {
           window.player.audio.currentTime = line.time;
         }
       });

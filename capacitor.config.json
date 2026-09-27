@@ -5,7 +5,13 @@
   "bundledWebRuntime": false,
   "server": {
     "cleartext": true,
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "hostname": "etsuko.app"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
   },
   "android": {
     "allowMixedContent": true

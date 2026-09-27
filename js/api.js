@@ -1,5 +1,5 @@
 // Etsuko Mobile Neural API Engine
-// Pure YouTube Music Catalog + Direct Cloud Audio Streaming
+// Pure YouTube Music Catalog & Local Persistent Library
 
 const DEFAULT_TRENDING_TRACKS = [
   {
@@ -51,22 +51,6 @@ const DEFAULT_TRENDING_TRACKS = [
     thumbnail: "https://yt3.googleusercontent.com/8qk3C_zpd2FXHVN8BpMBFL6h9J5BlKlbcKOlvDMvIgBWBsAblDoTjU98RGbFH9DxtnN1X5zRzc9sSvWr=w544-h544-l90-rj"
   },
   {
-    videoId: "4EQkYVtE-28",
-    title: "Circles",
-    artist: "Post Malone",
-    album: "Hollywood's Bleeding",
-    duration: "3:36",
-    thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj"
-  },
-  {
-    videoId: "OsfAnsMY21M",
-    title: "Levitating",
-    artist: "Dua Lipa",
-    album: "Future Nostalgia",
-    duration: "3:24",
-    thumbnail: "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj"
-  },
-  {
     videoId: "DlFXDl_ROAM",
     title: "Die With A Smile",
     artist: "Lady Gaga, Bruno Mars",
@@ -83,6 +67,22 @@ const DEFAULT_TRENDING_TRACKS = [
     thumbnail: "https://yt3.googleusercontent.com/eBvJuWpjg0Mx8DBa5WIhCzEopXyMnxkjWSU895BDGjTpNeqrliLrv3zGqNNuCUoXL1EkEAr5VQ3cx2pW=w544-h544-l90-rj"
   },
   {
+    videoId: "4EQkYVtE-28",
+    title: "Circles",
+    artist: "Post Malone",
+    album: "Hollywood's Bleeding",
+    duration: "3:36",
+    thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj"
+  },
+  {
+    videoId: "OsfAnsMY21M",
+    title: "Levitating",
+    artist: "Dua Lipa",
+    album: "Future Nostalgia",
+    duration: "3:24",
+    thumbnail: "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj"
+  },
+  {
     videoId: "aHmg0jsmNhg",
     title: "vampire",
     artist: "Olivia Rodrigo",
@@ -97,83 +97,29 @@ const DEFAULT_TRENDING_TRACKS = [
     album: "Lover",
     duration: "2:59",
     thumbnail: "https://yt3.googleusercontent.com/OhxDTHQOQzSrcdgH9hzqzp1v22GYDE-QKnkryvCeq4ddx-3K3_c8oDXN0E6NvHlMn1q4XV59aHr0oL4f=w544-h544-l90-rj"
-  },
-  {
-    videoId: "AdEKgwUqPKI",
-    title: "Kill Bill",
-    artist: "SZA",
-    album: "SOS",
-    duration: "2:34",
-    thumbnail: "https://yt3.googleusercontent.com/tw5VGXEsehs9OpwnpbubqGp_3Pq9so7QShdyJSlCpXeI2mLRvqRqLNbA7EC4zcNWrFE0_lj9HxpZ23v6=w544-h544-l90-rj"
-  },
-  {
-    videoId: "FrsOnNxIrg8",
-    title: "God's Plan",
-    artist: "Drake",
-    album: "Scorpion",
-    duration: "3:19",
-    thumbnail: "https://yt3.googleusercontent.com/9Oe4acEXgmAlCKgcgI6JlSXi2Tj30u6anzvfGBrunGO-fLhBTgzy-ei1ugPJpZDD5ArKFod9H4RTA5g0=w544-h544-l90-rj"
-  },
-  {
-    videoId: "BSTsnWoslP4",
-    title: "Bohemian Rhapsody",
-    artist: "Queen",
-    album: "A Night at the Opera",
-    duration: "5:55",
-    thumbnail: "https://yt3.googleusercontent.com/nLn1gxvYiZqzXOY9HyUXVXbFtmR5nhY8sDpbvBT1aw-Ejjsz__Nz90sZoc4nZgff2sf8WjowuVRVBlBTww=w544-h544-l90-rj"
-  },
-  {
-    videoId: "2NiyrtYegso",
-    title: "Wake Me Up",
-    artist: "Avicii",
-    album: "True",
-    duration: "4:08",
-    thumbnail: "https://yt3.googleusercontent.com/XincHWEjkXhpbavoQEHWRbTcVdvHsujjr7OAw-73KUCILFgjLdevPW8vkoaRMibnwkTtGWkEDyKbuNeK=w544-h544-l90-rj"
   }
 ];
 
 const DEFAULT_CATEGORIES = [
-  { id: "pop", name: "Pop Hits", query: "Top Pop Hits", color: "#a855f7", colorEnd: "#581c87", image: "assets/genres/pop.jpg", sub: "Global Chart Toppers" },
-  { id: "hiphop", name: "Hip-Hop & Rap", query: "Hip Hop Hits", color: "#d97706", colorEnd: "#78350f", image: "assets/genres/hiphop.jpg", sub: "Beats, Bars & Traps" },
-  { id: "lofi", name: "Lo-Fi Beats", query: "Lo-Fi Chill Study Beats", color: "#0ea5e9", colorEnd: "#0c4a6e", image: "assets/genres/lofi.jpg", sub: "Deep Chill & Study" },
-  { id: "rock", name: "Rock Classics", query: "Rock Classics Greatest Hits", color: "#ef4444", colorEnd: "#7f1d1d", image: "assets/genres/rock.jpg", sub: "Riffs & Heavy Anthems" },
-  { id: "electronic", name: "EDM & Dance", query: "EDM Dance Club Hits", color: "#06b6d4", colorEnd: "#164e63", image: "assets/genres/edm.jpg", sub: "Club Drops & Synths" },
-  { id: "anime", name: "Anime & J-Pop", query: "Anime Openings OST", color: "#f43f5e", colorEnd: "#881337", image: "assets/genres/anime.jpg", sub: "OSTs & J-Rock Energy" },
-  { id: "gaming", name: "Gaming Soundtrack", query: "Cyberpunk Gaming Soundtrack", color: "#8b5cf6", colorEnd: "#3b0764", image: "assets/genres/gaming.jpg", sub: "Cyberpunk & Epic Scores" },
-  { id: "rnb", name: "R&B / Soul", query: "R&B Soul Night", color: "#f97316", colorEnd: "#7c2d12", image: "assets/genres/rnb.jpg", sub: "Smooth Night Grooves" }
+  { id: "trending", name: "🔥 Global Hits", query: "Top Global Hits" },
+  { id: "phonk", name: "⚡ Phonk & Drift", query: "Brazilian Phonk Drift" },
+  { id: "lofi", name: "☕ Lo-Fi Study", query: "Lofi Chill Study Beats" },
+  { id: "synth", name: "🚗 Late Night Synth", query: "Synthwave Retro Electro" },
+  { id: "gaming", name: "🎮 Deep Focus", query: "Gaming Focus Electronic" },
+  { id: "rock", name: "🎸 Rock & Metal", query: "Modern Rock Hardcore" }
 ];
 
-const YOUTUBE_SEARCH_MIRRORS = [
+const PIPED_SEARCH_MIRRORS = [
   'https://api.piped.private.coffee',
-  'https://pipedapi.tokhmi.xyz',
-  'https://pipedapi.leptons.xyz'
+  'https://pipedapi.ducks.party'
 ];
 
 class EtsukoAPI {
   constructor() {
-    this.baseUrl = this.determineBaseUrl();
+    this.baseUrl = '';
     this.localLikesKey = 'etsuko_library_likes_v1';
     this.localCratesKey = 'etsuko_library_crates_v1';
     this.initLocalStorage();
-  }
-
-  determineBaseUrl() {
-    if (window.location.protocol.startsWith('http') && !window.location.origin.includes('localhost:')) {
-      return window.location.origin;
-    }
-    const saved = localStorage.getItem('etsuko_custom_server');
-    return saved ? saved.trim().replace(/\/+$/, '') : '';
-  }
-
-  setServerUrl(url) {
-    let clean = url.trim().replace(/\/+$/, '');
-    if (clean && !clean.startsWith('http')) clean = 'http://' + clean;
-    this.baseUrl = clean;
-    if (clean) {
-      localStorage.setItem('etsuko_custom_server', clean);
-    } else {
-      localStorage.removeItem('etsuko_custom_server');
-    }
   }
 
   initLocalStorage() {
@@ -192,91 +138,139 @@ class EtsukoAPI {
     }
   }
 
-  // Unified HTTP Request: uses Native CapacitorHttp on Android/iOS when available to bypass CORS
-  async unifiedFetch(url, options = {}) {
-    const isNative = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
-    const capHttp = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.CapacitorHttp;
-
-    if (isNative && capHttp) {
-      try {
-        const res = await capHttp.request({
-          url: url,
-          method: options.method || 'GET',
-          headers: options.headers || {},
-          data: options.body ? (typeof options.body === 'string' ? JSON.parse(options.body) : options.body) : undefined
-        });
-        return res.data;
-      } catch (err) {
-        console.warn('[API] CapacitorHttp error, falling back to standard fetch:', err);
-      }
-    }
-
-    const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    return await res.json();
-  }
-
   // --- Home Feed ---
   async getHomeFeed() {
-    // 1. If custom server is explicitly configured, attempt to pull from desktop server
-    if (this.baseUrl) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2000);
-        const res = await fetch(`${this.baseUrl}/api/home`, { signal: controller.signal });
-        clearTimeout(timeoutId);
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.trending && data.trending.length > 0) {
-            return {
-              trending: data.trending.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
-              categories: data.categories || DEFAULT_CATEGORIES
-            };
-          }
-        }
-      } catch (err) {
-        console.warn('[API] Custom server unreachable, using standalone feed:', err.message);
-      }
-    }
-
-    // 2. Return instant curated baseline feed
-    const baselineTrending = DEFAULT_TRENDING_TRACKS.map(t => ({
+    const trending = DEFAULT_TRENDING_TRACKS.map(t => ({
       ...t,
       isLiked: this.isLiked(t.videoId)
     }));
-
     return {
-      trending: baselineTrending,
+      trending: trending,
       categories: DEFAULT_CATEGORIES
     };
   }
 
-  // --- Fast YouTube Music Search Engine ---
+  // --- Pure YouTube Music Search Engine ---
   async search(query, filter = 'songs', signal = null) {
     if (!query || !query.trim()) return { results: [] };
     const q = query.trim();
 
-    // 1. Custom server prioritized if configured
-    if (this.baseUrl) {
-      try {
-        const params = new URLSearchParams({ q: q, filter: filter });
-        const res = await fetch(`${this.baseUrl}/api/search?${params.toString()}`, { signal });
-        if (res.ok) {
-          const data = await res.json();
-          if (data && data.results && data.results.length > 0) {
-            return {
-              results: data.results.map(r => ({ ...r, isLiked: this.isLiked(r.videoId) }))
-            };
-          }
-        }
-      } catch (e) {
-        if (e.name === 'AbortError') throw e;
+    // 1. Direct YouTube Music InnerTube Search (WEB_REMIX client)
+    try {
+      const ytResults = await this.searchInnerTube(q, signal);
+      if (ytResults && ytResults.length > 0) {
+        return {
+          results: ytResults.map(r => ({
+            ...r,
+            isLiked: this.isLiked(r.videoId)
+          }))
+        };
       }
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      console.warn('[Search] InnerTube notice:', err.message);
     }
 
-    // 2. Standalone YouTube Music Search (Concurrent Fast Race across mirrors)
-    const ytPromises = YOUTUBE_SEARCH_MIRRORS.map(async mirror => {
-      const url = `${mirror}/search?q=${encodeURIComponent(q)}&filter=music_songs`;
+    // 2. Piped Mirrors Fallback Race
+    try {
+      const pipedResults = await this.searchPiped(q, signal);
+      if (pipedResults && pipedResults.length > 0) {
+        return {
+          results: pipedResults.map(r => ({
+            ...r,
+            isLiked: this.isLiked(r.videoId)
+          }))
+        };
+      }
+    } catch (err) {
+      if (err.name === 'AbortError') throw err;
+      console.warn('[Search] Piped fallback notice:', err.message);
+    }
+
+    return { results: [] };
+  }
+
+  async searchInnerTube(query, signal = null) {
+    const res = await fetch('https://music.youtube.com/youtubei/v1/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36'
+      },
+      body: JSON.stringify({
+        context: {
+          client: {
+            clientName: 'WEB_REMIX',
+            clientVersion: '1.20240101.01.00'
+          }
+        },
+        query: query
+      }),
+      signal: signal || AbortSignal.timeout(4500)
+    });
+
+    if (!res.ok) throw new Error(`InnerTube HTTP ${res.status}`);
+    const data = await res.json();
+    const sections = data?.contents?.tabbedSearchResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.sectionListRenderer?.contents || [];
+
+    const results = [];
+    const seen = new Set();
+
+    for (const s of sections) {
+      // Top result card
+      if (s.musicCardShelfRenderer) {
+        const c = s.musicCardShelfRenderer;
+        const title = c.title?.runs?.[0]?.text;
+        const vid = c.title?.runs?.[0]?.navigationEndpoint?.watchEndpoint?.videoId || c.onTap?.watchEndpoint?.videoId;
+        const artist = (c.subtitle?.runs || []).map(r => r.text).join('').replace(/^[•\s]+|[•\s]+$/g, '');
+        const thumb = c.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
+        if (vid && title && !seen.has(vid)) {
+          seen.add(vid);
+          results.push({
+            videoId: vid,
+            title: title,
+            artist: artist || 'YouTube Music',
+            album: 'Official Release',
+            duration: '3:30',
+            thumbnail: thumb || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+            source: 'youtube'
+          });
+        }
+      }
+
+      // Track rows in shelf or section
+      const items = s.itemSectionRenderer?.contents || s.musicShelfRenderer?.contents || [];
+      for (const item of items) {
+        const r = item.musicResponsiveListItemRenderer;
+        if (!r) continue;
+        const cols = r.flexColumns || [];
+        const title = cols[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.text;
+        const vid = cols[0]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs?.[0]?.navigationEndpoint?.watchEndpoint?.videoId
+          || r.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId
+          || r.playlistItemData?.videoId;
+        const artist = (cols[1]?.musicResponsiveListItemFlexColumnRenderer?.text?.runs || []).map(x => x.text).join('').replace(/^[•\s]+|[•\s]+$/g, '');
+        const thumb = r.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails?.slice(-1)[0]?.url;
+
+        if (vid && title && !seen.has(vid)) {
+          seen.add(vid);
+          results.push({
+            videoId: vid,
+            title: title,
+            artist: artist || 'YouTube Artist',
+            album: 'YouTube Music Master',
+            duration: '3:30',
+            thumbnail: thumb || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+            source: 'youtube'
+          });
+        }
+      }
+    }
+    return results;
+  }
+
+  async searchPiped(query, signal = null) {
+    const promises = PIPED_SEARCH_MIRRORS.map(async mirror => {
+      const url = `${mirror}/search?q=${encodeURIComponent(query)}&filter=music_songs`;
       const res = await fetch(url, { signal: signal || AbortSignal.timeout(3500) });
       if (!res.ok) throw new Error(`${mirror} status ${res.status}`);
       const data = await res.json();
@@ -284,122 +278,57 @@ class EtsukoAPI {
       return data.items;
     });
 
-    try {
-      const items = await Promise.any(ytPromises);
-      const results = [];
-      const seen = new Set();
+    const items = await Promise.any(promises);
+    const results = [];
+    const seen = new Set();
 
-      items.forEach(item => {
-        const vid = item.url ? item.url.replace('/watch?v=', '') : null;
-        if (vid && !seen.has(vid)) {
-          seen.add(vid);
-          const durSec = parseInt(item.duration, 10) || 210;
-          const mins = Math.floor(durSec / 60);
-          const secs = durSec % 60;
-
-          results.push({
-            videoId: vid,
-            title: item.title || 'Unknown Track',
-            artist: item.uploaderName || 'YouTube Artist',
-            album: 'YouTube Music Master',
-            duration: `${mins}:${String(secs).padStart(2, '0')}`,
-            thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
-            source: 'youtube',
-            isLiked: this.isLiked(vid)
-          });
-        }
-      });
-
-      if (results.length > 0) {
-        return { results };
-      }
-    } catch (err) {
-      console.warn('[Search] Piped race note:', err.message);
-    }
-
-    // 3. Fallback: Query JioSaavn if YouTube mirrors are unreachable
-    try {
-      const saavnUrl = `https://jiosaavn-api-2.vercel.app/search/songs?query=${encodeURIComponent(q)}&limit=25`;
-      const saavnData = await this.unifiedFetch(saavnUrl, { signal });
-      const items = saavnData?.results || (Array.isArray(saavnData) ? saavnData : []);
-      const results = [];
-
-      items.forEach(item => {
-        const id = item.id || `s_${Math.random()}`;
+    items.forEach(item => {
+      const vid = item.url ? item.url.replace('/watch?v=', '') : null;
+      if (vid && !seen.has(vid)) {
+        seen.add(vid);
         const durSec = parseInt(item.duration, 10) || 210;
         const mins = Math.floor(durSec / 60);
         const secs = durSec % 60;
 
-        const streamUrl = (item.downloadUrl && (
-          item.downloadUrl.find(d => d.quality === '320kbps')?.link ||
-          item.downloadUrl.find(d => d.quality === '160kbps')?.link ||
-          item.downloadUrl[item.downloadUrl.length - 1]?.link
-        )) || item.url || '';
-
-        const thumb = (item.image && (
-          item.image[2]?.link || item.image[1]?.link || item.image[0]?.link
-        )) || 'assets/default_cover.png';
-
         results.push({
-          videoId: id,
-          title: item.name || item.title || 'Unknown Title',
-          artist: item.primaryArtists || item.artist || 'Unknown Artist',
-          album: item.album?.name || 'Studio Master',
+          videoId: vid,
+          title: item.title || 'Unknown Track',
+          artist: item.uploaderName || 'YouTube Artist',
+          album: 'YouTube Music Master',
           duration: `${mins}:${String(secs).padStart(2, '0')}`,
-          thumbnail: thumb,
-          streamUrl: streamUrl,
-          source: 'saavn',
-          isLiked: this.isLiked(id)
+          thumbnail: item.thumbnail || `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`,
+          source: 'youtube'
         });
-      });
+      }
+    });
 
-      return { results };
-    } catch (err2) {
-      console.warn('[Search] JioSaavn fallback note:', err2.message);
-    }
-
-    return { results: [] };
+    return results;
   }
 
-  // --- Audio Stream Resolver ---
-  getStreamUrl(videoId) {
-    if (this.baseUrl) {
-      return `${this.baseUrl}/api/proxy_stream/${videoId}`;
-    }
-    return '';
-  }
-
-  // --- Lyrics Engine (LRCLIB synced lyrics) ---
-  async getLyrics(title, artist, videoId = '') {
-    if (this.baseUrl) {
-      try {
-        const params = new URLSearchParams({ title, artist, video_id: videoId });
-        const res = await fetch(`${this.baseUrl}/api/lyrics?${params.toString()}`);
-        if (res.ok) return await res.json();
-      } catch (e) {}
-    }
-
-    // Standalone direct LRCLIB
+  // --- Synced Lyrics (LRCLIB) ---
+  async getLyrics(title, artist = '') {
     try {
       const cleanTitle = title.replace(/\([^)]*\)|\[[^\]]*\]/g, '').trim();
       const cleanArtist = artist.split(/[,&feat•]/i)[0].trim();
       const lrcUrl = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanTitle)}&artist_name=${encodeURIComponent(cleanArtist)}`;
-      const data = await this.unifiedFetch(lrcUrl);
-
-      if (data && (data.syncedLyrics || data.plainLyrics)) {
-        return {
-          syncedLyrics: data.syncedLyrics || '',
-          plainLyrics: data.plainLyrics || '',
-          source: 'LRCLIB'
-        };
+      const res = await fetch(lrcUrl, { signal: AbortSignal.timeout(3500) });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && (data.syncedLyrics || data.plainLyrics)) {
+          return {
+            syncedLyrics: data.syncedLyrics || '',
+            plainLyrics: data.plainLyrics || '',
+            source: 'LRCLIB'
+          };
+        }
       }
     } catch (e) {
-      console.warn('[API] Lyrics fetch error:', e.message);
+      console.warn('[API] Lyrics notice:', e.message);
     }
 
     return {
       syncedLyrics: '',
-      plainLyrics: 'No synchronized neural lyrics available for this transmission.',
+      plainLyrics: 'No synchronized neural lyrics available for this track.',
       source: 'offline'
     };
   }
@@ -424,34 +353,36 @@ class EtsukoAPI {
     }
   }
 
-  async toggleLike(track) {
+  async likeTrack(track) {
     const raw = localStorage.getItem(this.localLikesKey);
     let likes = raw ? JSON.parse(raw) : [];
-    const existsIndex = likes.findIndex(t => t.videoId === track.videoId);
-    let nowLiked = false;
-
-    if (existsIndex >= 0) {
-      likes.splice(existsIndex, 1);
-      nowLiked = false;
-    } else {
+    if (!likes.some(t => t.videoId === track.videoId)) {
       likes.unshift({ ...track, isLiked: true });
-      nowLiked = true;
+      localStorage.setItem(this.localLikesKey, JSON.stringify(likes));
     }
-
-    localStorage.setItem(this.localLikesKey, JSON.stringify(likes));
-
-    // Async sync to custom server if available
-    if (this.baseUrl) {
-      fetch(`${this.baseUrl}/api/library/like`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ video_id: track.videoId, track: track })
-      }).catch(() => {});
-    }
-
-    return nowLiked;
+    return true;
   }
 
+  async unlikeTrack(videoId) {
+    const raw = localStorage.getItem(this.localLikesKey);
+    let likes = raw ? JSON.parse(raw) : [];
+    likes = likes.filter(t => t.videoId !== videoId);
+    localStorage.setItem(this.localLikesKey, JSON.stringify(likes));
+    return false;
+  }
+
+  async toggleLike(track) {
+    const currentlyLiked = this.isLiked(track.videoId);
+    if (currentlyLiked) {
+      await this.unlikeTrack(track.videoId);
+      return false;
+    } else {
+      await this.likeTrack(track);
+      return true;
+    }
+  }
+
+  // --- Crates / Playlists ---
   async getPlaylists() {
     try {
       const raw = localStorage.getItem(this.localCratesKey);
@@ -459,6 +390,11 @@ class EtsukoAPI {
     } catch (e) {
       return [];
     }
+  }
+
+  async getPlaylist(id) {
+    const crates = await this.getPlaylists();
+    return crates.find(c => c.id === id) || { id, title: 'Crate', tracks: [] };
   }
 
   async createPlaylist(name, description = '') {
@@ -481,12 +417,23 @@ class EtsukoAPI {
     return true;
   }
 
-  async addTrackToPlaylist(crateId, track) {
+  async addTrackToPlaylist(playlistId, track) {
     const crates = await this.getPlaylists();
-    const target = crates.find(c => c.id === crateId);
-    if (!target) throw new Error('Playlist not found');
-    if (!target.tracks.some(t => t.videoId === track.videoId)) {
-      target.tracks.unshift(track);
+    const crate = crates.find(c => c.id === playlistId);
+    if (crate) {
+      if (!crate.tracks.some(t => t.videoId === track.videoId)) {
+        crate.tracks.push(track);
+        localStorage.setItem(this.localCratesKey, JSON.stringify(crates));
+      }
+    }
+    return true;
+  }
+
+  async removeTrackFromPlaylist(playlistId, videoId) {
+    const crates = await this.getPlaylists();
+    const crate = crates.find(c => c.id === playlistId);
+    if (crate) {
+      crate.tracks = crate.tracks.filter(t => t.videoId !== videoId);
       localStorage.setItem(this.localCratesKey, JSON.stringify(crates));
     }
     return true;

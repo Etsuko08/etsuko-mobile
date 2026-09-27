@@ -24,10 +24,7 @@
         <span class="brand-text">ETSUKO</span>
       </div>
       <div class="top-actions">
-        <button class="btn-icon-top" id="btn-open-settings" title="Server & Connection Settings">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        </button>
-        <div class="user-avatar-btn" id="btn-open-profile">
+        <div class="user-avatar-btn" id="btn-open-profile" title="Profile">
           <img src="assets/default_user.png" id="top-avatar-img" alt="User">
         </div>
       </div>
@@ -290,24 +287,7 @@
       </div>
     </div>
 
-    <!-- 3. Server Connection & Settings Modal -->
-    <div class="mobile-modal-backdrop" id="modal-settings">
-      <div class="mobile-modal-box">
-        <div class="modal-header-row">
-          <span class="modal-title">Server & Network</span>
-          <button class="btn-icon-top" id="btn-close-settings">&times;</button>
-        </div>
-        <p style="font-size: 12.5px; color: var(--text-sub); margin-bottom: 12px;">
-          If streaming from your phone over Wi-Fi, enter your PC's IP address:
-        </p>
-        <input type="text" id="input-server-url" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); margin-bottom: 14px;" placeholder="http://192.168.1.X:52331">
-        <button class="btn-mobile-pill primary" id="btn-save-server-url" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px;">
-          Connect to Server
-        </button>
-      </div>
-    </div>
-
-    <!-- 4. User Profile Modal -->
+    <!-- 3. User Profile Modal -->
     <div class="mobile-modal-backdrop" id="modal-profile">
       <div class="mobile-modal-box">
         <div class="modal-header-row">
@@ -343,10 +323,6 @@
               <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Saved Crates</div>
             </div>
           </div>
-          <button class="btn-mobile-pill secondary" id="btn-profile-server-settings" style="width: 100%; justify-content: center; padding: 10px; border-radius: 10px; margin-top: 4px; font-size: 12px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            Server & Connection Settings
-          </button>
           <button class="btn-mobile-pill primary" id="btn-save-profile" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px; margin-top: 4px;">
             Save Profile
           </button>

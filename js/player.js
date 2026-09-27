@@ -87,7 +87,7 @@ class MobilePlayer {
           this.ytPlayer = new window.YT.Player('yt-player', {
             height: '100%',
             width: '100%',
-            host: 'https://www.youtube-nocookie.com',
+            host: 'https://www.youtube.com',
             playerVars: {
               'autoplay': 1,
               'controls': 1,
@@ -96,8 +96,7 @@ class MobilePlayer {
               'playsinline': 1,
               'rel': 0,
               'modestbranding': 1,
-              'enablejsapi': 1,
-              'origin': window.location.origin
+              'enablejsapi': 1
             },
             events: {
               'onReady': () => {
@@ -156,10 +155,14 @@ class MobilePlayer {
 
   onYTError(e) {
     console.warn('[Etsuko] YouTube Player error code:', e.data);
+    if (this._errorThrottleTimer) return;
+    this._errorThrottleTimer = setTimeout(() => { this._errorThrottleTimer = null; }, 2000);
     if (window.app && window.app.showToast) {
-      window.app.showToast('Transmission restricted by owner, skipping to next...');
+      window.app.showToast('Playback restricted, trying next track...');
     }
-    setTimeout(() => this.next(), 800);
+    setTimeout(() => {
+      if (!this.userPaused) this.next();
+    }, 1200);
   }
 
   startProgressTicker() {
