@@ -318,7 +318,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         if (isMediaPlaying && bridge != null && bridge.getWebView() != null) {
             bridge.getWebView().resumeTimers();
@@ -326,7 +326,7 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
-    protected void onStop() {
+    public void onStop() {
         super.onStop();
         if (isMediaPlaying && bridge != null && bridge.getWebView() != null) {
             bridge.getWebView().resumeTimers();
