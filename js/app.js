@@ -14,6 +14,7 @@ class EtsukoMobileApp {
     this.initPWA();
     this.loadHomeFeed();
     this.loadLibraryData();
+    this.loadUserProfileOnStartup();
   }
 
   initDOM() {
@@ -79,6 +80,22 @@ class EtsukoMobileApp {
 
     // Toast
     this.toast = document.getElementById('mobile-toast');
+
+    // Profile Elements
+    this.btnOpenProfile = document.getElementById('btn-open-profile');
+    this.modalProfile = document.getElementById('modal-profile');
+    this.btnCloseProfile = document.getElementById('btn-close-profile');
+    this.profileModalAvatar = document.getElementById('profile-modal-avatar');
+    this.inputProfileFile = document.getElementById('input-profile-file');
+    this.btnChangeAvatar = document.getElementById('btn-change-avatar');
+    this.btnResetAvatar = document.getElementById('btn-reset-avatar');
+    this.inputProfileName = document.getElementById('input-profile-name');
+    this.inputProfileBio = document.getElementById('input-profile-bio');
+    this.profileLikesCount = document.getElementById('profile-likes-count');
+    this.profileCratesCount = document.getElementById('profile-crates-count');
+    this.btnProfileServerSettings = document.getElementById('btn-profile-server-settings');
+    this.btnSaveProfile = document.getElementById('btn-save-profile');
+    this.topAvatarImg = document.getElementById('top-avatar-img');
   }
 
   bindEvents() {
@@ -261,6 +278,38 @@ class EtsukoMobileApp {
       }
     });
 
+    // Profile Modal Events
+    this.btnOpenProfile?.addEventListener('click', async () => {
+      window.touch.vibrate(12);
+      await this.openProfileModal();
+    });
+    this.btnCloseProfile?.addEventListener('click', () => {
+      this.modalProfile?.classList.remove('open');
+    });
+    this.btnChangeAvatar?.addEventListener('click', () => {
+      this.inputProfileFile?.click();
+    });
+    this.inputProfileFile?.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          if (this.profileModalAvatar) this.profileModalAvatar.src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    this.btnResetAvatar?.addEventListener('click', () => {
+      if (this.profileModalAvatar) this.profileModalAvatar.src = 'assets/default_user.png';
+    });
+    this.btnProfileServerSettings?.addEventListener('click', () => {
+      this.modalProfile?.classList.remove('open');
+      this.btnOpenSettings?.click();
+    });
+    this.btnSaveProfile?.addEventListener('click', () => {
+      this.saveUserProfile();
+    });
+
     // Lyrics Time Sync Event Listener
     window.addEventListener('etsuko:mobile-time-update', (e) => {
       this.syncLyrics(e.detail.currentTime);
@@ -325,6 +374,50 @@ class EtsukoMobileApp {
     }, 2400);
   }
 
+  // --- Profile Methods ---
+  async openProfileModal() {
+    const saved = localStorage.getItem('etsuko_user_profile');
+    const profile = saved ? JSON.parse(saved) : {
+      name: 'Cyber Operator',
+      bio: 'Listening to the grid...',
+      avatar: 'assets/default_user.png'
+    };
+
+    if (this.inputProfileName) this.inputProfileName.value = profile.name || 'Cyber Operator';
+    if (this.inputProfileBio) this.inputProfileBio.value = profile.bio || 'Listening to the grid...';
+    if (this.profileModalAvatar) this.profileModalAvatar.src = profile.avatar || 'assets/default_user.png';
+
+    const likes = await window.api.getLikedTracks();
+    const crates = await window.api.getPlaylists();
+    if (this.profileLikesCount) this.profileLikesCount.textContent = likes.length;
+    if (this.profileCratesCount) this.profileCratesCount.textContent = crates.length;
+
+    this.modalProfile?.classList.add('open');
+  }
+
+  saveUserProfile() {
+    const name = this.inputProfileName ? this.inputProfileName.value.trim() : 'Cyber Operator';
+    const bio = this.inputProfileBio ? this.inputProfileBio.value.trim() : '';
+    const avatar = this.profileModalAvatar ? this.profileModalAvatar.src : 'assets/default_user.png';
+
+    const profile = { name, bio, avatar };
+    localStorage.setItem('etsuko_user_profile', JSON.stringify(profile));
+    if (this.topAvatarImg) this.topAvatarImg.src = avatar;
+
+    this.modalProfile?.classList.remove('open');
+    this.showToast('Profile updated!');
+  }
+
+  loadUserProfileOnStartup() {
+    try {
+      const saved = localStorage.getItem('etsuko_user_profile');
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (p.avatar && this.topAvatarImg) this.topAvatarImg.src = p.avatar;
+      }
+    } catch (e) {}
+  }
+
   // --- Discover Feeds ---
   async loadHomeFeed() {
     try {
@@ -332,14 +425,12 @@ class EtsukoMobileApp {
       this.trendingTracks = data.trending || [];
       this.renderTrendingGrid(this.trendingTracks);
     } catch (e) {
-      this.trendingGrid.innerHTML = `
-        <div style="grid-column: span 2; padding: 20px; text-align: center; color: var(--text-muted);">
-          Could not connect to Etsuko Server.<br>
-          <button class="btn-mobile-pill secondary" onclick="document.getElementById('btn-open-settings').click()" style="margin: 12px auto;">
-            Configure Server IP
-          </button>
-        </div>
-      `;
+      console.warn('[App] Home feed fallback:', e);
+      if (window.api && window.api.getHomeFeed) {
+        const data = await window.api.getHomeFeed();
+        this.trendingTracks = data.trending || [];
+        this.renderTrendingGrid(this.trendingTracks);
+      }
     }
   }
 
@@ -451,11 +542,14 @@ class EtsukoMobileApp {
         });
       } else {
         // Songs
+        const badge = item.streamUrl 
+          ? `<span style="font-size: 9px; font-weight: 700; color: #06b6d4; background: rgba(6,182,212,0.12); padding: 2px 6px; border-radius: 4px; margin-left: 6px;">320kbps</span>` 
+          : `<span style="font-size: 9px; font-weight: 700; color: #ec4899; background: rgba(236,72,153,0.12); padding: 2px 6px; border-radius: 4px; margin-left: 6px;">YouTube</span>`;
         row.innerHTML = `
           <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
           <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(item.title)}</div>
-            <div class="track-row-artist">${this.escapeHtml(item.artist)}</div>
+            <div class="track-row-title">${this.escapeHtml(item.title)} ${badge}</div>
+            <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.duration || '3:30'}</div>
           </div>
           <div class="track-row-actions">
             <button class="btn-track-action btn-add-pl" title="Add to Crate">

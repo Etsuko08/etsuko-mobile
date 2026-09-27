@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Etsuko Mobile — Neural Audio</title>
+  <title>Etsuko</title>
 
   <!-- PWA & Mobile Web App Meta -->
   <link rel="manifest" href="manifest.json">
@@ -22,7 +22,6 @@
       <div class="brand-group">
         <img src="assets/logo.png" alt="Etsuko" class="brand-logo-img" onerror="this.src='assets/default_cover.png'">
         <span class="brand-text">ETSUKO</span>
-        <span class="brand-badge">MOBILE</span>
       </div>
       <div class="top-actions">
         <button class="btn-icon-top" id="btn-open-settings" title="Server & Connection Settings">
@@ -300,14 +299,67 @@
       </div>
     </div>
 
+    <!-- 4. User Profile Modal -->
+    <div class="mobile-modal-backdrop" id="modal-profile">
+      <div class="mobile-modal-box">
+        <div class="modal-header-row">
+          <span class="modal-title">Neural Profile</span>
+          <button class="btn-icon-top" id="btn-close-profile">&times;</button>
+        </div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 16px 0;">
+          <div class="profile-avatar-wrapper" style="position: relative; width: 84px; height: 84px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-magenta); box-shadow: 0 0 20px rgba(236,72,153,0.3);">
+            <img src="assets/default_user.png" id="profile-modal-avatar" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
+          </div>
+          <input type="file" id="input-profile-file" accept="image/*" style="display: none;">
+          <div style="display: flex; gap: 8px;">
+            <button class="btn-mobile-pill secondary" id="btn-change-avatar" style="font-size: 11px; padding: 6px 14px;">Change Avatar</button>
+            <button class="btn-mobile-pill secondary" id="btn-reset-avatar" style="font-size: 11px; padding: 6px 14px;">Reset</button>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Display Name</label>
+            <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Cyber Operator">
+          </div>
+          <div>
+            <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Bio / Status</label>
+            <input type="text" id="input-profile-bio" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Listening to the grid...">
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; text-align: center;">
+              <div id="profile-likes-count" style="font-size: 18px; font-weight: 700; color: var(--accent-magenta);">0</div>
+              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Liked Tracks</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; text-align: center;">
+              <div id="profile-crates-count" style="font-size: 18px; font-weight: 700; color: var(--accent-cyan);">0</div>
+              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Saved Crates</div>
+            </div>
+          </div>
+          <button class="btn-mobile-pill secondary" id="btn-profile-server-settings" style="width: 100%; justify-content: center; padding: 10px; border-radius: 10px; margin-top: 4px; font-size: 12px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 6px;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            Server & Connection Settings
+          </button>
+          <button class="btn-mobile-pill primary" id="btn-save-profile" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px; margin-top: 4px;">
+            Save Profile
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Notification -->
     <div class="mobile-toast" id="mobile-toast"></div>
 
     <!-- Audio Element -->
     <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
+
+    <!-- YouTube Player Background Engine -->
+    <div id="yt-player-container" style="position: absolute; width: 1px; height: 1px; left: -9999px; top: -9999px; opacity: 0; pointer-events: none; overflow: hidden;">
+      <div id="yt-player"></div>
+    </div>
   </div>
 
   <!-- Scripts -->
+  <script src="https://www.youtube.com/iframe_api"></script>
   <script src="js/api.js"></script>
   <script src="js/touch.js"></script>
   <script src="js/player.js"></script>

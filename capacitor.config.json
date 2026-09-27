@@ -1,6 +1,6 @@
 {
   "appId": "com.etsuko.music",
-  "appName": "Etsuko Mobile",
+  "appName": "Etsuko",
   "webDir": "www",
   "bundledWebRuntime": false,
   "server": {

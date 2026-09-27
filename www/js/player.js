@@ -1,10 +1,15 @@
-// Etsuko Mobile Audio Engine
+// Etsuko Mobile Hybrid Audio Engine (HTML5 Audio + YouTube IFrame Engine)
+
 class MobilePlayer {
   constructor() {
     this.audio = document.getElementById('mobile-audio-engine') || new Audio();
     this.audio.setAttribute('playsinline', '');
     this.audio.setAttribute('webkit-playsinline', '');
     this.audio.preload = 'auto';
+
+    this.ytPlayer = null;
+    this.ytReady = false;
+    this.activeEngine = 'audio'; // 'audio' | 'youtube'
 
     this.currentTrack = null;
     this.queue = [];
@@ -19,6 +24,8 @@ class MobilePlayer {
     this.initElements();
     this.initAudioEvents();
     this.initMediaSession();
+    this.initYouTube();
+    this.startProgressTicker();
   }
 
   initElements() {
@@ -71,26 +78,99 @@ class MobilePlayer {
     }
   }
 
+  initYouTube() {
+    const setupYT = () => {
+      if (window.YT && window.YT.Player) {
+        try {
+          this.ytPlayer = new window.YT.Player('yt-player', {
+            height: '1',
+            width: '1',
+            playerVars: {
+              'autoplay': 1,
+              'controls': 0,
+              'disablekb': 1,
+              'fs': 0,
+              'playsinline': 1,
+              'rel': 0
+            },
+            events: {
+              'onReady': () => {
+                this.ytReady = true;
+                console.log('[Etsuko] YouTube Neural Engine connected');
+              },
+              'onStateChange': (e) => this.onYTStateChange(e),
+              'onError': (e) => this.onYTError(e)
+            }
+          });
+        } catch (err) {
+          console.warn('[Etsuko] YouTube init notice:', err);
+        }
+      }
+    };
+
+    if (window.YT && window.YT.Player) {
+      setupYT();
+    } else {
+      window.onYouTubeIframeAPIReady = setupYT;
+    }
+  }
+
+  onYTStateChange(event) {
+    // 1: Playing, 2: Paused, 0: Ended
+    if (event.data === 1) {
+      this.onPlayState(true);
+    } else if (event.data === 2) {
+      this.onPlayState(false);
+    } else if (event.data === 0) {
+      this.onEnded();
+    }
+  }
+
+  onYTError(e) {
+    console.warn('[Etsuko] YouTube Player code:', e.data);
+    // Auto proceed on unplayable item
+    setTimeout(() => this.next(), 1000);
+  }
+
+  startProgressTicker() {
+    setInterval(() => {
+      if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && this.isPlaying) {
+        try {
+          const cur = this.ytPlayer.getCurrentTime() || 0;
+          const dur = this.ytPlayer.getDuration() || 0;
+          if (dur > 0) {
+            const pct = (cur / dur) * 100;
+            if (this.miniProgress) this.miniProgress.style.width = `${pct}%`;
+            if (this.scrubberFill) this.scrubberFill.style.width = `${pct}%`;
+            if (this.scrubberThumb) this.scrubberThumb.style.left = `${pct}%`;
+            if (this.timeCurrent) this.timeCurrent.textContent = this.formatTime(cur);
+            if (this.timeTotal) this.timeTotal.textContent = this.formatTime(dur);
+
+            window.dispatchEvent(new CustomEvent('etsuko:mobile-time-update', {
+              detail: { currentTime: cur, duration: dur }
+            }));
+          }
+        } catch (err) {}
+      }
+    }, 250);
+  }
+
   initAudioEvents() {
-    this.audio.addEventListener('play', () => this.onPlayState(true));
-    this.audio.addEventListener('pause', () => this.onPlayState(false));
-    this.audio.addEventListener('timeupdate', () => this.onTimeUpdate());
-    this.audio.addEventListener('ended', () => this.onEnded());
-    this.audio.addEventListener('stalled', () => {
-      if (this.isPlaying && this.audio.paused && !this.userPaused) {
-        this.audio.play().catch(() => {});
-      }
+    this.audio.addEventListener('play', () => {
+      if (this.activeEngine === 'audio') this.onPlayState(true);
+    });
+    this.audio.addEventListener('pause', () => {
+      if (this.activeEngine === 'audio') this.onPlayState(false);
+    });
+    this.audio.addEventListener('timeupdate', () => {
+      if (this.activeEngine === 'audio') this.onTimeUpdate();
+    });
+    this.audio.addEventListener('ended', () => {
+      if (this.activeEngine === 'audio') this.onEnded();
     });
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.visibilityState === 'visible' && this.isPlaying && this.audio.paused && !this.userPaused) {
-        this.audio.play().catch(() => {});
-      }
-    });
-
-    // Scrubber Touch Events
+    // Touch seeking on Scrubber
     if (this.scrubberTrack) {
-      let isSeeking = false;
       const doSeek = (e) => {
         const rect = this.scrubberTrack.getBoundingClientRect();
         const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -98,23 +178,18 @@ class MobilePlayer {
         const pct = x / rect.width;
         this.scrubberFill.style.width = `${pct * 100}%`;
         if (this.scrubberThumb) this.scrubberThumb.style.left = `${pct * 100}%`;
-        if (this.audio.duration) {
-          this.audio.currentTime = pct * this.audio.duration;
+
+        if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
+          const dur = this.ytPlayer.getDuration() || 0;
+          this.ytPlayer.seekTo(dur * pct, true);
+        } else if (this.audio.duration) {
+          this.audio.currentTime = this.audio.duration * pct;
         }
       };
 
-      this.scrubberTrack.addEventListener('touchstart', (e) => {
-        isSeeking = true;
-        doSeek(e);
-      }, { passive: true });
-
-      this.scrubberTrack.addEventListener('touchmove', (e) => {
-        if (isSeeking) doSeek(e);
-      }, { passive: true });
-
-      this.scrubberTrack.addEventListener('touchend', () => {
-        isSeeking = false;
-      });
+      this.scrubberTrack.addEventListener('touchstart', (e) => doSeek(e), { passive: true });
+      this.scrubberTrack.addEventListener('touchmove', (e) => doSeek(e), { passive: true });
+      this.scrubberTrack.addEventListener('click', (e) => doSeek(e));
     }
   }
 
@@ -125,8 +200,12 @@ class MobilePlayer {
       navigator.mediaSession.setActionHandler('previoustrack', () => this.prev());
       navigator.mediaSession.setActionHandler('nexttrack', () => this.next());
       navigator.mediaSession.setActionHandler('seekto', (details) => {
-        if (details.seekTime && this.audio.duration) {
-          this.audio.currentTime = details.seekTime;
+        if (details.seekTime) {
+          if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer) {
+            this.ytPlayer.seekTo(details.seekTime, true);
+          } else if (this.audio.duration) {
+            this.audio.currentTime = details.seekTime;
+          }
         }
       });
     }
@@ -137,7 +216,7 @@ class MobilePlayer {
       navigator.mediaSession.metadata = new MediaMetadata({
         title: track.title,
         artist: track.artist,
-        album: track.album || 'Etsuko Music',
+        album: track.album || 'Etsuko Neural Audio',
         artwork: [
           { src: track.thumbnail || 'assets/default_cover.png', sizes: '512x512', type: 'image/jpeg' }
         ]
@@ -147,6 +226,7 @@ class MobilePlayer {
 
   async playTrack(track, queueList = null) {
     this.unlockAudioContext();
+
     if (queueList) {
       this.queue = [...queueList];
       this.queueIndex = this.queue.findIndex(t => t.videoId === track.videoId);
@@ -163,24 +243,54 @@ class MobilePlayer {
     this.updateTrackUI(track);
     this.updateMediaSession(track);
 
-    try {
-      this.userPaused = false;
-      this.audio.src = window.api.getStreamUrl(track.videoId);
-      await this.audio.play();
-      this.isPlaying = true;
-      this.fetchAutoplayRadio(track.videoId);
-      window.dispatchEvent(new CustomEvent('etsuko:mobile-track-started', { detail: track }));
-    } catch (e) {
-      if (e && (e.name === 'AbortError' || e.code === 20)) return;
-      console.warn('[Player] Retrying stream start:', e);
+    // Direct stream resolution (JioSaavn or Desktop custom server proxy)
+    const directStream = track.streamUrl || (window.api && window.api.baseUrl ? window.api.getStreamUrl(track.videoId) : null);
+
+    if (directStream) {
+      this.activeEngine = 'audio';
+      if (this.ytReady && this.ytPlayer && this.ytPlayer.pauseVideo) {
+        try { this.ytPlayer.pauseVideo(); } catch (e) {}
+      }
+
       try {
-        await new Promise(r => setTimeout(r, 400));
+        this.userPaused = false;
+        this.audio.src = directStream;
         await this.audio.play();
-      } catch (err2) {
-        if (err2 && (err2.name === 'AbortError' || err2.code === 20)) return;
-        console.error('[Player] Audio failed to start:', err2);
+        this.onPlayState(true);
+      } catch (err) {
+        console.warn('[Player] Direct stream playback retry:', err);
+        try {
+          await new Promise(r => setTimeout(r, 400));
+          await this.audio.play();
+        } catch (e2) {}
+      }
+    } else {
+      // YouTube Engine
+      this.activeEngine = 'youtube';
+      this.audio.pause();
+
+      if (this.ytReady && this.ytPlayer && this.ytPlayer.loadVideoById) {
+        try {
+          this.userPaused = false;
+          this.ytPlayer.loadVideoById(track.videoId);
+          this.ytPlayer.playVideo();
+          this.onPlayState(true);
+        } catch (e) {
+          console.warn('[Player] YouTube stream error:', e);
+        }
+      } else {
+        // Wait briefly for YT API
+        setTimeout(() => {
+          if (this.ytPlayer && this.ytPlayer.loadVideoById) {
+            this.ytPlayer.loadVideoById(track.videoId);
+            this.ytPlayer.playVideo();
+            this.onPlayState(true);
+          }
+        }, 1000);
       }
     }
+
+    window.dispatchEvent(new CustomEvent('etsuko:mobile-track-started', { detail: track }));
   }
 
   updateTrackUI(track) {
@@ -198,7 +308,7 @@ class MobilePlayer {
     if (this.sheetCover) this.sheetCover.src = thumb;
     if (this.sheetTitle) this.sheetTitle.textContent = title;
     if (this.sheetArtist) this.sheetArtist.textContent = artist;
-    if (this.sheetAlbum) this.sheetAlbum.textContent = track.album || 'Etsuko Neural Audio';
+    if (this.sheetAlbum) this.sheetAlbum.textContent = track.album || (track.source === 'saavn' ? 'Lossless 320kbps' : 'Etsuko Neural Audio');
     if (this.sheetLikeBtn) {
       this.sheetLikeBtn.classList.toggle('liked', !!track.isLiked);
       const svg = this.sheetLikeBtn.querySelector('svg');
@@ -208,16 +318,32 @@ class MobilePlayer {
 
   togglePlay() {
     this.unlockAudioContext();
-    if (!this.audio.src || !this.currentTrack) {
+    if (!this.currentTrack) {
       if (this.queue.length > 0) this.playTrack(this.queue[0]);
       return;
     }
-    if (this.audio.paused) {
-      this.userPaused = false;
-      this.audio.play().catch(() => {});
+
+    if (this.activeEngine === 'youtube') {
+      if (this.ytReady && this.ytPlayer && this.ytPlayer.getPlayerState) {
+        const state = this.ytPlayer.getPlayerState();
+        if (state === 1) { // playing
+          this.ytPlayer.pauseVideo();
+          this.userPaused = true;
+          this.onPlayState(false);
+        } else {
+          this.ytPlayer.playVideo();
+          this.userPaused = false;
+          this.onPlayState(true);
+        }
+      }
     } else {
-      this.userPaused = true;
-      this.audio.pause();
+      if (this.audio.paused) {
+        this.userPaused = false;
+        this.audio.play().catch(() => {});
+      } else {
+        this.userPaused = true;
+        this.audio.pause();
+      }
     }
   }
 
@@ -243,11 +369,6 @@ class MobilePlayer {
     if (this.queueIndex < this.queue.length - 1) {
       this.queueIndex++;
       this.playTrack(this.queue[this.queueIndex]);
-    } else if (this.autoplayTracks.length > 0) {
-      const nextTrack = this.autoplayTracks.shift();
-      this.queue.push(nextTrack);
-      this.queueIndex = this.queue.length - 1;
-      this.playTrack(nextTrack);
     } else if (this.repeatMode === 1) {
       this.queueIndex = 0;
       this.playTrack(this.queue[0]);
@@ -255,22 +376,30 @@ class MobilePlayer {
   }
 
   prev() {
-    if (this.audio.currentTime > 3) {
-      this.audio.currentTime = 0;
+    const curTime = this.activeEngine === 'youtube' && this.ytPlayer && this.ytPlayer.getCurrentTime ? this.ytPlayer.getCurrentTime() : this.audio.currentTime;
+    if (curTime > 3) {
+      if (this.activeEngine === 'youtube' && this.ytPlayer) this.ytPlayer.seekTo(0, true);
+      else this.audio.currentTime = 0;
       return;
     }
     if (this.queueIndex > 0) {
       this.queueIndex--;
       this.playTrack(this.queue[this.queueIndex]);
     } else {
-      this.audio.currentTime = 0;
+      if (this.activeEngine === 'youtube' && this.ytPlayer) this.ytPlayer.seekTo(0, true);
+      else this.audio.currentTime = 0;
     }
   }
 
   onEnded() {
     if (this.repeatMode === 2) {
-      this.audio.currentTime = 0;
-      this.audio.play().catch(() => {});
+      if (this.activeEngine === 'youtube' && this.ytPlayer) {
+        this.ytPlayer.seekTo(0, true);
+        this.ytPlayer.playVideo();
+      } else {
+        this.audio.currentTime = 0;
+        this.audio.play().catch(() => {});
+      }
     } else {
       this.next();
     }
@@ -321,15 +450,6 @@ class MobilePlayer {
     if (this.btnSheetShuffle) {
       this.btnSheetShuffle.classList.toggle('active', this.isShuffle);
     }
-  }
-
-  async fetchAutoplayRadio(videoId) {
-    try {
-      const res = await window.api.fetchJson(`/api/radio/${encodeURIComponent(videoId)}`);
-      if (res.tracks && res.tracks.length > 0) {
-        this.autoplayTracks = res.tracks;
-      }
-    } catch (e) {}
   }
 }
 
