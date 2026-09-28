@@ -41,12 +41,61 @@ class MobilePlayer {
     this.isShuffle = false;
     this.timeUpdateTimer = null;
     this.lastProgressSync = 0;
+    this.silentAudio = null;
 
     this.initElements();
     this.initAudioEvents();
+    this.initSilentAudio();
     this.initYouTube();
     this.initMediaSession();
     this.initDownloadEvents();
+    this.initWatchdog();
+  }
+
+  initSilentAudio() {
+    try {
+      const silentWav = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
+      this.silentAudio = new Audio(silentWav);
+      this.silentAudio.loop = true;
+      this.silentAudio.volume = 0.01;
+      this.silentAudio.setAttribute('playsinline', '');
+      this.silentAudio.setAttribute('webkit-playsinline', '');
+    } catch (e) {}
+  }
+
+  startSilentAudio() {
+    try {
+      if (!this.silentAudio) this.initSilentAudio();
+      if (this.silentAudio && this.silentAudio.paused) {
+        this.silentAudio.play().catch(() => {});
+      }
+    } catch (e) {}
+  }
+
+  stopSilentAudio() {
+    try {
+      if (this.silentAudio && !this.silentAudio.paused) {
+        this.silentAudio.pause();
+      }
+    } catch (e) {}
+  }
+
+  initWatchdog() {
+    setInterval(() => {
+      if (this.isPlaying && !this.userPaused) {
+        if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && typeof this.ytPlayer.getPlayerState === 'function') {
+          try {
+            const st = this.ytPlayer.getPlayerState();
+            if (st === 2) { // Paused unexpectedly in background
+              this.ytPlayer.playVideo();
+            }
+          } catch (e) {}
+        } else if (this.activeEngine === 'audio' && this.audio && this.audio.paused) {
+          this.audio.play().catch(() => {});
+        }
+        this.startSilentAudio();
+      }
+    }, 1000);
   }
 
   initElements() {
@@ -199,7 +248,7 @@ class MobilePlayer {
       if (!carrier) {
         const container = document.createElement('div');
         container.id = 'yt-audio-carrier';
-        container.style.cssText = 'position: fixed; bottom: 0; right: 0; width: 220px; height: 220px; opacity: 0.001; pointer-events: none; z-index: -9999; overflow: hidden;';
+        container.style.cssText = 'position: fixed; bottom: 0; right: 0; width: 48px; height: 48px; opacity: 0.01; pointer-events: none; z-index: 1; overflow: hidden;';
         container.innerHTML = '<div id="yt-player"></div>';
         document.body.appendChild(container);
         carrier = document.getElementById('yt-player');
@@ -208,8 +257,8 @@ class MobilePlayer {
       if (window.YT && window.YT.Player) {
         try {
           this.ytPlayer = new window.YT.Player('yt-player', {
-            height: '200',
-            width: '200',
+            height: '48',
+            width: '48',
             playerVars: {
               autoplay: 1,
               controls: 0,
@@ -219,7 +268,8 @@ class MobilePlayer {
               rel: 0,
               modestbranding: 1,
               iv_load_policy: 3,
-              enablejsapi: 1
+              enablejsapi: 1,
+              origin: window.location.origin || 'http://localhost'
             },
             events: {
               onReady: () => {
@@ -371,6 +421,11 @@ class MobilePlayer {
 
   async playTrack(track, queueList = null) {
     if (!track) return;
+
+    // Automatically expand full player sheet like Spotify whenever any track starts
+    if (window.app && typeof window.app.openPlayerSheet === 'function') {
+      window.app.openPlayerSheet();
+    }
 
     if (queueList && Array.isArray(queueList)) {
       this.queue = [...queueList];
@@ -585,6 +640,12 @@ class MobilePlayer {
     if (this.iconMiniPause) this.iconMiniPause.style.display = playing ? 'block' : 'none';
     if (this.iconSheetPlay) this.iconSheetPlay.style.display = playing ? 'none' : 'block';
     if (this.iconSheetPause) this.iconSheetPause.style.display = playing ? 'block' : 'none';
+
+    if (playing) {
+      this.startSilentAudio();
+    } else {
+      this.stopSilentAudio();
+    }
 
     if ('mediaSession' in navigator) {
       navigator.mediaSession.playbackState = playing ? 'playing' : 'paused';

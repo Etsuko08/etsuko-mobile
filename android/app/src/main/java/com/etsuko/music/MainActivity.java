@@ -164,6 +164,17 @@ public class MainActivity extends BridgeActivity {
     }
 
     @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (bridge != null && bridge.getWebView() != null) {
+            try {
+                bridge.getWebView().onResume();
+                bridge.getWebView().resumeTimers();
+            } catch (Exception ignored) {}
+        }
+    }
+
+    @Override
     public void onDestroy() {
         if (instance == this) {
             instance = null;

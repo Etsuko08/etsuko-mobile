@@ -117,7 +117,25 @@ public class MediaService extends Service {
     }
 
     private void dispatchAction(String action) {
-        if (MainActivity.getInstance() == null) return;
+        if (ACTION_PLAY_PAUSE.equals(action)) {
+            this.isPlaying = !this.isPlaying;
+            if (this.isPlaying) {
+                if (wakeLock != null && !wakeLock.isHeld()) wakeLock.acquire();
+            } else {
+                if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+            }
+            postForegroundNotification();
+        }
+
+        if (MainActivity.getInstance() == null) {
+            try {
+                Intent launchIntent = new Intent(this, MainActivity.class);
+                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                startActivity(launchIntent);
+            } catch (Exception ignored) {}
+            return;
+        }
+
         switch (action) {
             case ACTION_PLAY_PAUSE:
                 MainActivity.getInstance().evaluateJs("window.player && window.player.togglePlay();");
