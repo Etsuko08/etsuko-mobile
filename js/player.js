@@ -55,6 +55,8 @@ class MobilePlayer {
     this.miniCover = document.getElementById('mini-cover');
     this.miniTitle = document.getElementById('mini-title');
     this.miniArtist = document.getElementById('mini-artist');
+    this.btnMiniLike = document.getElementById('btn-mini-like');
+    this.btnMiniDownload = document.getElementById('btn-mini-download');
     this.btnMiniPlay = document.getElementById('btn-mini-play');
     this.btnMiniNext = document.getElementById('btn-mini-next');
     this.iconMiniPlay = document.getElementById('icon-mini-play');
@@ -79,20 +81,79 @@ class MobilePlayer {
     this.btnSheetRepeat = document.getElementById('btn-sheet-repeat');
     this.repeatBadge = document.getElementById('sheet-repeat-badge');
 
+    // Queue section in Sheet
+    this.sheetQueueSection = document.getElementById('sheet-queue-section');
+    this.sheetQueueCount = document.getElementById('sheet-queue-count');
+    this.sheetQueueList = document.getElementById('sheet-queue-list');
+
     this.timeCurrent = document.getElementById('sheet-time-current');
     this.timeTotal = document.getElementById('sheet-time-total');
     this.scrubberTrack = document.getElementById('sheet-scrubber-track');
     this.scrubberFill = document.getElementById('sheet-scrubber-fill');
     this.scrubberThumb = document.getElementById('sheet-scrubber-thumb');
 
-    // Controls listeners
+    // Mini Player Tapping opens Sheet Player
+    if (this.miniPlayer) {
+      this.miniPlayer.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-mini-control')) return;
+        if (window.app && typeof window.app.openPlayerSheet === 'function') {
+          window.app.openPlayerSheet();
+        }
+      });
+    }
+
+    // Mini Controls listeners
+    if (this.btnMiniLike) {
+      this.btnMiniLike.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTrack && window.api) {
+          const isNowLiked = window.api.toggleLike(this.currentTrack);
+          this.updateLikeButtonState(isNowLiked);
+          if (window.app && window.app.showToast) {
+            window.app.showToast(isNowLiked ? 'Added to Liked Songs' : 'Removed from Liked Songs');
+          }
+        }
+      });
+    }
+
+    if (this.btnMiniDownload) {
+      this.btnMiniDownload.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTrack && window.downloader) {
+          this.btnMiniDownload.classList.add('downloading-pulse');
+          this.btnMiniDownload.style.transform = 'scale(0.78)';
+          setTimeout(() => { this.btnMiniDownload.style.transform = 'scale(1.25)'; }, 140);
+          setTimeout(() => { this.btnMiniDownload.style.transform = 'scale(1.0)'; }, 280);
+          if (window.app && window.app.showToast) {
+            window.app.showToast(`Starting download: ${this.currentTrack.title}`);
+          }
+          window.downloader.startDownload(this.currentTrack);
+        }
+      });
+    }
+
     if (this.btnMiniPlay) this.btnMiniPlay.addEventListener('click', (e) => { e.stopPropagation(); this.togglePlay(); });
     if (this.btnMiniNext) this.btnMiniNext.addEventListener('click', (e) => { e.stopPropagation(); this.next(); });
+
+    // Sheet Controls listeners
     if (this.btnSheetPlay) this.btnSheetPlay.addEventListener('click', () => this.togglePlay());
     if (this.btnSheetPrev) this.btnSheetPrev.addEventListener('click', () => this.prev());
     if (this.btnSheetNext) this.btnSheetNext.addEventListener('click', () => this.next());
     if (this.btnSheetShuffle) this.btnSheetShuffle.addEventListener('click', () => this.toggleShuffle());
     if (this.btnSheetRepeat) this.btnSheetRepeat.addEventListener('click', () => this.toggleRepeat());
+
+    if (this.sheetLikeBtn) {
+      this.sheetLikeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (this.currentTrack && window.api) {
+          const isNowLiked = window.api.toggleLike(this.currentTrack);
+          this.updateLikeButtonState(isNowLiked);
+          if (window.app && window.app.showToast) {
+            window.app.showToast(isNowLiked ? 'Added to Liked Songs' : 'Removed from Liked Songs');
+          }
+        }
+      });
+    }
 
     if (this.sheetDownloadBtn) {
       this.sheetDownloadBtn.addEventListener('click', () => {
@@ -138,7 +199,7 @@ class MobilePlayer {
       if (!carrier) {
         const container = document.createElement('div');
         container.id = 'yt-audio-carrier';
-        container.style.cssText = 'position: absolute; width: 1px; height: 1px; opacity: 0.001; pointer-events: none; left: -9999px; overflow: hidden;';
+        container.style.cssText = 'position: fixed; bottom: 0; right: 0; width: 220px; height: 220px; opacity: 0.001; pointer-events: none; z-index: -9999; overflow: hidden;';
         container.innerHTML = '<div id="yt-player"></div>';
         document.body.appendChild(container);
         carrier = document.getElementById('yt-player');
@@ -147,8 +208,8 @@ class MobilePlayer {
       if (window.YT && window.YT.Player) {
         try {
           this.ytPlayer = new window.YT.Player('yt-player', {
-            height: '1',
-            width: '1',
+            height: '200',
+            width: '200',
             playerVars: {
               autoplay: 1,
               controls: 0,
@@ -158,8 +219,7 @@ class MobilePlayer {
               rel: 0,
               modestbranding: 1,
               iv_load_policy: 3,
-              enablejsapi: 1,
-              origin: window.location.origin
+              enablejsapi: 1
             },
             events: {
               onReady: () => {
@@ -327,6 +387,7 @@ class MobilePlayer {
     this.currentTrack = track;
     this.updateTrackUI(track);
     this.updateMediaSession(track);
+    this.renderQueueInSheet();
 
     // Save to recents in localStorage
     this.recordRecentTrack(track);
@@ -410,12 +471,8 @@ class MobilePlayer {
     if (this.sheetArtist) this.sheetArtist.textContent = artist;
     if (this.sheetAlbum) this.sheetAlbum.textContent = track.isOffline ? '⚡ Offline Master' : (track.album || 'Etsuko Master');
 
-    if (this.sheetLikeBtn) {
-      const isLiked = window.api ? window.api.isLiked(track.videoId) : !!track.isLiked;
-      this.sheetLikeBtn.classList.toggle('liked', isLiked);
-      const svg = this.sheetLikeBtn.querySelector('svg');
-      if (svg) svg.setAttribute('fill', isLiked ? '#ec4899' : 'none');
-    }
+    const isLiked = window.api ? window.api.isLiked(track.videoId) : !!track.isLiked;
+    this.updateLikeButtonState(isLiked);
 
     // Update Download Button State
     if (window.downloader) {
@@ -425,19 +482,69 @@ class MobilePlayer {
     }
   }
 
+  updateLikeButtonState(isLiked) {
+    const applyLike = (btn) => {
+      if (!btn) return;
+      btn.classList.toggle('liked', isLiked);
+      const svg = btn.querySelector('svg');
+      if (svg) svg.setAttribute('fill', isLiked ? '#ec4899' : 'none');
+    };
+    applyLike(this.sheetLikeBtn);
+    applyLike(this.btnMiniLike);
+  }
+
   updateDownloadButtonState(isDownloaded) {
-    if (!this.sheetDownloadBtn) return;
-    this.sheetDownloadBtn.classList.toggle('downloaded', isDownloaded);
-    const svg = this.sheetDownloadBtn.querySelector('svg');
-    if (svg) {
-      if (isDownloaded) {
-        svg.innerHTML = '<path d="M20 6L9 17l-5-5"></path>';
-        this.sheetDownloadBtn.style.color = '#10b981';
-      } else {
-        svg.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>';
-        this.sheetDownloadBtn.style.color = 'var(--text-sub)';
+    const updateBtn = (btn) => {
+      if (!btn) return;
+      btn.classList.toggle('downloaded', isDownloaded);
+      const svg = btn.querySelector('svg');
+      if (svg) {
+        if (isDownloaded) {
+          svg.innerHTML = '<path d="M20 6L9 17l-5-5"></path>';
+          btn.style.color = '#10b981';
+        } else {
+          svg.innerHTML = '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line>';
+          btn.style.color = 'var(--text-sub)';
+        }
       }
+    };
+    updateBtn(this.sheetDownloadBtn);
+    updateBtn(this.btnMiniDownload);
+  }
+
+  renderQueueInSheet() {
+    if (!this.sheetQueueList) return;
+    this.sheetQueueList.innerHTML = '';
+
+    if (!this.queue || this.queue.length === 0) {
+      if (this.sheetQueueCount) this.sheetQueueCount.textContent = '0 tracks';
+      return;
     }
+
+    if (this.sheetQueueCount) {
+      this.sheetQueueCount.textContent = `${this.queue.length} track${this.queue.length === 1 ? '' : 's'}`;
+    }
+
+    this.queue.forEach((track, idx) => {
+      const isCurrent = idx === this.queueIndex;
+      const item = document.createElement('div');
+      item.className = `sheet-queue-item${isCurrent ? ' current' : ''}`;
+      item.innerHTML = `
+        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="sheet-queue-item-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+        <div class="sheet-queue-item-info">
+          <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${track.title || 'Unknown Title'}</div>
+          <div class="sheet-queue-item-artist">${track.artist || 'Unknown Artist'}</div>
+        </div>
+        ${isCurrent ? '<span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase;">NOW</span>' : ''}
+      `;
+
+      item.addEventListener('click', () => {
+        this.queueIndex = idx;
+        this.playTrack(this.queue[idx]);
+      });
+
+      this.sheetQueueList.appendChild(item);
+    });
   }
 
   togglePlay() {

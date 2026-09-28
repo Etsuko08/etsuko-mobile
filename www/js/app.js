@@ -237,9 +237,10 @@ class EtsukoMobileApp {
       });
     }
 
-    // Mini Player touch opens Sheet Player
-    if (this.miniTouchArea) {
-      this.miniTouchArea.addEventListener('click', () => {
+    // Mini Player tap opens Full Screen Player Sheet
+    if (this.miniPlayer) {
+      this.miniPlayer.addEventListener('click', (e) => {
+        if (e.target.closest('.btn-mini-control')) return;
         this.openPlayerSheet();
       });
     }
@@ -444,18 +445,26 @@ class EtsukoMobileApp {
     (mixes || []).forEach(mix => {
       const card = document.createElement('div');
       card.className = 'spotify-mix-card';
-      card.style.background = mix.gradient || 'linear-gradient(135deg, #10b981, #064e3b)';
+
+      const t1 = mix.tracks?.[0]?.thumbnail || 'assets/default_cover.png';
+      const t2 = mix.tracks?.[1]?.thumbnail || 'assets/default_cover.png';
+      const t3 = mix.tracks?.[2]?.thumbnail || 'assets/default_cover.png';
+      const t4 = mix.tracks?.[3]?.thumbnail || 'assets/default_cover.png';
 
       card.innerHTML = `
-        <div class="spotify-mix-banner" style="background: ${mix.bannerColor || '#10b981'};">
-          ${this.escapeHtml(mix.title)}
+        <div class="spotify-mix-artwork-grid">
+          <img src="${t1}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+          <img src="${t2}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+          <img src="${t3}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+          <img src="${t4}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
         </div>
-        <div class="spotify-mix-info">
+        <div class="spotify-mix-info-box" style="border-top: 3px solid ${mix.bannerColor || '#10b981'};">
+          <button class="spotify-mix-play-btn" title="Play Mix">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+          <div class="spotify-mix-banner">${this.escapeHtml(mix.title)}</div>
           <div class="spotify-mix-sub">${this.escapeHtml(mix.subtitle)}</div>
         </div>
-        <button class="spotify-mix-play-btn" title="Play Mix">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-        </button>
       `;
 
       card.addEventListener('click', () => {

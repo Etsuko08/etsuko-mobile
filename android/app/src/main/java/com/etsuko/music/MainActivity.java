@@ -1,18 +1,7 @@
 package com.etsuko.music;
 
-import android.app.Notification;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.media.MediaMetadata;
-import android.media.session.MediaSession;
-import android.media.session.PlaybackState;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -34,27 +23,19 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends BridgeActivity {
-    private static final String CHANNEL_ID = "etsuko_playback_channel";
-    private static final int NOTIFICATION_ID = 1001;
-
-    public static final String ACTION_PREV = "com.etsuko.music.ACTION_PREV";
-    public static final String ACTION_PLAY_PAUSE = "com.etsuko.music.ACTION_PLAY_PAUSE";
-    public static final String ACTION_NEXT = "com.etsuko.music.ACTION_NEXT";
-
-    private NotificationManager notificationManager;
-    private MediaSession mediaSession;
+    private static MainActivity instance;
     private PowerManager.WakeLock wakeLock;
-    private boolean isMediaPlaying = false;
-    private BroadcastReceiver mediaButtonReceiver;
+
+    public static MainActivity getInstance() {
+        return instance;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        instance = this;
 
         initWakeLock();
-        initNotificationChannel();
-        initMediaSession();
-        registerMediaReceiver();
         checkNotificationPermission();
 
         if (bridge != null && bridge.getWebView() != null) {
@@ -80,9 +61,19 @@ public class MainActivity extends BridgeActivity {
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (bridge != null && bridge.getWebView() != null) {
-                    bridge.getWebView().evaluateJavascript("window.handleHardwareBack && window.handleHardwareBack();", null);
-                }
+                evaluateJs("window.handleHardwareBack && window.handleHardwareBack();");
+            }
+        });
+    }
+
+    public void evaluateJs(String script) {
+        runOnUiThread(() -> {
+            if (bridge != null && bridge.getWebView() != null) {
+                try {
+                    bridge.getWebView().onResume();
+                    bridge.getWebView().resumeTimers();
+                } catch (Exception ignored) {}
+                bridge.getWebView().evaluateJavascript(script, null);
             }
         });
     }
@@ -99,7 +90,7 @@ public class MainActivity extends BridgeActivity {
         try {
             PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
             if (pm != null) {
-                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Etsuko::MediaPlaybackWakeLock");
+                wakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "Etsuko::MainActivityWakeLock");
                 wakeLock.setReferenceCounted(false);
             }
         } catch (Exception e) {
@@ -107,106 +98,7 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private void initNotificationChannel() {
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    CHANNEL_ID,
-                    "Etsuko Music Playback",
-                    NotificationManager.IMPORTANCE_LOW
-            );
-            channel.setDescription("Background audio controls and notifications");
-            channel.setShowBadge(false);
-            channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
-
-            if (notificationManager != null) {
-                notificationManager.createNotificationChannel(channel);
-            }
-        }
-    }
-
-    private void initMediaSession() {
-        mediaSession = new MediaSession(this, "EtsukoMediaSession");
-        mediaSession.setFlags(MediaSession.FLAG_HANDLES_MEDIA_BUTTONS | MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS);
-        mediaSession.setCallback(new MediaSession.Callback() {
-            @Override
-            public void onPlay() {
-                handleAction(ACTION_PLAY_PAUSE);
-            }
-
-            @Override
-            public void onPause() {
-                handleAction(ACTION_PLAY_PAUSE);
-            }
-
-            @Override
-            public void onSkipToNext() {
-                handleAction(ACTION_NEXT);
-            }
-
-            @Override
-            public void onSkipToPrevious() {
-                handleAction(ACTION_PREV);
-            }
-
-            @Override
-            public void onSeekTo(long pos) {
-                runOnUiThread(() -> {
-                    if (bridge != null && bridge.getWebView() != null) {
-                        bridge.getWebView().evaluateJavascript("window.player && window.player.seekToMs(" + pos + ");", null);
-                    }
-                });
-            }
-        });
-        mediaSession.setActive(true);
-    }
-
-    private void registerMediaReceiver() {
-        mediaButtonReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent != null && intent.getAction() != null) {
-                    handleAction(intent.getAction());
-                }
-            }
-        };
-
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(ACTION_PREV);
-        filter.addAction(ACTION_PLAY_PAUSE);
-        filter.addAction(ACTION_NEXT);
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(mediaButtonReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(mediaButtonReceiver, filter);
-        }
-    }
-
-    private void handleAction(String action) {
-        runOnUiThread(() -> {
-            if (bridge == null || bridge.getWebView() == null) return;
-            try {
-                bridge.getWebView().onResume();
-                bridge.getWebView().resumeTimers();
-            } catch (Exception ignored) {}
-            switch (action) {
-                case ACTION_PLAY_PAUSE:
-                    bridge.getWebView().evaluateJavascript("window.player && window.player.togglePlay();", null);
-                    break;
-                case ACTION_NEXT:
-                    bridge.getWebView().evaluateJavascript("window.player && window.player.next();", null);
-                    break;
-                case ACTION_PREV:
-                    bridge.getWebView().evaluateJavascript("window.player && window.player.prev();", null);
-                    break;
-            }
-        });
-    }
-
-    public void updateNotification(String title, String artist, String album, String thumbUrl, boolean isPlaying, long positionMs, long durationMs) {
-        this.isMediaPlaying = isPlaying;
-
+    public void sendMediaUpdateToService(String title, String artist, String album, String thumbUrl, boolean isPlaying, long posMs, long durMs) {
         if (isPlaying) {
             if (wakeLock != null && !wakeLock.isHeld()) {
                 wakeLock.acquire();
@@ -217,128 +109,36 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
-        // Update MediaSession state with real position & seek support
-        int state = isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED;
-        long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
-                PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT |
-                PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;
+        Intent intent = new Intent(this, MediaService.class);
+        intent.setAction(MediaService.ACTION_UPDATE);
+        intent.putExtra("title", title);
+        intent.putExtra("artist", artist);
+        intent.putExtra("album", album);
+        intent.putExtra("thumbUrl", thumbUrl);
+        intent.putExtra("isPlaying", isPlaying);
+        intent.putExtra("posMs", posMs);
+        intent.putExtra("durMs", durMs);
 
-        if (mediaSession != null) {
-            mediaSession.setPlaybackState(new PlaybackState.Builder()
-                    .setActions(actions)
-                    .setState(state, positionMs >= 0 ? positionMs : 0, 1.0f)
-                    .build());
-        }
-
-        // Run background thread for artwork loading
-        new Thread(() -> {
-            Bitmap coverBitmap = null;
-            if (thumbUrl != null && !thumbUrl.isEmpty() && thumbUrl.startsWith("http")) {
-                try {
-                    URL url = new URL(thumbUrl);
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    connection.setDoInput(true);
-                    connection.setConnectTimeout(4000);
-                    connection.setReadTimeout(4000);
-                    connection.connect();
-                    InputStream input = connection.getInputStream();
-                    coverBitmap = BitmapFactory.decodeStream(input);
-                } catch (Exception ignored) {}
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                startForegroundService(intent);
+            } else {
+                startService(intent);
             }
-
-            if (coverBitmap == null) {
-                coverBitmap = BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher);
-            }
-
-            final Bitmap finalCover = coverBitmap;
-            runOnUiThread(() -> buildAndPostNotification(title, artist, album, finalCover, isPlaying, durationMs));
-        }).start();
-    }
-
-    private void buildAndPostNotification(String title, String artist, String album, Bitmap cover, boolean isPlaying, long durationMs) {
-        int flag = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            flag |= PendingIntent.FLAG_IMMUTABLE;
-        }
-
-        Intent openAppIntent = new Intent(this, MainActivity.class);
-        openAppIntent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, openAppIntent, flag);
-
-        Intent prevIntent = new Intent(ACTION_PREV);
-        PendingIntent pPrev = PendingIntent.getBroadcast(this, 1, prevIntent, flag);
-
-        Intent playIntent = new Intent(ACTION_PLAY_PAUSE);
-        PendingIntent pPlay = PendingIntent.getBroadcast(this, 2, playIntent, flag);
-
-        Intent nextIntent = new Intent(ACTION_NEXT);
-        PendingIntent pNext = PendingIntent.getBroadcast(this, 3, nextIntent, flag);
-
-        int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
-        String playPauseTitle = isPlaying ? "Pause" : "Play";
-
-        // Update MediaSession metadata for Android Quick Settings and Lockscreen Spotify-style player
-        if (mediaSession != null) {
-            try {
-                MediaMetadata.Builder metaBuilder = new MediaMetadata.Builder()
-                        .putString(MediaMetadata.METADATA_KEY_TITLE, title != null && !title.isEmpty() ? title : "Etsuko Music")
-                        .putString(MediaMetadata.METADATA_KEY_ARTIST, artist != null && !artist.isEmpty() ? artist : "Playing")
-                        .putString(MediaMetadata.METADATA_KEY_ALBUM, album != null && !album.isEmpty() ? album : "Etsuko Neural Audio");
-                if (durationMs > 0) {
-                    metaBuilder.putLong(MediaMetadata.METADATA_KEY_DURATION, durationMs);
-                }
-                if (cover != null) {
-                    metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, cover);
-                    metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, cover);
-                }
-                mediaSession.setMetadata(metaBuilder.build());
-            } catch (Exception ignored) {}
-        }
-
-        Notification.Builder builder;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            builder = new Notification.Builder(this, CHANNEL_ID);
-        } else {
-            builder = new Notification.Builder(this);
-        }
-
-        Notification.MediaStyle mediaStyle = new Notification.MediaStyle();
-        if (mediaSession != null) {
-            mediaStyle.setMediaSession(mediaSession.getSessionToken());
-        }
-        mediaStyle.setShowActionsInCompactView(0, 1, 2);
-
-        Notification notification = builder
-                .setSmallIcon(R.drawable.ic_stat_music)
-                .setLargeIcon(cover)
-                .setContentTitle(title != null && !title.isEmpty() ? title : "Etsuko Music")
-                .setContentText(artist != null && !artist.isEmpty() ? artist : "Playing")
-                .setSubText(album != null && !album.isEmpty() ? album : "Etsuko Neural Audio")
-                .setContentIntent(contentIntent)
-                .setOngoing(isPlaying)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .addAction(android.R.drawable.ic_media_previous, "Previous", pPrev)
-                .addAction(playPauseIcon, playPauseTitle, pPlay)
-                .addAction(android.R.drawable.ic_media_next, "Next", pNext)
-                .setStyle(mediaStyle)
-                .build();
-
-        if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, notification);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
-    public void cancelNotification() {
-        this.isMediaPlaying = false;
+    public void stopMediaService() {
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
         }
-        if (notificationManager != null) {
-            notificationManager.cancel(NOTIFICATION_ID);
-        }
-        if (mediaSession != null) {
-            mediaSession.setActive(false);
-        }
+        Intent intent = new Intent(this, MediaService.class);
+        intent.setAction(MediaService.ACTION_STOP);
+        try {
+            startService(intent);
+        } catch (Exception ignored) {}
     }
 
     @Override
@@ -365,62 +165,50 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     public void onDestroy() {
-        if (mediaButtonReceiver != null) {
-            try {
-                unregisterReceiver(mediaButtonReceiver);
-            } catch (Exception ignored) {}
+        if (instance == this) {
+            instance = null;
         }
-        cancelNotification();
-        if (mediaSession != null) {
-            mediaSession.release();
-        }
+        stopMediaService();
         super.onDestroy();
     }
 
     @Override
     public void onBackPressed() {
-        if (bridge != null && bridge.getWebView() != null) {
-            bridge.getWebView().evaluateJavascript("window.handleHardwareBack && window.handleHardwareBack();", null);
-            return;
-        }
-        super.onBackPressed();
+        evaluateJs("window.handleHardwareBack && window.handleHardwareBack();");
     }
 
     // JavaScript Bridge exposed as `window.AndroidMedia`
     public class AndroidMediaBridge {
         @JavascriptInterface
         public void updatePlaybackState(String title, String artist, String album, String thumbUrl, boolean isPlaying) {
-            runOnUiThread(() -> updateNotification(title, artist, album, thumbUrl, isPlaying, 0, 0));
+            runOnUiThread(() -> sendMediaUpdateToService(title, artist, album, thumbUrl, isPlaying, 0, 0));
         }
 
         @JavascriptInterface
         public void updatePlaybackState(String title, String artist, String album, String thumbUrl, boolean isPlaying, double positionSec, double durationSec) {
             long posMs = (long) (positionSec * 1000);
             long durMs = (long) (durationSec * 1000);
-            runOnUiThread(() -> updateNotification(title, artist, album, thumbUrl, isPlaying, posMs, durMs));
+            runOnUiThread(() -> sendMediaUpdateToService(title, artist, album, thumbUrl, isPlaying, posMs, durMs));
         }
 
         @JavascriptInterface
         public void updateProgress(double positionSec, double durationSec, boolean isPlaying) {
-            if (mediaSession == null) return;
             long posMs = (long) (positionSec * 1000);
-            int state = isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED;
-            long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
-                    PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT |
-                    PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;
-            runOnUiThread(() -> {
-                try {
-                    mediaSession.setPlaybackState(new PlaybackState.Builder()
-                            .setActions(actions)
-                            .setState(state, posMs >= 0 ? posMs : 0, 1.0f)
-                            .build());
-                } catch (Exception ignored) {}
-            });
+            long durMs = (long) (durationSec * 1000);
+            // Lightweight progress sync to Foreground Service
+            Intent intent = new Intent(MainActivity.this, MediaService.class);
+            intent.setAction(MediaService.ACTION_UPDATE);
+            intent.putExtra("isPlaying", isPlaying);
+            intent.putExtra("posMs", posMs);
+            intent.putExtra("durMs", durMs);
+            try {
+                startService(intent);
+            } catch (Exception ignored) {}
         }
 
         @JavascriptInterface
         public void stopPlayback() {
-            runOnUiThread(() -> cancelNotification());
+            runOnUiThread(() -> stopMediaService());
         }
 
         @JavascriptInterface
@@ -465,13 +253,8 @@ public class MainActivity extends BridgeActivity {
 
                 final String finalJson = responseJson;
                 runOnUiThread(() -> {
-                    if (bridge != null && bridge.getWebView() != null) {
-                        String safeId = callbackId.replaceAll("[^a-zA-Z0-9_]", "");
-                        bridge.getWebView().evaluateJavascript(
-                            "window['__native_search_" + safeId + "'] && window['__native_search_" + safeId + "'](" + JSONObject.quote(finalJson) + ");",
-                            null
-                        );
-                    }
+                    String safeId = callbackId.replaceAll("[^a-zA-Z0-9_]", "");
+                    evaluateJs("window['__native_search_" + safeId + "'] && window['__native_search_" + safeId + "'](" + JSONObject.quote(finalJson) + ");");
                 });
             }).start();
         }

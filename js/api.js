@@ -3,50 +3,59 @@
 // True Daily-Seeded Recommendations, Dynamic Podcasts & Standalone Offline Storage
 
 function formatHighResThumbnail(videoId, url) {
+  if (url && typeof url === 'string') {
+    // If it's a Google/YouTube Music CDN square album cover, upgrade to 544x544 HD
+    if (url.includes('googleusercontent.com') || url.includes('ggpht.com')) {
+      return url.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
+    }
+    if (url.startsWith('http') && !url.includes('hqdefault.jpg')) {
+      return url;
+    }
+  }
   if (videoId) {
-    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    return `https://i.ytimg.com/vi/${videoId}/hq720.jpg`;
   }
   return url || 'assets/default_cover.png';
 }
 
 // Master Curated Catalogs (Guaranteed 100% Active YouTube IDs & Static Edge Covers)
 const CATALOG_TRENDING_HITS = [
-  { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", album: "Die With A Smile", duration: "4:12", tag: "Single", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hqdefault.jpg" },
-  { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", album: "Short n' Sweet", duration: "2:56", tag: "Single", thumbnail: "https://i.ytimg.com/vi/kIft-LUHHVA/hqdefault.jpg" },
-  { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", album: "HIT ME HARD AND SOFT", duration: "3:31", tag: "Single", thumbnail: "https://i.ytimg.com/vi/WKZO-CWeOVA/hqdefault.jpg" },
-  { videoId: "phLb_SoPBlA", title: "Not Like Us", artist: "Kendrick Lamar", album: "Not Like Us", duration: "4:35", tag: "Single", thumbnail: "https://i.ytimg.com/vi/phLb_SoPBlA/hqdefault.jpg" },
-  { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", album: "Lover", duration: "2:59", tag: "Single", thumbnail: "https://i.ytimg.com/vi/aC9HkZW2hZk/hqdefault.jpg" },
-  { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", album: "After Hours", duration: "3:22", tag: "Single", thumbnail: "https://i.ytimg.com/vi/J7p4bzqLvCw/hqdefault.jpg" },
-  { videoId: "3_g2un5M350", title: "Starboy (feat. Daft Punk)", artist: "The Weeknd", album: "Starboy", duration: "3:51", tag: "Album", thumbnail: "https://i.ytimg.com/vi/3_g2un5M350/hqdefault.jpg" },
-  { videoId: "xIQpLlYC8xA", title: "Houdini", artist: "Eminem", album: "The Death of Slim Shady", duration: "3:48", tag: "Single", thumbnail: "https://i.ytimg.com/vi/xIQpLlYC8xA/hqdefault.jpg" },
-  { videoId: "2nR1zrNzgcY", title: "FE!N (feat. Playboi Carti)", artist: "Travis Scott", album: "UTOPIA", duration: "3:12", tag: "Album", thumbnail: "https://i.ytimg.com/vi/2nR1zrNzgcY/hqdefault.jpg" },
-  { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", album: "Close Eyes", duration: "2:12", tag: "Single", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg" },
-  { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", album: "Hollywood's Bleeding", duration: "3:36", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hqdefault.jpg" },
-  { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", album: "Future Nostalgia", duration: "3:24", tag: "Single", thumbnail: "https://i.ytimg.com/vi/OsfAnsMY21M/hqdefault.jpg" }
+  { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", album: "Die With A Smile", duration: "4:12", tag: "Single", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hq720.jpg" },
+  { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", album: "Short n' Sweet", duration: "2:56", tag: "Single", thumbnail: "https://i.ytimg.com/vi/kIft-LUHHVA/hq720.jpg" },
+  { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", album: "HIT ME HARD AND SOFT", duration: "3:31", tag: "Single", thumbnail: "https://i.ytimg.com/vi/WKZO-CWeOVA/hq720.jpg" },
+  { videoId: "phLb_SoPBlA", title: "Not Like Us", artist: "Kendrick Lamar", album: "Not Like Us", duration: "4:35", tag: "Single", thumbnail: "https://i.ytimg.com/vi/phLb_SoPBlA/hq720.jpg" },
+  { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", album: "Lover", duration: "2:59", tag: "Single", thumbnail: "https://i.ytimg.com/vi/aC9HkZW2hZk/hq720.jpg" },
+  { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", album: "After Hours", duration: "3:22", tag: "Single", thumbnail: "https://i.ytimg.com/vi/J7p4bzqLvCw/hq720.jpg" },
+  { videoId: "3_g2un5M350", title: "Starboy (feat. Daft Punk)", artist: "The Weeknd", album: "Starboy", duration: "3:51", tag: "Album", thumbnail: "https://i.ytimg.com/vi/3_g2un5M350/hq720.jpg" },
+  { videoId: "xIQpLlYC8xA", title: "Houdini", artist: "Eminem", album: "The Death of Slim Shady", duration: "3:48", tag: "Single", thumbnail: "https://i.ytimg.com/vi/xIQpLlYC8xA/hq720.jpg" },
+  { videoId: "2nR1zrNzgcY", title: "FE!N (feat. Playboi Carti)", artist: "Travis Scott", album: "UTOPIA", duration: "3:12", tag: "Album", thumbnail: "https://i.ytimg.com/vi/2nR1zrNzgcY/hq720.jpg" },
+  { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", album: "Close Eyes", duration: "2:12", tag: "Single", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hq720.jpg" },
+  { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", album: "Hollywood's Bleeding", duration: "3:36", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hq720.jpg" },
+  { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", album: "Future Nostalgia", duration: "3:24", tag: "Single", thumbnail: "https://i.ytimg.com/vi/OsfAnsMY21M/hq720.jpg" }
 ];
 
 const CATALOG_DAILY_POOL = [
-  { videoId: "aHmg0jsmNhg", title: "vampire", artist: "Olivia Rodrigo", album: "GUTS", duration: "3:40", tag: "Single", thumbnail: "https://i.ytimg.com/vi/aHmg0jsmNhg/hqdefault.jpg" },
-  { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know?", artist: "Arctic Monkeys", album: "AM", duration: "4:32", tag: "Album", thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hqdefault.jpg" },
-  { videoId: "eVTXPUF4Oz4", title: "In the End", artist: "Linkin Park", album: "Hybrid Theory", duration: "3:36", tag: "EP", thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hqdefault.jpg" },
-  { videoId: "AdEKgwUqPKI", title: "Kill Bill", artist: "SZA", album: "SOS", duration: "2:34", tag: "Single", thumbnail: "https://i.ytimg.com/vi/AdEKgwUqPKI/hqdefault.jpg" },
-  { videoId: "FrsOnNxIrg8", title: "God's Plan", artist: "Drake", album: "Scorpion", duration: "3:19", tag: "Single", thumbnail: "https://i.ytimg.com/vi/FrsOnNxIrg8/hqdefault.jpg" },
-  { videoId: "_GWKkqNoyEA", title: "Counting Stars", artist: "OneRepublic", album: "Native", duration: "4:18", tag: "Single", thumbnail: "https://i.ytimg.com/vi/_GWKkqNoyEA/hqdefault.jpg" },
-  { videoId: "9ssQKlLxBdQ", title: "Thunder", artist: "Imagine Dragons", album: "Evolve", duration: "3:08", tag: "Single", thumbnail: "https://i.ytimg.com/vi/9ssQKlLxBdQ/hqdefault.jpg" },
-  { videoId: "BSTsnWoslP4", title: "Bohemian Rhapsody", artist: "Queen", album: "A Night at the Opera", duration: "5:55", tag: "Master", thumbnail: "https://i.ytimg.com/vi/BSTsnWoslP4/hqdefault.jpg" },
-  { videoId: "4D7u5KF7SP8", title: "Get Lucky", artist: "Daft Punk, Pharrell Williams", album: "Random Access Memories", duration: "6:10", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4D7u5KF7SP8/hqdefault.jpg" },
-  { videoId: "2NiyrtYegso", title: "Wake Me Up", artist: "Avicii", album: "True", duration: "4:08", tag: "Single", thumbnail: "https://i.ytimg.com/vi/2NiyrtYegso/hqdefault.jpg" },
-  { videoId: "IJq0ydz44gk", title: "Tum Hi Ho", artist: "Arijit Singh", album: "Aashiqui 2", duration: "4:22", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/IJq0ydz44gk/hqdefault.jpg" },
-  { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", album: "Brahmastra", duration: "4:28", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg" },
-  { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", album: "Bad Newz", duration: "3:26", tag: "Single", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hqdefault.jpg" },
-  { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla, Ikky", album: "Four You", duration: "2:36", tag: "Single", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hqdefault.jpg" },
-  { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", album: "Still Rollin", duration: "3:03", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hqdefault.jpg" },
-  { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", album: "One Love", duration: "2:40", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hqdefault.jpg" },
-  { videoId: "VNs_cCtdbPc", title: "Baller", artist: "Shubh, Ikky", album: "Baller", duration: "2:28", tag: "Single", thumbnail: "https://i.ytimg.com/vi/VNs_cCtdbPc/hqdefault.jpg" },
-  { videoId: "w-sQRS-Mun8", title: "Murder In My Mind", artist: "Kordhell", album: "Murder In My Mind", duration: "2:25", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/w-sQRS-Mun8/hqdefault.jpg" },
-  { videoId: "q9qj4TqD7jU", title: "Metamorphosis", artist: "INTERWORLD", album: "Metamorphosis", duration: "2:22", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/q9qj4TqD7jU/hqdefault.jpg" },
-  { videoId: "YTv3g8-eM30", title: "Neon Blade", artist: "MoonDeity", album: "Neon Blade", duration: "4:24", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/YTv3g8-eM30/hqdefault.jpg" },
-  { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", album: "Lofi Study Session", duration: "3:40", tag: "EP", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hqdefault.jpg" }
+  { videoId: "aHmg0jsmNhg", title: "vampire", artist: "Olivia Rodrigo", album: "GUTS", duration: "3:40", tag: "Single", thumbnail: "https://i.ytimg.com/vi/aHmg0jsmNhg/hq720.jpg" },
+  { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know?", artist: "Arctic Monkeys", album: "AM", duration: "4:32", tag: "Album", thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hq720.jpg" },
+  { videoId: "eVTXPUF4Oz4", title: "In the End", artist: "Linkin Park", album: "Hybrid Theory", duration: "3:36", tag: "EP", thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hq720.jpg" },
+  { videoId: "AdEKgwUqPKI", title: "Kill Bill", artist: "SZA", album: "SOS", duration: "2:34", tag: "Single", thumbnail: "https://i.ytimg.com/vi/AdEKgwUqPKI/hq720.jpg" },
+  { videoId: "FrsOnNxIrg8", title: "God's Plan", artist: "Drake", album: "Scorpion", duration: "3:19", tag: "Single", thumbnail: "https://i.ytimg.com/vi/FrsOnNxIrg8/hq720.jpg" },
+  { videoId: "_GWKkqNoyEA", title: "Counting Stars", artist: "OneRepublic", album: "Native", duration: "4:18", tag: "Single", thumbnail: "https://i.ytimg.com/vi/_GWKkqNoyEA/hq720.jpg" },
+  { videoId: "9ssQKlLxBdQ", title: "Thunder", artist: "Imagine Dragons", album: "Evolve", duration: "3:08", tag: "Single", thumbnail: "https://i.ytimg.com/vi/9ssQKlLxBdQ/hq720.jpg" },
+  { videoId: "BSTsnWoslP4", title: "Bohemian Rhapsody", artist: "Queen", album: "A Night at the Opera", duration: "5:55", tag: "Master", thumbnail: "https://i.ytimg.com/vi/BSTsnWoslP4/hq720.jpg" },
+  { videoId: "4D7u5KF7SP8", title: "Get Lucky", artist: "Daft Punk, Pharrell Williams", album: "Random Access Memories", duration: "6:10", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4D7u5KF7SP8/hq720.jpg" },
+  { videoId: "2NiyrtYegso", title: "Wake Me Up", artist: "Avicii", album: "True", duration: "4:08", tag: "Single", thumbnail: "https://i.ytimg.com/vi/2NiyrtYegso/hq720.jpg" },
+  { videoId: "IJq0ydz44gk", title: "Tum Hi Ho", artist: "Arijit Singh", album: "Aashiqui 2", duration: "4:22", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/IJq0ydz44gk/hq720.jpg" },
+  { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", album: "Brahmastra", duration: "4:28", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hq720.jpg" },
+  { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", album: "Bad Newz", duration: "3:26", tag: "Single", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hq720.jpg" },
+  { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla, Ikky", album: "Four You", duration: "2:36", tag: "Single", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hq720.jpg" },
+  { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", album: "Still Rollin", duration: "3:03", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hq720.jpg" },
+  { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", album: "One Love", duration: "2:40", tag: "Single", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hq720.jpg" },
+  { videoId: "VNs_cCtdbPc", title: "Baller", artist: "Shubh, Ikky", album: "Baller", duration: "2:28", tag: "Single", thumbnail: "https://i.ytimg.com/vi/VNs_cCtdbPc/hq720.jpg" },
+  { videoId: "w-sQRS-Mun8", title: "Murder In My Mind", artist: "Kordhell", album: "Murder In My Mind", duration: "2:25", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/w-sQRS-Mun8/hq720.jpg" },
+  { videoId: "q9qj4TqD7jU", title: "Metamorphosis", artist: "INTERWORLD", album: "Metamorphosis", duration: "2:22", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/q9qj4TqD7jU/hq720.jpg" },
+  { videoId: "YTv3g8-eM30", title: "Neon Blade", artist: "MoonDeity", album: "Neon Blade", duration: "4:24", tag: "Phonk", thumbnail: "https://i.ytimg.com/vi/YTv3g8-eM30/hq720.jpg" },
+  { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", album: "Lofi Study Session", duration: "3:40", tag: "EP", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hq720.jpg" }
 ];
 
 const CATALOG_TOP_MIXES = [
@@ -57,10 +66,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #10b981, #064e3b)",
     bannerColor: "#10b981",
     tracks: [
-      { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", thumbnail: "https://i.ytimg.com/vi/kIft-LUHHVA/hqdefault.jpg" },
-      { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://i.ytimg.com/vi/aC9HkZW2hZk/hqdefault.jpg" },
-      { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", thumbnail: "https://i.ytimg.com/vi/OsfAnsMY21M/hqdefault.jpg" },
-      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hqdefault.jpg" }
+      { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", thumbnail: "https://i.ytimg.com/vi/kIft-LUHHVA/hq720.jpg" },
+      { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://i.ytimg.com/vi/aC9HkZW2hZk/hq720.jpg" },
+      { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", thumbnail: "https://i.ytimg.com/vi/OsfAnsMY21M/hq720.jpg" },
+      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hq720.jpg" }
     ]
   },
   {
@@ -70,10 +79,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #a855f7, #581c87)",
     bannerColor: "#a855f7",
     tracks: [
-      { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", thumbnail: "https://i.ytimg.com/vi/WKZO-CWeOVA/hqdefault.jpg" },
-      { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", thumbnail: "https://i.ytimg.com/vi/J7p4bzqLvCw/hqdefault.jpg" },
-      { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hqdefault.jpg" },
-      { videoId: "3_g2un5M350", title: "Starboy", artist: "The Weeknd", thumbnail: "https://i.ytimg.com/vi/3_g2un5M350/hqdefault.jpg" }
+      { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", thumbnail: "https://i.ytimg.com/vi/WKZO-CWeOVA/hq720.jpg" },
+      { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", thumbnail: "https://i.ytimg.com/vi/J7p4bzqLvCw/hq720.jpg" },
+      { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hq720.jpg" },
+      { videoId: "3_g2un5M350", title: "Starboy", artist: "The Weeknd", thumbnail: "https://i.ytimg.com/vi/3_g2un5M350/hq720.jpg" }
     ]
   },
   {
@@ -83,10 +92,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #ec4899, #831843)",
     bannerColor: "#ec4899",
     tracks: [
-      { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg" },
-      { videoId: "w-sQRS-Mun8", title: "Murder In My Mind", artist: "Kordhell", thumbnail: "https://i.ytimg.com/vi/w-sQRS-Mun8/hqdefault.jpg" },
-      { videoId: "q9qj4TqD7jU", title: "Metamorphosis", artist: "INTERWORLD", thumbnail: "https://i.ytimg.com/vi/q9qj4TqD7jU/hqdefault.jpg" },
-      { videoId: "YTv3g8-eM30", title: "Neon Blade", artist: "MoonDeity", thumbnail: "https://i.ytimg.com/vi/YTv3g8-eM30/hqdefault.jpg" }
+      { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hq720.jpg" },
+      { videoId: "w-sQRS-Mun8", title: "Murder In My Mind", artist: "Kordhell", thumbnail: "https://i.ytimg.com/vi/w-sQRS-Mun8/hq720.jpg" },
+      { videoId: "q9qj4TqD7jU", title: "Metamorphosis", artist: "INTERWORLD", thumbnail: "https://i.ytimg.com/vi/q9qj4TqD7jU/hq720.jpg" },
+      { videoId: "YTv3g8-eM30", title: "Neon Blade", artist: "MoonDeity", thumbnail: "https://i.ytimg.com/vi/YTv3g8-eM30/hq720.jpg" }
     ]
   },
   {
@@ -96,9 +105,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #f43f5e, #881337)",
     bannerColor: "#f43f5e",
     tracks: [
-      { videoId: "IJq0ydz44gk", title: "Tum Hi Ho", artist: "Arijit Singh", thumbnail: "https://i.ytimg.com/vi/IJq0ydz44gk/hqdefault.jpg" },
-      { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg" },
-      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hqdefault.jpg" }
+      { videoId: "IJq0ydz44gk", title: "Tum Hi Ho", artist: "Arijit Singh", thumbnail: "https://i.ytimg.com/vi/IJq0ydz44gk/hq720.jpg" },
+      { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hq720.jpg" },
+      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://i.ytimg.com/vi/DlFXDl_ROAM/hq720.jpg" },
+      { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://i.ytimg.com/vi/aC9HkZW2hZk/hq720.jpg" }
     ]
   },
   {
@@ -108,10 +118,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #f59e0b, #78350f)",
     bannerColor: "#f59e0b",
     tracks: [
-      { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hqdefault.jpg" },
-      { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hqdefault.jpg" },
-      { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hqdefault.jpg" },
-      { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hqdefault.jpg" }
+      { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hq720.jpg" },
+      { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hq720.jpg" },
+      { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hq720.jpg" },
+      { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hq720.jpg" }
     ]
   },
   {
@@ -121,8 +131,10 @@ const CATALOG_TOP_MIXES = [
     gradient: "linear-gradient(135deg, #3b82f6, #1e3a8a)",
     bannerColor: "#3b82f6",
     tracks: [
-      { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hqdefault.jpg" },
-      { videoId: "4EQkYVtE-28", title: "Circles (Chill Acoustic)", artist: "Post Malone", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hqdefault.jpg" }
+      { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hq720.jpg" },
+      { videoId: "4EQkYVtE-28", title: "Circles (Chill Acoustic)", artist: "Post Malone", thumbnail: "https://i.ytimg.com/vi/4EQkYVtE-28/hq720.jpg" },
+      { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know? (Acoustic)", artist: "Arctic Monkeys", thumbnail: "https://i.ytimg.com/vi/bpOSxM0rNPM/hq720.jpg" },
+      { videoId: "aHmg0jsmNhg", title: "vampire (Lofi)", artist: "Olivia Rodrigo", thumbnail: "https://i.ytimg.com/vi/aHmg0jsmNhg/hq720.jpg" }
     ]
   }
 ];
@@ -223,7 +235,15 @@ class EtsukoAPI {
     if (!query || !query.trim()) return { results: [] };
     const q = query.trim();
 
-    // 1. Android Native Bridge Search (100% bypass of CORS, unlimited YouTube Music catalog!)
+    // 1. If native bridge is initializing on first launch, wait briefly
+    if (!window.AndroidMedia) {
+      for (let i = 0; i < 4; i++) {
+        await new Promise(r => setTimeout(r, 150));
+        if (window.AndroidMedia) break;
+      }
+    }
+
+    // 2. Android Native Bridge Search (100% bypass of CORS, unlimited YouTube Music catalog!)
     if (window.AndroidMedia && typeof window.AndroidMedia.nativeSearchAsync === 'function') {
       try {
         const rawJson = await new Promise((resolve) => {
@@ -259,7 +279,7 @@ class EtsukoAPI {
       }
     }
 
-    // 2. Direct browser/web fetch or public fallback
+    // 3. Direct browser/web fetch or public fallback
     try {
       const ytResults = await this.searchInnerTube(q, filter, signal);
       if (ytResults && ytResults.length > 0) {
@@ -275,7 +295,7 @@ class EtsukoAPI {
       if (err.name === 'AbortError') throw err;
     }
 
-    // 3. Fallback: filter local curated catalog
+    // 4. Fallback: filter local curated catalog
     const local = this.searchLocalCatalog(q);
     return { results: local };
   }
@@ -322,13 +342,18 @@ class EtsukoAPI {
           if (vid) {
             const cardTitle = card.title?.runs?.[0]?.text || card.header?.musicCardShelfHeaderBasicRenderer?.title?.runs?.[0]?.text || 'Top Result';
             const cardArtist = card.subtitle?.runs?.map(r => r.text).join('') || 'Featured Artist';
+            let cardThumb = `https://i.ytimg.com/vi/${vid}/hq720.jpg`;
+            const cardThumbs = card.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails;
+            if (cardThumbs && cardThumbs.length > 0) {
+              cardThumb = formatHighResThumbnail(vid, cardThumbs[cardThumbs.length - 1].url);
+            }
             results.push({
               videoId: vid,
               title: cardTitle,
               artist: cardArtist,
               album: 'Top Hit',
               duration: '3:30',
-              thumbnail: `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`
+              thumbnail: cardThumb
             });
           }
         }
@@ -387,13 +412,19 @@ class EtsukoAPI {
             duration = col3Runs[0].text.trim();
           }
 
+          let itemThumb = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`;
+          const rawThumbs = renderer.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails;
+          if (rawThumbs && rawThumbs.length > 0) {
+            itemThumb = formatHighResThumbnail(videoId, rawThumbs[rawThumbs.length - 1].url);
+          }
+
           results.push({
             videoId,
             title,
             artist,
             album,
             duration,
-            thumbnail: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
+            thumbnail: itemThumb
           });
         }
       }

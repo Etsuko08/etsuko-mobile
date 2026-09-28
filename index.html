@@ -232,12 +232,19 @@
 
     <!-- Floating Mini-Player -->
     <div class="mini-player" id="mini-player">
+      <div class="mini-progress-line" id="mini-progress-bar"></div>
       <img src="assets/default_cover.png" alt="Cover" class="mini-cover-art" id="mini-cover">
       <div class="mini-info-col" id="mini-info-touch-area">
         <div class="mini-title" id="mini-title">Ready to Stream</div>
         <div class="mini-artist" id="mini-artist">Etsuko Studio</div>
       </div>
       <div class="mini-controls">
+        <button class="btn-mini-control" id="btn-mini-like" title="Like Track">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        </button>
+        <button class="btn-mini-control" id="btn-mini-download" title="Download Offline">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        </button>
         <button class="btn-mini-control" id="btn-mini-play" title="Play/Pause">
           <svg id="icon-mini-play" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
           <svg id="icon-mini-pause" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
@@ -246,7 +253,6 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
         </button>
       </div>
-      <div class="mini-progress-line" id="mini-progress-bar"></div>
     </div>
 
     <!-- Bottom Navigation Bar -->
@@ -334,6 +340,17 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
           <span class="sheet-badge-repeat" id="sheet-repeat-badge"></span>
         </button>
+      </div>
+
+      <!-- Up Next / Queue Drawer inside Sheet -->
+      <div class="sheet-queue-section" id="sheet-queue-section">
+        <div class="sheet-queue-header">
+          <span class="sheet-queue-title">Up Next in Queue</span>
+          <span class="sheet-queue-count" id="sheet-queue-count">0 tracks</span>
+        </div>
+        <div class="sheet-queue-list" id="sheet-queue-list">
+          <!-- Upcoming tracks in queue -->
+        </div>
       </div>
     </div>
 
@@ -423,8 +440,8 @@
     <!-- HTML5 Audio Engine for Offline Storage -->
     <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline></audio>
 
-    <!-- Invisible YouTube 144p Engine Carrier (Off-screen, zero pixels visible) -->
-    <div id="yt-audio-carrier" style="position: absolute; width: 1px; height: 1px; opacity: 0.001; pointer-events: none; left: -9999px; overflow: hidden;">
+    <!-- Invisible YouTube 144p Engine Carrier (On-screen fixed, 100% transparent behind layers) -->
+    <div id="yt-audio-carrier" style="position: fixed; bottom: 0; right: 0; width: 220px; height: 220px; opacity: 0.001; pointer-events: none; z-index: -9999; overflow: hidden;">
       <div id="yt-player"></div>
     </div>
   </div>
