@@ -1,7 +1,7 @@
 // Etsuko Mobile — Main Application Controller
-// Fully Standalone Touch-First Cyberpunk Music Client
+// Fully Standalone Touch-First Cyberpunk / Spotify-Tier Music Client
 
-// Global Hardware & Gesture Back Handler (Available immediately)
+// Global Hardware & Gesture Back Handler
 window.handleHardwareBack = () => {
   if (window.app && typeof window.app.onHardwareBack === 'function') {
     window.app.onHardwareBack();
@@ -16,15 +16,17 @@ class EtsukoMobileApp {
     this.currentSearchRequestId = 0;
     this.currentSearchFilter = 'songs';
     this.activeCrateId = null;
-    this.syncedLyrics = [];
-    this.pendingAddTrack = null;
+    this.likedTracks = [];
+    this.downloadedTracks = [];
     this._lastBackPress = 0;
 
     this.initDOM();
     this.bindEvents();
     this.initPWA();
+    this.checkOnboarding();
     this.loadHomeFeed();
     this.loadLibraryData();
+    this.loadDownloadsData();
     this.loadUserProfileOnStartup();
   }
 
@@ -38,11 +40,16 @@ class EtsukoMobileApp {
     };
     this.navBtns = document.querySelectorAll('.nav-tab-btn');
 
-    // Home / Discover
-    this.trendingGrid = document.getElementById('trending-track-grid');
-    this.moodPills = document.querySelectorAll('.category-pill');
-    this.btnHeroQuick = document.getElementById('btn-hero-quick-play');
-    this.btnHeroSurprise = document.getElementById('btn-hero-surprise');
+    // Top Filter Pills
+    this.topFilterPills = document.querySelectorAll('.top-filter-pill');
+
+    // Home Sections
+    this.jumpBackRow = document.getElementById('jump-back-row');
+    this.recentsRow = document.getElementById('recents-row');
+    this.dailyPicksRow = document.getElementById('daily-picks-row');
+    this.topMixesRow = document.getElementById('top-mixes-row');
+    this.popularAlbumsRow = document.getElementById('popular-albums-row');
+    this.dailyTagDate = document.getElementById('daily-tag-date');
 
     // Search
     this.btnSearchBack = document.getElementById('btn-search-back');
@@ -61,6 +68,7 @@ class EtsukoMobileApp {
     this.playlistTracksList = document.getElementById('playlist-tracks-list');
     this.btnBackToCrates = document.getElementById('btn-back-to-crates');
     this.activeCrateTitle = document.getElementById('active-crate-title');
+    this.btnPlayAllCrate = document.getElementById('btn-play-all-crate');
     this.btnDeleteActiveCrate = document.getElementById('btn-delete-active-crate');
 
     // Sheet Player Elements
@@ -69,43 +77,46 @@ class EtsukoMobileApp {
     this.miniPlayer = document.getElementById('mini-player');
     this.miniTouchArea = document.getElementById('mini-info-touch-area');
 
-    // Modals
+    // Downloads Elements
+    this.inputYtDownloadUrl = document.getElementById('input-yt-download-url');
+    this.btnStartYtDownload = document.getElementById('btn-start-yt-download');
+    this.activeDownloadsCard = document.getElementById('active-downloads-card');
+    this.downloadActiveTitle = document.getElementById('download-active-title');
+    this.downloadSpeedTag = document.getElementById('download-speed-tag');
+    this.downloadProgressBar = document.getElementById('download-progress-bar');
+    this.downloadPercentTag = document.getElementById('download-percent-tag');
+    this.downloadsCountLabel = document.getElementById('downloads-count-label');
+    this.btnPlayAllDownloads = document.getElementById('btn-play-all-downloads');
+    this.downloadedTracksList = document.getElementById('downloaded-tracks-list');
+
+    // Onboarding Modal
+    this.modalOnboarding = document.getElementById('modal-genre-onboarding');
+    this.btnConfirmOnboarding = document.getElementById('btn-confirm-onboarding');
+    this.onboardChips = document.querySelectorAll('.onboard-chip');
+
+    // Custom Crates Modals
     this.modalAddPlaylist = document.getElementById('modal-add-playlist');
     this.btnClosePlaylistModal = document.getElementById('btn-close-playlist-modal');
     this.modalCratesList = document.getElementById('modal-crates-list');
-
     this.modalCreateCrate = document.getElementById('modal-create-crate');
     this.btnCloseCreateModal = document.getElementById('btn-close-create-modal');
     this.inputCrateName = document.getElementById('input-crate-name');
     this.inputCrateDesc = document.getElementById('input-crate-desc');
     this.btnConfirmCreateCrate = document.getElementById('btn-confirm-create-crate');
 
-    // Downloads
-    this.downloadsCountBadge = document.getElementById('downloads-count-badge');
-    this.activeDownloadsCard = document.getElementById('active-downloads-card');
-    this.downloadActiveTitle = document.getElementById('download-active-title');
-    this.downloadSpeedTag = document.getElementById('download-speed-tag');
-    this.downloadProgressBar = document.getElementById('download-progress-bar');
-    this.downloadPercentTag = document.getElementById('download-percent-tag');
-    this.downloadedTracksList = document.getElementById('downloaded-tracks-list');
-
-    // Toast
-    this.toast = document.getElementById('mobile-toast');
-
     // Profile Elements
     this.btnOpenProfile = document.getElementById('btn-open-profile');
     this.modalProfile = document.getElementById('modal-profile');
     this.btnCloseProfile = document.getElementById('btn-close-profile');
-    this.profileModalAvatar = document.getElementById('profile-modal-avatar');
-    this.inputProfileFile = document.getElementById('input-profile-file');
-    this.btnChangeAvatar = document.getElementById('btn-change-avatar');
-    this.btnResetAvatar = document.getElementById('btn-reset-avatar');
+    this.btnReopenGenres = document.getElementById('btn-reopen-genres');
     this.inputProfileName = document.getElementById('input-profile-name');
-    this.inputProfileBio = document.getElementById('input-profile-bio');
     this.profileLikesCount = document.getElementById('profile-likes-count');
     this.profileCratesCount = document.getElementById('profile-crates-count');
     this.btnSaveProfile = document.getElementById('btn-save-profile');
-    this.topAvatarImg = document.getElementById('top-avatar-img');
+    this.topAvatarInitial = document.getElementById('top-avatar-initial');
+
+    // Toast
+    this.toast = document.getElementById('mobile-toast');
   }
 
   bindEvents() {
@@ -118,435 +129,341 @@ class EtsukoMobileApp {
       });
     });
 
-    // Expand / Collapse Player Sheet
-    if (this.miniTouchArea) {
-      this.miniTouchArea.addEventListener('click', () => this.openPlayerSheet());
-    }
-    if (this.btnSheetDismiss) {
-      this.btnSheetDismiss.addEventListener('click', () => this.closePlayerSheet());
-    }
-
-    // Touch Swipe Gestures
-    if (window.touch) {
-      window.touch.initPlayerDrawerGestures(this.playerSheet, () => this.closePlayerSheet());
-      window.touch.initMiniPlayerSwipe(
-        this.miniPlayer,
-        () => window.player.next(),
-        () => window.player.prev()
-      );
-    }
-
-    // Player Play Controls
-    document.getElementById('btn-mini-play')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.player.togglePlay();
-    });
-    document.getElementById('btn-mini-next')?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      window.player.next();
-    });
-    document.getElementById('btn-sheet-play')?.addEventListener('click', () => window.player.togglePlay());
-    document.getElementById('btn-sheet-next')?.addEventListener('click', () => window.player.next());
-    document.getElementById('btn-sheet-prev')?.addEventListener('click', () => window.player.prev());
-    document.getElementById('btn-sheet-shuffle')?.addEventListener('click', () => window.player.toggleShuffle());
-    document.getElementById('btn-sheet-repeat')?.addEventListener('click', () => window.player.toggleRepeat());
-
-    // Like Button in Sheet
-    document.getElementById('sheet-like-btn')?.addEventListener('click', async () => {
-      if (!window.player.currentTrack) return;
-      await this.toggleTrackLike(window.player.currentTrack);
-    });
-
-    // Add to Crate in Sheet
-    document.getElementById('sheet-playlist-btn')?.addEventListener('click', () => {
-      if (!window.player.currentTrack) return;
-      this.openAddToPlaylistModal(window.player.currentTrack);
-    });
-
-    // Download Shortcut in Sheet
-    document.getElementById('sheet-download-btn')?.addEventListener('click', () => {
-      if (window.player && window.player.currentTrack && window.downloader) {
-        window.downloader.startDownload(window.player.currentTrack);
-      }
-    });
-
-    // Mood Pills
-    this.moodPills.forEach(pill => {
+    // Top Filter Pills
+    this.topFilterPills.forEach(pill => {
       pill.addEventListener('click', () => {
-        if (window.touch) window.touch.vibrate(8);
-        this.moodPills.forEach(p => p.classList.remove('active'));
+        this.topFilterPills.forEach(p => p.classList.remove('active'));
         pill.classList.add('active');
-        const cat = pill.getAttribute('data-cat');
-        this.filterMoodStation(cat);
+        const filter = pill.getAttribute('data-filter');
+        this.filterHomeFeed(filter);
       });
     });
 
-    // Hero Buttons
-    this.btnHeroQuick?.addEventListener('click', () => {
-      if (this.trendingTracks && this.trendingTracks.length > 0) {
-        window.player.playTrack(this.trendingTracks[0], this.trendingTracks);
-        this.openPlayerSheet();
-      }
-    });
-    this.btnHeroSurprise?.addEventListener('click', () => {
-      if (this.trendingTracks && this.trendingTracks.length > 0) {
-        const rand = this.trendingTracks[Math.floor(Math.random() * this.trendingTracks.length)];
-        window.player.playTrack(rand, this.trendingTracks);
-        this.openPlayerSheet();
-      }
-    });
+    // Search events
+    if (this.btnSearchBack) {
+      this.btnSearchBack.addEventListener('click', () => {
+        this.switchView('view-discover');
+      });
+    }
 
-    // In-App Back Button in Search View
-    this.btnSearchBack?.addEventListener('click', () => {
-      if (window.touch) window.touch.vibrate(10);
-      this.switchView('view-discover');
-    });
-
-    // Search Input with 320ms Debounce and Immediate Execution on Enter
-    this.searchInput?.addEventListener('input', (e) => {
-      const q = e.target.value.trim();
-      if (this.btnSearchClear) this.btnSearchClear.style.display = q ? 'flex' : 'none';
-      clearTimeout(this.searchDebounceTimer);
-      if (q) {
-        this.searchDebounceTimer = setTimeout(() => this.executeSearch(q), 320);
-      } else {
-        this.searchResultsList.innerHTML = '';
-      }
-    });
-
-    this.searchInput?.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
+    if (this.searchInput) {
+      this.searchInput.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (this.btnSearchClear) this.btnSearchClear.style.display = val.length > 0 ? 'flex' : 'none';
         clearTimeout(this.searchDebounceTimer);
-        const q = this.searchInput.value.trim();
-        if (q) this.executeSearch(q);
-        this.searchInput.blur();
-      }
-    });
+        this.searchDebounceTimer = setTimeout(() => {
+          this.executeSearch(val);
+        }, 320);
+      });
+    }
 
-    this.btnSearchClear?.addEventListener('click', () => {
-      this.searchInput.value = '';
-      this.btnSearchClear.style.display = 'none';
-      this.searchResultsList.innerHTML = '';
-      this.searchInput.focus();
-    });
+    if (this.btnSearchClear) {
+      this.btnSearchClear.addEventListener('click', () => {
+        this.searchInput.value = '';
+        this.btnSearchClear.style.display = 'none';
+        this.searchResultsList.innerHTML = '';
+        this.searchInput.focus();
+      });
+    }
 
     this.searchChips.forEach(chip => {
       chip.addEventListener('click', () => {
         this.searchChips.forEach(c => c.classList.remove('active'));
         chip.classList.add('active');
-        this.currentSearchFilter = chip.getAttribute('data-filter');
-        const q = this.searchInput.value.trim();
-        if (q) this.executeSearch(q);
+        this.currentSearchFilter = chip.getAttribute('data-filter') || 'songs';
+        if (this.searchInput.value.trim()) {
+          this.executeSearch(this.searchInput.value.trim());
+        }
       });
     });
 
-    // Library Controls
-    this.btnPlayAllLikes?.addEventListener('click', (e) => {
-      e.stopPropagation();
-      this.playAllLikedSongs();
-    });
-    this.cardLikes?.addEventListener('click', () => {
-      this.openLikedSongsView();
-    });
-
-    this.btnCreateCrateModal?.addEventListener('click', () => {
-      this.modalCreateCrate.classList.add('open');
-      this.inputCrateName.focus();
-    });
-    this.btnCloseCreateModal?.addEventListener('click', () => {
-      this.modalCreateCrate.classList.remove('open');
-    });
-
-    this.btnConfirmCreateCrate?.addEventListener('click', async () => {
-      const name = this.inputCrateName.value.trim();
-      const desc = this.inputCrateDesc.value.trim();
-      if (!name) return;
-      try {
-        await window.api.createPlaylist(name, desc);
-        this.inputCrateName.value = '';
-        this.inputCrateDesc.value = '';
-        this.modalCreateCrate.classList.remove('open');
-        this.showToast('Crate created!');
-        this.loadLibraryData();
-      } catch (e) {
-        this.showToast('Failed to create crate');
-      }
-    });
-
-    this.btnBackToCrates?.addEventListener('click', () => {
-      this.playlistDetailView.style.display = 'none';
-      this.playlistsList.style.display = 'flex';
-      this.cardLikes.style.display = 'block';
-    });
-
-    this.btnDeleteActiveCrate?.addEventListener('click', async () => {
-      if (!this.activeCrateId) return;
-      if (confirm('Delete this playlist crate?')) {
-        await window.api.deletePlaylist(this.activeCrateId);
-        this.showToast('Playlist deleted');
-        this.btnBackToCrates.click();
-        this.loadLibraryData();
-      }
-    });
-
-    // Modal Add To Playlist
-    this.btnClosePlaylistModal?.addEventListener('click', () => {
-      this.modalAddPlaylist.classList.remove('open');
-    });
-
-    // Profile Modal Events
-    this.btnOpenProfile?.addEventListener('click', async () => {
-      if (window.touch) window.touch.vibrate(12);
-      await this.openProfileModal();
-    });
-    this.btnCloseProfile?.addEventListener('click', () => {
-      this.modalProfile?.classList.remove('open');
-    });
-    this.btnChangeAvatar?.addEventListener('click', () => {
-      this.inputProfileFile?.click();
-    });
-    this.inputProfileFile?.addEventListener('change', (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (re) => {
-          if (this.profileModalAvatar) this.profileModalAvatar.src = re.target.result;
-        };
-        reader.readAsDataURL(file);
-      }
-    });
-    this.btnResetAvatar?.addEventListener('click', () => {
-      if (this.profileModalAvatar) this.profileModalAvatar.src = 'assets/default_user.png';
-    });
-    this.btnSaveProfile?.addEventListener('click', () => {
-      this.saveUserProfile();
-    });
-
-    // Offline Downloader Event Listeners
-    this.initDownloaderEvents();
-  }
-
-  // --- Modern Android Gesture & Hardware Back Button Routing ---
-  onHardwareBack() {
-    // 1. Close open modal if any
-    const openModal = document.querySelector('.mobile-modal-backdrop.open');
-    if (openModal) {
-      openModal.classList.remove('open');
-      return;
+    // Library Events
+    if (this.cardLikes) {
+      this.cardLikes.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-play-all-likes')) return;
+        this.openLikedSongsView();
+      });
     }
 
-    // 2. Close player sheet if open
-    if (this.playerSheet && this.playerSheet.classList.contains('open')) {
-      this.closePlayerSheet();
-      return;
+    if (this.btnPlayAllLikes) {
+      this.btnPlayAllLikes.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.playAllLikedSongs();
+      });
     }
 
-    // 3. Close playlist detail view in Library
-    if (this.playlistDetailView && this.playlistDetailView.style.display !== 'none') {
-      this.btnBackToCrates?.click();
-      return;
+    if (this.btnBackToCrates) {
+      this.btnBackToCrates.addEventListener('click', () => {
+        this.activeCrateId = null;
+        this.playlistDetailView.style.display = 'none';
+        this.cardLikes.style.display = 'block';
+        this.playlistsList.style.display = 'flex';
+      });
     }
 
-    // 4. Return to Discover view from any other view
-    if (this.currentView !== 'view-discover') {
-      this.switchView('view-discover');
-      return;
+    if (this.btnPlayAllCrate) {
+      this.btnPlayAllCrate.addEventListener('click', () => {
+        if (this.activeCrateTracks && this.activeCrateTracks.length > 0) {
+          window.player.playTrack(this.activeCrateTracks[0], this.activeCrateTracks);
+          this.openPlayerSheet();
+        }
+      });
     }
 
-    // 5. Clear search input if filled
-    if (this.searchInput && this.searchInput.value) {
-      this.searchInput.value = '';
-      this.btnSearchClear?.click();
-      return;
+    // Downloads Link Downloader
+    if (this.btnStartYtDownload) {
+      this.btnStartYtDownload.addEventListener('click', () => {
+        const url = this.inputYtDownloadUrl.value;
+        if (!url || !url.trim()) {
+          this.showToast('Please paste a YouTube link or video ID');
+          return;
+        }
+        if (window.downloader) {
+          window.downloader.downloadFromUrl(url);
+          this.inputYtDownloadUrl.value = '';
+        }
+      });
     }
 
-    // 6. Double back press to exit gracefully
-    const now = Date.now();
-    if (this._lastBackPress && (now - this._lastBackPress < 2000)) {
-      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
-        window.Capacitor.Plugins.App.exitApp();
-      }
-    } else {
-      this._lastBackPress = now;
-      this.showToast('Press back again to exit');
+    if (this.btnPlayAllDownloads) {
+      this.btnPlayAllDownloads.addEventListener('click', () => {
+        this.playAllDownloads();
+      });
     }
+
+    // Mini Player touch opens Sheet Player
+    if (this.miniTouchArea) {
+      this.miniTouchArea.addEventListener('click', () => {
+        this.openPlayerSheet();
+      });
+    }
+
+    if (this.btnSheetDismiss) {
+      this.btnSheetDismiss.addEventListener('click', () => {
+        this.closePlayerSheet();
+      });
+    }
+
+    // Downloads Engine Event Listeners
+    window.addEventListener('etsuko:download-started', (e) => {
+      const task = e.detail;
+      this.showActiveDownloadCard(task);
+    });
+
+    window.addEventListener('etsuko:download-progress', (e) => {
+      const task = e.detail;
+      this.updateActiveDownloadCard(task);
+    });
+
+    window.addEventListener('etsuko:download-complete', (e) => {
+      this.hideActiveDownloadCard();
+      this.loadDownloadsData();
+    });
+
+    window.addEventListener('etsuko:download-deleted', () => {
+      this.loadDownloadsData();
+    });
+
+    // Profile Modals
+    if (this.btnOpenProfile) {
+      this.btnOpenProfile.addEventListener('click', () => {
+        this.openProfileModal();
+      });
+    }
+
+    if (this.btnCloseProfile) {
+      this.btnCloseProfile.addEventListener('click', () => {
+        this.modalProfile.classList.remove('active');
+      });
+    }
+
+    if (this.btnReopenGenres) {
+      this.btnReopenGenres.addEventListener('click', () => {
+        this.modalProfile.classList.remove('active');
+        this.openOnboardingModal();
+      });
+    }
+
+    if (this.btnSaveProfile) {
+      this.btnSaveProfile.addEventListener('click', () => {
+        this.saveProfile();
+      });
+    }
+
+    // Onboarding Chips
+    this.onboardChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        chip.classList.toggle('selected');
+      });
+    });
+
+    if (this.btnConfirmOnboarding) {
+      this.btnConfirmOnboarding.addEventListener('click', () => {
+        const selected = [];
+        this.onboardChips.forEach(c => {
+          if (c.classList.contains('selected')) selected.push(c.getAttribute('data-genre'));
+        });
+        if (window.api) window.api.saveUserGenres(selected.length > 0 ? selected : ['english', 'hindi', 'phonk']);
+        this.modalOnboarding.classList.remove('active');
+        this.showToast('Preferences saved! Refreshing your daily feed.');
+        this.loadHomeFeed();
+      });
+    }
+
+    // Recents update event
+    window.addEventListener('etsuko:recents-updated', () => {
+      this.loadHomeFeed();
+    });
   }
 
   initPWA() {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js').catch(err => {
-        console.log('SW register note:', err);
+      navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+  }
+
+  checkOnboarding() {
+    if (window.api && !window.api.getUserGenres()) {
+      setTimeout(() => this.openOnboardingModal(), 500);
+    }
+  }
+
+  openOnboardingModal() {
+    if (this.modalOnboarding) {
+      const saved = window.api ? window.api.getUserGenres() || [] : [];
+      this.onboardChips.forEach(c => {
+        const g = c.getAttribute('data-genre');
+        c.classList.toggle('selected', saved.includes(g));
       });
+      this.modalOnboarding.classList.add('active');
     }
   }
 
   switchView(viewId) {
-    Object.keys(this.views).forEach(vKey => {
-      const view = this.views[vKey];
-      if (vKey === viewId) {
-        view.classList.add('active');
-      } else {
-        view.classList.remove('active');
-      }
+    if (!this.views[viewId]) return;
+    this.currentView = viewId;
+
+    Object.keys(this.views).forEach(key => {
+      this.views[key].classList.toggle('active', key === viewId);
     });
 
     this.navBtns.forEach(btn => {
-      if (btn.getAttribute('data-view') === viewId) {
-        btn.classList.add('active');
-      } else {
-        btn.classList.remove('active');
-      }
+      const match = btn.getAttribute('data-view') === viewId;
+      btn.classList.toggle('active', match);
     });
 
-    this.currentView = viewId;
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    const viewport = document.getElementById('view-viewport');
+    if (viewport) viewport.scrollTo({ top: 0, behavior: 'smooth' });
 
-    if (viewId === 'view-downloads') {
-      this.renderDownloadsView();
-    }
+    if (viewId === 'view-library') this.loadLibraryData();
+    if (viewId === 'view-downloads') this.loadDownloadsData();
   }
 
-  openPlayerSheet() {
-    if (this.playerSheet) {
-      this.playerSheet.classList.add('open');
-      if (window.touch) window.touch.vibrate(10);
-    }
-  }
-
-  closePlayerSheet() {
-    if (this.playerSheet) {
-      this.playerSheet.classList.remove('open');
-      this.playerSheet.style.transform = '';
-    }
-  }
-
-  showToast(msg, duration = 2200) {
-    if (!this.toast) return;
-    this.toast.textContent = msg;
-    this.toast.classList.add('show');
-    clearTimeout(this._toastTimer);
-    this._toastTimer = setTimeout(() => {
-      this.toast.classList.remove('show');
-    }, duration);
-  }
-
-  // --- Profile Logic ---
-  async openProfileModal() {
-    let profile = { name: 'Cyber Operator', bio: 'Listening to the grid...', avatar: 'assets/default_user.png' };
-    try {
-      const saved = localStorage.getItem('etsuko_user_profile');
-      if (saved) profile = JSON.parse(saved);
-    } catch (e) {}
-
-    if (this.inputProfileName) this.inputProfileName.value = profile.name || 'Cyber Operator';
-    if (this.inputProfileBio) this.inputProfileBio.value = profile.bio || 'Listening to the grid...';
-    if (this.profileModalAvatar) this.profileModalAvatar.src = profile.avatar || 'assets/default_user.png';
-
-    const likes = await window.api.getLikedTracks();
-    const crates = await window.api.getPlaylists();
-    if (this.profileLikesCount) this.profileLikesCount.textContent = likes.length;
-    if (this.profileCratesCount) this.profileCratesCount.textContent = crates.length;
-
-    this.modalProfile?.classList.add('open');
-  }
-
-  saveUserProfile() {
-    const name = this.inputProfileName ? this.inputProfileName.value.trim() : 'Cyber Operator';
-    const bio = this.inputProfileBio ? this.inputProfileBio.value.trim() : '';
-    const avatar = this.profileModalAvatar ? this.profileModalAvatar.src : 'assets/default_user.png';
-
-    const profile = { name, bio, avatar };
-    localStorage.setItem('etsuko_user_profile', JSON.stringify(profile));
-    if (this.topAvatarImg) this.topAvatarImg.src = avatar;
-
-    this.modalProfile?.classList.remove('open');
-    this.showToast('Profile updated!');
-  }
-
-  loadUserProfileOnStartup() {
-    try {
-      const saved = localStorage.getItem('etsuko_user_profile');
-      if (saved) {
-        const p = JSON.parse(saved);
-        if (p.avatar && this.topAvatarImg) this.topAvatarImg.src = p.avatar;
-      }
-    } catch (e) {}
-  }
-
-  // --- Discover Feeds ---
+  // --- Spotify-Style Home Feed Loading ---
   async loadHomeFeed() {
     try {
-      const data = await window.api.getHomeFeed();
-      this.trendingTracks = data.trending || [];
-      this.renderTrendingGrid(this.trendingTracks);
+      const feed = await window.api.getHomeFeed();
+
+      // Today date tag
+      if (this.dailyTagDate) {
+        const d = new Date();
+        const options = { month: 'short', day: 'numeric' };
+        this.dailyTagDate.textContent = d.toLocaleDateString('en-US', options).toUpperCase();
+      }
+
+      this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
+      this.renderHorizontalRow(this.recentsRow, feed.recents);
+      this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
+      this.renderTopMixes(this.topMixesRow, feed.topMixes);
+      this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums);
     } catch (e) {
-      console.warn('[App] Home feed fallback:', e);
+      console.warn('[HomeFeed] Error:', e);
     }
   }
 
-  renderTrendingGrid(tracks) {
-    this.trendingGrid.innerHTML = '';
-    tracks.slice(0, 16).forEach(track => {
-      const isLiked = window.api.isLiked(track.videoId);
+  renderHorizontalRow(container, tracks) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    (tracks || []).forEach(track => {
       const card = document.createElement('div');
-      card.className = 'track-card';
+      card.className = 'spotify-card';
+      const isLiked = window.api ? window.api.isLiked(track.videoId) : false;
+
       card.innerHTML = `
-        <div class="track-card-thumb-wrap">
-          <img src="${track.thumbnail || 'assets/default_cover.png'}" loading="lazy" alt="Cover" onerror="this.src='assets/default_cover.png'">
-          <button class="track-card-download-btn" data-vid="${track.videoId}" title="Download">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          </button>
-          <button class="track-card-like-btn ${isLiked ? 'liked' : ''}" data-vid="${track.videoId}" title="Like">
-            <svg viewBox="0 0 24 24" width="15" height="15" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <div class="spotify-card-cover-box">
+          <img src="${track.thumbnail || 'assets/default_cover.png'}" class="spotify-card-cover" alt="Cover" onerror="this.src='assets/default_cover.png'">
+          <button class="spotify-card-play-btn" title="Play">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
           </button>
         </div>
-        <div class="track-card-title">${this.escapeHtml(track.title)}</div>
-        <div class="track-card-artist">${this.escapeHtml(track.artist)}</div>
+        <div class="spotify-card-meta">
+          <span class="spotify-card-tag">${track.tag || 'Track'}</span>
+          <div class="spotify-card-title">${this.escapeHtml(track.title)}</div>
+          <div class="spotify-card-artist">${this.escapeHtml(track.artist)}</div>
+        </div>
       `;
 
-      if (window.downloader) {
-        window.downloader.isDownloaded(track.videoId).then(isDl => {
-          if (isDl) card.querySelector('.track-card-download-btn')?.classList.add('downloaded');
-        });
-      }
-
-      card.querySelector('.track-card-download-btn')?.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (window.downloader) window.downloader.startDownload(track);
-      });
-
-      card.querySelector('.track-card-like-btn').addEventListener('click', async (e) => {
-        e.stopPropagation();
-        track.isLiked = window.api.isLiked(track.videoId);
-        await this.toggleTrackLike(track);
-        const btn = card.querySelector('.track-card-like-btn');
-        const nowLiked = window.api.isLiked(track.videoId);
-        btn.classList.toggle('liked', nowLiked);
-        btn.querySelector('svg').setAttribute('fill', nowLiked ? '#ec4899' : 'none');
-      });
-
       card.addEventListener('click', () => {
-        track.isLiked = window.api.isLiked(track.videoId);
         window.player.playTrack(track, tracks);
         this.openPlayerSheet();
       });
 
-      this.trendingGrid.appendChild(card);
+      container.appendChild(card);
     });
   }
 
-  async filterMoodStation(mood) {
-    try {
-      const tracks = window.api.getMoodTracks(mood);
-      this.trendingTracks = tracks;
-      this.renderTrendingGrid(tracks);
-    } catch (e) {
-      this.loadHomeFeed();
+  renderTopMixes(container, mixes) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    (mixes || []).forEach(mix => {
+      const card = document.createElement('div');
+      card.className = 'spotify-mix-card';
+      card.style.background = mix.gradient || 'linear-gradient(135deg, #10b981, #064e3b)';
+
+      card.innerHTML = `
+        <div class="spotify-mix-banner" style="background: ${mix.bannerColor || '#10b981'};">
+          ${this.escapeHtml(mix.title)}
+        </div>
+        <div class="spotify-mix-info">
+          <div class="spotify-mix-sub">${this.escapeHtml(mix.subtitle)}</div>
+        </div>
+        <button class="spotify-mix-play-btn" title="Play Mix">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+        </button>
+      `;
+
+      card.addEventListener('click', () => {
+        if (mix.tracks && mix.tracks.length > 0) {
+          window.player.playTrack(mix.tracks[0], mix.tracks);
+          this.openPlayerSheet();
+        }
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  filterHomeFeed(filter) {
+    const jumpSection = document.getElementById('section-jump-back');
+    const recentsSection = document.getElementById('section-recents');
+    const dailySection = document.getElementById('section-daily-picks');
+    const mixesSection = document.getElementById('section-top-mixes');
+    const albumsSection = document.getElementById('section-popular-albums');
+
+    if (filter === 'all') {
+      [jumpSection, recentsSection, dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+    } else if (filter === 'music') {
+      [jumpSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+      [mixesSection].forEach(s => s && (s.style.display = 'none'));
+    } else { // podcasts / chill
+      [jumpSection, mixesSection].forEach(s => s && (s.style.display = 'block'));
+      [recentsSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
     }
   }
 
-  // --- Search Engine (Guarded Against Race Conditions & Stale Overwrites) ---
+  // --- Search Engine (Instant & Pure UI) ---
   async executeSearch(query) {
     if (!query || !query.trim()) {
       this.searchResultsList.innerHTML = '';
@@ -560,15 +477,17 @@ class EtsukoMobileApp {
     }
     this.searchAbortController = new AbortController();
 
+    // Clean loading skeleton (Zero mention of YouTube)
     this.searchResultsList.innerHTML = `
-      <div style="padding: 36px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
-        Searching YouTube Music...
+      <div style="padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        <div class="search-pulse-dot"></div>
+        Searching catalog...
       </div>
     `;
 
     try {
       const data = await window.api.search(q, this.currentSearchFilter, this.searchAbortController.signal);
-      if (reqId !== this.currentSearchRequestId) return; // Drop stale request!
+      if (reqId !== this.currentSearchRequestId) return;
 
       const results = data.results || [];
       this.renderSearchResults(results);
@@ -603,50 +522,33 @@ class EtsukoMobileApp {
         <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
         <div class="track-row-info">
           <div class="track-row-title">${this.escapeHtml(item.title)}</div>
-          <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${item.duration || '3:30'}</div>
+          <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${this.escapeHtml(item.album || 'Single')}</div>
         </div>
         <div class="track-row-actions">
-          <button class="btn-track-action btn-track-download" title="Download Offline">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <button class="btn-track-action btn-dl-row" title="Download Offline">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
           </button>
-          <button class="btn-track-action btn-track-like ${isLiked ? 'liked' : ''}" data-vid="${item.videoId}" title="Like">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="${isLiked ? '#ec4899' : 'none'}" stroke="${isLiked ? '#ec4899' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-          </button>
-          <button class="btn-track-action btn-add-pl" title="Add to Crate">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+          <button class="btn-track-action btn-like-row ${isLiked ? 'liked' : ''}" title="Like">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
           </button>
         </div>
       `;
 
-      if (window.downloader) {
-        window.downloader.isDownloaded(item.videoId).then(isDl => {
-          if (isDl) row.querySelector('.btn-track-download')?.classList.add('downloaded');
-        });
-      }
-
-      row.querySelector('.btn-track-download')?.addEventListener('click', (e) => {
+      row.querySelector('.btn-dl-row').addEventListener('click', (e) => {
         e.stopPropagation();
         if (window.downloader) window.downloader.startDownload(item);
       });
 
-      row.querySelector('.btn-track-like').addEventListener('click', async (e) => {
+      row.querySelector('.btn-like-row').addEventListener('click', async (e) => {
         e.stopPropagation();
-        item.isLiked = window.api.isLiked(item.videoId);
         await this.toggleTrackLike(item);
-        const btn = row.querySelector('.btn-track-like');
         const nowLiked = window.api.isLiked(item.videoId);
+        const btn = row.querySelector('.btn-like-row');
         btn.classList.toggle('liked', nowLiked);
         btn.querySelector('svg').setAttribute('fill', nowLiked ? '#ec4899' : 'none');
-        btn.querySelector('svg').setAttribute('stroke', nowLiked ? '#ec4899' : 'currentColor');
-      });
-
-      row.querySelector('.btn-add-pl').addEventListener('click', (e) => {
-        e.stopPropagation();
-        this.openAddToPlaylistModal(item);
       });
 
       row.addEventListener('click', () => {
-        item.isLiked = window.api.isLiked(item.videoId);
         window.player.playTrack(item, items);
         this.openPlayerSheet();
       });
@@ -655,7 +557,7 @@ class EtsukoMobileApp {
     });
   }
 
-  // --- Library / Crates ---
+  // --- Library & Liked Songs Section ---
   async loadLibraryData() {
     try {
       const likes = await window.api.getLikedTracks();
@@ -663,10 +565,36 @@ class EtsukoMobileApp {
       if (this.likesCountLabel) {
         this.likesCountLabel.textContent = `${likes.length} track${likes.length === 1 ? '' : 's'} stored`;
       }
+      if (this.profileLikesCount) {
+        this.profileLikesCount.textContent = `${likes.length}`;
+      }
 
       const crates = await window.api.getPlaylists();
       this.renderCratesList(crates);
     } catch (e) {}
+  }
+
+  async openLikedSongsView() {
+    this.activeCrateId = 'liked_songs_virtual';
+    this.activeCrateTitle.textContent = 'Liked Songs';
+    this.btnDeleteActiveCrate.style.display = 'none';
+    this.cardLikes.style.display = 'none';
+    this.playlistsList.style.display = 'none';
+    this.playlistDetailView.style.display = 'block';
+
+    const likes = await window.api.getLikedTracks();
+    this.likedTracks = likes;
+    this.activeCrateTracks = likes;
+    this.renderPlaylistTracks(likes, 'liked');
+  }
+
+  playAllLikedSongs() {
+    if (this.likedTracks && this.likedTracks.length > 0) {
+      window.player.playTrack(this.likedTracks[0], this.likedTracks);
+      this.openPlayerSheet();
+    } else {
+      this.showToast('No liked songs yet! Like songs by tapping the heart icon.');
+    }
   }
 
   renderCratesList(crates) {
@@ -702,276 +630,251 @@ class EtsukoMobileApp {
   async openCrateDetails(crateId, crateName) {
     this.activeCrateId = crateId;
     this.activeCrateTitle.textContent = crateName;
+    this.btnDeleteActiveCrate.style.display = 'block';
     this.cardLikes.style.display = 'none';
     this.playlistsList.style.display = 'none';
     this.playlistDetailView.style.display = 'block';
 
-    this.playlistTracksList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted);">Loading crate tracks...</div>';
-    try {
-      const pl = await window.api.getPlaylist(crateId);
-      const tracks = pl.tracks || [];
-      this.playlistTracksList.innerHTML = '';
-      if (tracks.length === 0) {
-        this.playlistTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">Crate is empty.</div>';
-        return;
-      }
-      tracks.forEach(track => {
-        const row = document.createElement('div');
-        row.className = 'track-row';
-        row.innerHTML = `
-          <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
-            <div class="track-row-artist">${this.escapeHtml(track.artist)}</div>
-          </div>
-          <button class="btn-track-action btn-rm-track" title="Remove" style="color: #ef4444;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          </button>
-        `;
-        row.querySelector('.btn-rm-track').addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await window.api.removeTrackFromPlaylist(crateId, track.videoId);
-          this.showToast('Track removed from crate');
-          this.openCrateDetails(crateId, crateName);
-        });
-        row.addEventListener('click', () => {
-          window.player.playTrack(track, tracks);
-          this.openPlayerSheet();
-        });
-        this.playlistTracksList.appendChild(row);
-      });
-    } catch (e) {
-      this.playlistTracksList.innerHTML = '<div style="padding: 16px; text-align: center; color: #ef4444;">Failed to load crate.</div>';
-    }
+    const pl = await window.api.getPlaylist(crateId);
+    const tracks = pl.tracks || [];
+    this.activeCrateTracks = tracks;
+    this.renderPlaylistTracks(tracks, crateId);
   }
 
-  async openLikedSongsView() {
-    this.openCrateDetails('liked_songs_virtual', 'Liked Songs');
-    this.activeCrateTitle.textContent = 'Liked Songs';
-    this.btnDeleteActiveCrate.style.display = 'none';
-
+  renderPlaylistTracks(tracks, contextId) {
     this.playlistTracksList.innerHTML = '';
-    const likes = await window.api.getLikedTracks();
-    this.likedTracks = likes;
-
-    if (!this.likedTracks || this.likedTracks.length === 0) {
-      this.playlistTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No liked tracks yet.</div>';
+    if (!tracks || tracks.length === 0) {
+      this.playlistTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No tracks in this collection.</div>';
       return;
     }
-    this.likedTracks.forEach(track => {
+
+    tracks.forEach((track, idx) => {
       const row = document.createElement('div');
       row.className = 'track-row';
       row.innerHTML = `
+        <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); width: 20px; text-align: center;">${idx + 1}</div>
         <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
         <div class="track-row-info">
           <div class="track-row-title">${this.escapeHtml(track.title)}</div>
           <div class="track-row-artist">${this.escapeHtml(track.artist)}</div>
         </div>
+        <button class="btn-track-action btn-rm-track" title="Remove" style="color: #ef4444;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       `;
+
+      row.querySelector('.btn-rm-track').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (contextId === 'liked') {
+          await window.api.unlikeTrack(track.videoId);
+          this.openLikedSongsView();
+        } else {
+          await window.api.removeTrackFromPlaylist(contextId, track.videoId);
+          this.openCrateDetails(contextId, this.activeCrateTitle.textContent);
+        }
+      });
+
       row.addEventListener('click', () => {
-        window.player.playTrack(track, this.likedTracks);
+        window.player.playTrack(track, tracks);
         this.openPlayerSheet();
       });
+
       this.playlistTracksList.appendChild(row);
     });
   }
 
-  playAllLikedSongs() {
-    if (this.likedTracks && this.likedTracks.length > 0) {
-      window.player.playTrack(this.likedTracks[0], this.likedTracks);
-      this.openPlayerSheet();
-    } else {
-      this.showToast('No liked songs in collection');
-    }
-  }
-
   async toggleTrackLike(track) {
-    try {
-      const nowLiked = await window.api.toggleLike(track);
-      track.isLiked = nowLiked;
-      this.showToast(nowLiked ? '❤️ Saved to Liked Songs' : 'Removed from Liked Songs');
-
-      if (window.player.currentTrack && window.player.currentTrack.videoId === track.videoId) {
-        window.player.currentTrack.isLiked = nowLiked;
-        window.player.updateTrackUI(window.player.currentTrack);
-      }
-
-      // Sync visible buttons matching this videoId
-      document.querySelectorAll(`[data-vid="${track.videoId}"]`).forEach(btn => {
-        btn.classList.toggle('liked', nowLiked);
-        const svg = btn.querySelector('svg');
-        if (svg) {
-          svg.setAttribute('fill', nowLiked ? '#ec4899' : 'none');
-          svg.setAttribute('stroke', nowLiked ? '#ec4899' : 'currentColor');
-        }
-      });
-
-      this.loadLibraryData();
-    } catch (e) {
-      console.warn('Like toggle notice:', e);
-      this.showToast('Like updated');
-    }
+    if (!window.api) return;
+    const isNowLiked = await window.api.toggleLike(track);
+    this.showToast(isNowLiked ? `Added to Liked Songs` : `Removed from Liked Songs`);
+    this.loadLibraryData();
   }
 
-  async openAddToPlaylistModal(track) {
-    this.pendingAddTrack = track;
-    this.modalAddPlaylist.classList.add('open');
-    this.modalCratesList.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted);">Loading crates...</div>';
-
-    try {
-      const crates = await window.api.getPlaylists();
-      this.modalCratesList.innerHTML = '';
-      if (crates.length === 0) {
-        this.modalCratesList.innerHTML = `
-          <div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
-            No crates available. Create one first!
-          </div>
-        `;
-        return;
-      }
-      crates.forEach(c => {
-        const row = document.createElement('div');
-        row.className = 'track-row';
-        const count = c.tracks ? c.tracks.length : (c.trackCount || 0);
-        row.innerHTML = `
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(c.title || c.name)}</div>
-            <div class="track-row-artist">${count} tracks</div>
-          </div>
-          <button class="btn-mobile-pill primary" style="padding: 6px 12px; font-size: 11px;">Add</button>
-        `;
-        row.addEventListener('click', async () => {
-          try {
-            await window.api.addTrackToPlaylist(c.id, this.pendingAddTrack);
-            this.modalAddPlaylist.classList.remove('open');
-            this.showToast(`Added to "${c.title || c.name}"`);
-            this.loadLibraryData();
-          } catch (e) {
-            this.showToast('Failed to add track to crate');
-          }
-        });
-        this.modalCratesList.appendChild(row);
-      });
-    } catch (e) {
-      this.modalCratesList.innerHTML = '<div style="padding: 16px; text-align: center; color: #ef4444;">Failed to load crates.</div>';
-    }
-  }
-
-  // --- Offline Downloads Engine ---
-  initDownloaderEvents() {
-    window.addEventListener('etsuko:download-started', (e) => {
-      const task = e.detail;
-      if (this.activeDownloadsCard) {
-        this.activeDownloadsCard.style.display = 'block';
-        if (this.downloadActiveTitle) this.downloadActiveTitle.textContent = task.track?.title || 'Downloading...';
-        if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = 'Starting...';
-        if (this.downloadProgressBar) this.downloadProgressBar.style.width = '0%';
-        if (this.downloadPercentTag) this.downloadPercentTag.textContent = '0%';
-      }
-    });
-
-    window.addEventListener('etsuko:download-progress', (e) => {
-      const task = e.detail;
-      if (this.activeDownloadsCard) {
-        this.activeDownloadsCard.style.display = 'block';
-        if (this.downloadActiveTitle) this.downloadActiveTitle.textContent = task.track?.title || 'Downloading...';
-        if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = task.speedText || '0 KB/s';
-        if (this.downloadProgressBar) this.downloadProgressBar.style.width = `${task.progress || 0}%`;
-        if (this.downloadPercentTag) this.downloadPercentTag.textContent = `${task.progress || 0}%`;
-      }
-    });
-
-    window.addEventListener('etsuko:download-complete', () => {
-      if (this.activeDownloadsCard) {
-        this.activeDownloadsCard.style.display = 'none';
-      }
-      this.renderDownloadsView();
-    });
-
-    window.addEventListener('etsuko:download-error', () => {
-      if (this.activeDownloadsCard) {
-        this.activeDownloadsCard.style.display = 'none';
-      }
-      this.renderDownloadsView();
-    });
-
-    window.addEventListener('etsuko:download-deleted', () => {
-      this.renderDownloadsView();
-    });
-  }
-
-  async renderDownloadsView() {
-    if (!this.downloadedTracksList || !window.downloader) return;
-
+  // --- Offline Downloads Section ---
+  async loadDownloadsData() {
+    if (!window.downloader) return;
     try {
       const tracks = await window.downloader.getAllDownloadedTracks();
-      if (this.downloadsCountBadge) {
-        this.downloadsCountBadge.textContent = `${tracks.length} SONG${tracks.length === 1 ? '' : 'S'}`;
+      this.downloadedTracks = tracks;
+
+      if (this.downloadsCountLabel) {
+        this.downloadsCountLabel.textContent = `${tracks.length} song${tracks.length === 1 ? '' : 's'} stored offline`;
+      }
+      if (this.profileCratesCount) {
+        this.profileCratesCount.textContent = `${tracks.length}`;
       }
 
-      this.downloadedTracksList.innerHTML = '';
-      if (tracks.length === 0) {
-        this.downloadedTracksList.innerHTML = `
-          <div style="text-align: center; padding: 48px 16px; color: var(--text-muted); font-size: 13px;">
-            <svg viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 12px; opacity: 0.4; display: block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-            No offline music downloaded yet.<br>
-            <span style="font-size: 11.5px; opacity: 0.8; margin-top: 6px; display: block;">Tap the download icon on any song to listen without internet.</span>
-          </div>
-        `;
-        return;
-      }
-
-      tracks.forEach(track => {
-        const row = document.createElement('div');
-        row.className = 'track-row';
-        row.innerHTML = `
-          <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Cover" onerror="this.src='assets/default_cover.png'">
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
-            <div class="track-row-artist" style="display: flex; align-items: center; gap: 6px; margin-top: 2px;">
-              <span class="offline-badge">⚡ Offline</span>
-              <span>${this.escapeHtml(track.artist)} • ${track.duration || '3:30'}</span>
-            </div>
-          </div>
-          <div class="track-row-actions">
-            <button class="btn-delete-download" title="Delete offline song">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
-          </div>
-        `;
-
-        row.querySelector('.btn-delete-download')?.addEventListener('click', async (e) => {
-          e.stopPropagation();
-          await window.downloader.deleteDownloadedTrack(track.videoId);
-          this.showToast('Removed from offline downloads');
-          this.renderDownloadsView();
-        });
-
-        row.addEventListener('click', () => {
-          window.player.playTrack(track, tracks);
-          this.openPlayerSheet();
-        });
-
-        this.downloadedTracksList.appendChild(row);
-      });
+      this.renderDownloadedTracksList(tracks);
     } catch (e) {
-      console.warn('[App] Render downloads error:', e);
+      console.warn('[Downloads] Error loading:', e);
     }
   }
 
-  escapeHtml(str) {
-    if (!str) return '';
-    return str.replace(/[&<>'"]/g, tag => ({
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      "'": '&#39;',
-      '"': '&quot;'
-    }[tag] || tag));
+  renderDownloadedTracksList(tracks) {
+    if (!this.downloadedTracksList) return;
+    this.downloadedTracksList.innerHTML = '';
+
+    if (!tracks || tracks.length === 0) {
+      this.downloadedTracksList.innerHTML = `
+        <div style="padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
+          No offline music downloaded yet.<br>
+          <span style="font-size: 11px; color: var(--accent-cyan); margin-top: 6px; display: inline-block;">
+            Paste any YouTube link above or tap the download button on any song.
+          </span>
+        </div>
+      `;
+      return;
+    }
+
+    tracks.forEach((track, idx) => {
+      const row = document.createElement('div');
+      row.className = 'track-row';
+      row.innerHTML = `
+        <div style="font-size: 12px; font-weight: 700; color: #10b981; width: 20px; text-align: center;">${idx + 1}</div>
+        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
+        <div class="track-row-info">
+          <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+          <div class="track-row-artist" style="color: #10b981;">⚡ Offline Master • ${this.escapeHtml(track.artist)}</div>
+        </div>
+        <button class="btn-track-action btn-del-download" title="Delete from Offline" style="color: #ef4444;">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+        </button>
+      `;
+
+      row.querySelector('.btn-del-download').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await window.downloader.deleteDownloadedTrack(track.videoId);
+        this.showToast('Removed from Offline Vault');
+        this.loadDownloadsData();
+      });
+
+      row.addEventListener('click', () => {
+        window.player.playTrack(track, tracks);
+        this.openPlayerSheet();
+      });
+
+      this.downloadedTracksList.appendChild(row);
+    });
+  }
+
+  playAllDownloads() {
+    if (this.downloadedTracks && this.downloadedTracks.length > 0) {
+      window.player.playTrack(this.downloadedTracks[0], this.downloadedTracks);
+      this.openPlayerSheet();
+    } else {
+      this.showToast('No downloaded tracks yet! Paste a link to download.');
+    }
+  }
+
+  showActiveDownloadCard(task) {
+    if (!this.activeDownloadsCard) return;
+    this.activeDownloadsCard.style.display = 'block';
+    if (this.downloadActiveTitle) this.downloadActiveTitle.textContent = task.track.title || 'Downloading...';
+    if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = task.speedText || '1.8 MB/s';
+    if (this.downloadProgressBar) this.downloadProgressBar.style.width = `${task.progress || 0}%`;
+    if (this.downloadPercentTag) this.downloadPercentTag.textContent = `${task.progress || 0}%`;
+  }
+
+  updateActiveDownloadCard(task) {
+    if (this.downloadSpeedTag) this.downloadSpeedTag.textContent = task.speedText || '1.8 MB/s';
+    if (this.downloadProgressBar) this.downloadProgressBar.style.width = `${task.progress}%`;
+    if (this.downloadPercentTag) this.downloadPercentTag.textContent = `${task.progress}%`;
+  }
+
+  hideActiveDownloadCard() {
+    if (this.activeDownloadsCard) {
+      setTimeout(() => {
+        this.activeDownloadsCard.style.display = 'none';
+      }, 1000);
+    }
+  }
+
+  // --- Sheet Player Navigation ---
+  openPlayerSheet() {
+    if (this.playerSheet) {
+      this.playerSheet.classList.add('active');
+    }
+  }
+
+  closePlayerSheet() {
+    if (this.playerSheet) {
+      this.playerSheet.classList.remove('active');
+    }
+  }
+
+  onHardwareBack() {
+    if (this.playerSheet && this.playerSheet.classList.contains('active')) {
+      this.closePlayerSheet();
+      return;
+    }
+    if (this.modalProfile && this.modalProfile.classList.contains('active')) {
+      this.modalProfile.classList.remove('active');
+      return;
+    }
+    if (this.modalOnboarding && this.modalOnboarding.classList.contains('active')) {
+      this.modalOnboarding.classList.remove('active');
+      return;
+    }
+    if (this.currentView !== 'view-discover') {
+      this.switchView('view-discover');
+      return;
+    }
+
+    const now = Date.now();
+    if (now - this._lastBackPress < 2000) {
+      navigator.app && navigator.app.exitApp && navigator.app.exitApp();
+    } else {
+      this._lastBackPress = now;
+      this.showToast('Press back again to exit');
+    }
+  }
+
+  // --- User Profile ---
+  openProfileModal() {
+    if (!this.modalProfile) return;
+    this.modalProfile.classList.add('active');
+    this.loadProfile();
+  }
+
+  loadProfile() {
+    const name = localStorage.getItem('etsuko_user_name') || 'Cyber Operator';
+    if (this.inputProfileName) this.inputProfileName.value = name;
+  }
+
+  saveProfile() {
+    if (this.inputProfileName && this.inputProfileName.value.trim()) {
+      const name = this.inputProfileName.value.trim();
+      localStorage.setItem('etsuko_user_name', name);
+      if (this.topAvatarInitial) this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
+      this.showToast('Profile updated!');
+    }
+    this.modalProfile.classList.remove('active');
+  }
+
+  loadUserProfileOnStartup() {
+    const name = localStorage.getItem('etsuko_user_name') || 'E';
+    if (this.topAvatarInitial) {
+      this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
+    }
+  }
+
+  showToast(message) {
+    if (!this.toast) return;
+    this.toast.textContent = message;
+    this.toast.classList.add('active');
+    setTimeout(() => {
+      this.toast.classList.remove('active');
+    }, 2800);
+  }
+
+  escapeHtml(text) {
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
   }
 }
 
-// Initialize on DOM ready
+// Global App Singleton
 document.addEventListener('DOMContentLoaded', () => {
   window.app = new EtsukoMobileApp();
 });

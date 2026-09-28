@@ -17,56 +17,73 @@
 </head>
 <body>
   <div id="app-root">
-    <!-- Top Mobile Navigation -->
-    <header class="mobile-top-bar">
-      <div class="brand-group">
-        <img src="assets/logo.png" alt="Etsuko" class="brand-logo-img" onerror="this.src='assets/default_cover.png'">
-        <span class="brand-text">ETSUKO</span>
+    <!-- Top Mobile Navigation (Spotify Style) -->
+    <header class="mobile-top-bar spotify-top-bar">
+      <div class="user-avatar-badge" id="btn-open-profile" title="Profile">
+        <span class="user-avatar-initial" id="top-avatar-initial">E</span>
+        <span class="user-online-dot"></span>
       </div>
-      <div class="top-actions">
-        <div class="user-avatar-btn" id="btn-open-profile" title="Profile">
-          <img src="assets/default_user.png" id="top-avatar-img" alt="User">
-        </div>
+      <div class="top-filter-pills">
+        <button class="top-filter-pill active" data-filter="all">All</button>
+        <button class="top-filter-pill" data-filter="music">Music</button>
+        <button class="top-filter-pill" data-filter="podcasts">Podcasts</button>
       </div>
     </header>
 
     <!-- Scrollable View Area -->
     <main class="view-viewport" id="view-viewport">
-      <!-- 1. Discover View -->
+      <!-- 1. Discover / Home View (Spotify Feed Style) -->
       <section class="page-view active" id="view-discover">
-        <div class="mobile-hero-card">
-          <div class="hero-tag">CURATED NEURAL FLOW</div>
-          <h2 class="hero-title" id="greeting-title">Welcome to Etsuko Mobile</h2>
-          <div class="hero-play-row">
-            <button class="btn-mobile-pill primary" id="btn-hero-quick-play">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              <span>Quick Flow</span>
-            </button>
-            <button class="btn-mobile-pill secondary" id="btn-hero-surprise">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
-              <span>Surprise Me</span>
-            </button>
+        <!-- Section 1: Jump back in -->
+        <div class="spotify-section" id="section-jump-back">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Jump back in</h2>
+          </div>
+          <div class="spotify-h-scroll" id="jump-back-row">
+            <!-- Dynamically populated -->
           </div>
         </div>
 
-        <div class="section-header">
-          <h3 class="section-title">Mood Stations</h3>
-        </div>
-        <div class="category-scroll-row" id="mood-scroll-row">
-          <div class="category-pill active" data-cat="trending">🔥 Global Hits</div>
-          <div class="category-pill" data-cat="phonk">⚡ Phonk & Drift</div>
-          <div class="category-pill" data-cat="lofi">☕ Lo-Fi Study</div>
-          <div class="category-pill" data-cat="synth">🚗 Late Night Synth</div>
-          <div class="category-pill" data-cat="gaming">🎮 Deep Focus</div>
-          <div class="category-pill" data-cat="rock">🎸 Rock & Metal</div>
+        <!-- Section 2: Recents -->
+        <div class="spotify-section" id="section-recents">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Recents</h2>
+            <button class="spotify-see-all-btn" id="btn-see-all-recents">Show all</button>
+          </div>
+          <div class="spotify-h-scroll" id="recents-row">
+            <!-- Dynamically populated -->
+          </div>
         </div>
 
-        <div class="section-header">
-          <h3 class="section-title">Trending Tracks</h3>
-          <span style="font-size: 11px; color: var(--accent-cyan); font-weight: 700;">LIVE FEED</span>
+        <!-- Section 3: Recommended for today (Daily seeded recommendations) -->
+        <div class="spotify-section" id="section-daily-picks">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Recommended for today</h2>
+            <span class="spotify-daily-tag" id="daily-tag-date">TODAY</span>
+          </div>
+          <div class="spotify-h-scroll" id="daily-picks-row">
+            <!-- Dynamically populated -->
+          </div>
         </div>
-        <div class="track-grid" id="trending-track-grid">
-          <!-- Populated by JS -->
+
+        <!-- Section 4: Your top mixes -->
+        <div class="spotify-section" id="section-top-mixes">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Your top mixes</h2>
+          </div>
+          <div class="spotify-h-scroll" id="top-mixes-row">
+            <!-- Pop Mix, 2020s Mix, Phonk Mix, Bollywood Romance, etc. -->
+          </div>
+        </div>
+
+        <!-- Section 5: Popular albums and singles -->
+        <div class="spotify-section" id="section-popular-albums">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Popular albums and singles</h2>
+          </div>
+          <div class="spotify-h-scroll" id="popular-albums-row">
+            <!-- Curated Album Cards -->
+          </div>
         </div>
       </section>
 
@@ -78,7 +95,7 @@
           </button>
           <div class="mobile-search-box" style="flex: 1; margin-bottom: 0;">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="Search YouTube Music, artists, albums..." autocomplete="off">
+            <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="What do you want to listen to?" autocomplete="off">
             <button class="btn-icon-top" id="btn-search-clear" style="display:none; width: 28px; height: 28px;">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
@@ -126,9 +143,15 @@
               ← Back
             </button>
             <h3 id="active-crate-title" style="font-size: 15px; font-weight: 700;">Crate Name</h3>
-            <button class="btn-icon-top" id="btn-delete-active-crate" title="Delete Crate" style="color: #ef4444;">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            </button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button class="btn-mobile-pill primary" id="btn-play-all-crate" style="padding: 6px 12px; font-size: 11px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                <span>Play All</span>
+              </button>
+              <button class="btn-icon-top" id="btn-delete-active-crate" title="Delete Crate" style="color: #ef4444;">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              </button>
+            </div>
           </div>
           <div class="track-list" id="playlist-tracks-list"></div>
         </div>
@@ -136,25 +159,46 @@
 
       <!-- 4. Offline Downloads View -->
       <section class="page-view" id="view-downloads">
-        <div class="section-header" style="margin-bottom: 14px;">
-          <h3 class="section-title">Offline Music</h3>
-          <span id="downloads-count-badge" class="hero-tag" style="background: rgba(16, 185, 129, 0.15); color: #10b981; padding: 4px 10px; border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.3);">0 SONGS</span>
+        <!-- Download from YouTube URL Card -->
+        <div class="yt-link-downloader-card">
+          <div class="yt-link-header">
+            <span class="yt-link-icon">📥</span>
+            <span class="yt-link-title">Download from YouTube URL</span>
+          </div>
+          <div class="yt-link-input-row">
+            <input type="text" id="input-yt-download-url" placeholder="Paste YouTube link or video ID..." autocomplete="off">
+            <button id="btn-start-yt-download" class="btn-mobile-pill primary">
+              <span>Download (144p)</span>
+            </button>
+          </div>
         </div>
 
-        <!-- Active Downloads Queue Container (Visible when downloading) -->
-        <div id="active-downloads-card" style="display: none; background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(0, 240, 255, 0.3); border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+        <!-- Active Downloads Progress Panel (Visible when downloading) -->
+        <div id="active-downloads-card" style="display: none;" class="active-download-panel">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <div style="font-size: 11px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 0.5px;">Downloading Song</div>
-            <div id="download-speed-tag" style="font-size: 11px; font-weight: 700; color: var(--text-sub);">0 KB/s</div>
+            <span class="active-dl-tag">⚡ DOWNLOADING 144p AUDIO</span>
+            <span id="download-speed-tag" class="active-dl-speed">0 MB/s</span>
           </div>
-          <div id="download-active-title" style="font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 8px;">Song Title</div>
-          <div style="background: rgba(255, 255, 255, 0.1); border-radius: 6px; height: 8px; overflow: hidden; position: relative;">
-            <div id="download-progress-bar" style="background: linear-gradient(90deg, var(--accent-cyan), #10b981); height: 100%; width: 0%; transition: width 0.2s ease;"></div>
+          <div id="download-active-title" class="active-dl-title">Song Title</div>
+          <div class="active-dl-bar-track">
+            <div id="download-progress-bar" class="active-dl-bar-fill"></div>
           </div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; font-size: 11px; color: var(--text-muted);">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; margin-top: 6px; color: var(--text-muted);">
             <span id="download-percent-tag">0%</span>
-            <span style="color: #10b981;">⚡ Offline Storage</span>
+            <span style="color: #10b981;">Saving to Offline Storage</span>
           </div>
+        </div>
+
+        <!-- Offline Library Section -->
+        <div class="downloads-vault-header">
+          <div>
+            <h3 class="section-title">Offline Library</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 2px;" id="downloads-count-label">0 songs stored</p>
+          </div>
+          <button class="btn-mobile-pill primary" id="btn-play-all-downloads">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Play All</span>
+          </button>
         </div>
 
         <!-- Downloaded Tracks List -->
@@ -178,60 +222,68 @@
           <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
         </button>
       </div>
-      <div class="mini-progress-bar" id="mini-progress-bar"></div>
+      <div class="mini-progress-line" id="mini-progress-bar"></div>
     </div>
 
     <!-- Bottom Navigation Bar -->
     <nav class="mobile-nav-bar">
       <button class="nav-tab-btn active" data-view="view-discover">
-        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-        <span class="nav-tab-label">Home</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+        <span>Home</span>
       </button>
       <button class="nav-tab-btn" data-view="view-search">
-        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <span class="nav-tab-label">Search</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <span>Search</span>
       </button>
       <button class="nav-tab-btn" data-view="view-library">
-        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-        <span class="nav-tab-label">Library</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+        <span>Library</span>
       </button>
       <button class="nav-tab-btn" data-view="view-downloads">
-        <svg class="nav-tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-        <span class="nav-tab-label">Downloads</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <span>Downloads</span>
       </button>
     </nav>
 
-    <!-- Full-Screen Now-Playing Drawer (Sheet Modal) -->
+    <!-- Full-Screen Swipeable Now-Playing Sheet (Pure Album Art Cover, ZERO Video UI) -->
     <div class="player-sheet" id="player-sheet">
+      <div class="sheet-drag-handle" id="sheet-drag-pill"></div>
+
       <div class="sheet-header">
-        <button class="btn-sheet-dismiss" id="btn-sheet-dismiss" title="Minimize">
+        <button class="btn-icon-top" id="btn-sheet-dismiss" title="Minimize">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
-        <div class="drawer-handle-bar"></div>
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">PLAYING FROM FLOW</div>
         <div style="width: 36px;"></div>
       </div>
 
-      <div class="sheet-artwork-box" id="sheet-artwork-box">
-        <img src="assets/default_cover.png" id="sheet-cover" alt="Album Art" class="sheet-cover-img" onerror="this.src='assets/default_cover.png'">
+      <!-- Pure Album Art Cover Hero -->
+      <div class="sheet-cover-container">
+        <img src="assets/default_cover.png" alt="Album Cover" class="sheet-cover" id="sheet-cover">
       </div>
 
-      <div class="sheet-track-details">
-        <div class="sheet-text-col">
-          <h2 class="sheet-title" id="sheet-title">Ready to Stream</h2>
-          <p class="sheet-artist" id="sheet-artist">Etsuko Studio</p>
-          <p class="sheet-album" id="sheet-album">Cyberpunk Edition</p>
+      <!-- Track Information & Like/Download Action Row -->
+      <div class="sheet-track-info-row">
+        <div class="sheet-track-meta">
+          <div class="sheet-title" id="sheet-title">Song Title</div>
+          <div class="sheet-artist" id="sheet-artist">Artist Name</div>
+          <div class="sheet-album" id="sheet-album">Master Audio</div>
         </div>
-        <button class="btn-sheet-like" id="sheet-like-btn" title="Like Song">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
-        </button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button class="sheet-btn-action" id="sheet-download-btn" title="Download Offline">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          </button>
+          <button class="sheet-btn-action" id="sheet-like-btn" title="Like Song">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+        </div>
       </div>
 
-      <div class="sheet-scrubber-section">
+      <!-- Interactive Scrubber & Time Display -->
+      <div class="sheet-scrubber-container">
         <div class="sheet-scrubber-track" id="sheet-scrubber-track">
-          <div class="sheet-scrubber-bg">
-            <div class="sheet-scrubber-fill" id="sheet-scrubber-fill"></div>
-            <div class="sheet-scrubber-thumb" id="sheet-scrubber-thumb"></div>
-          </div>
+          <div class="sheet-scrubber-fill" id="sheet-scrubber-fill"></div>
+          <div class="sheet-scrubber-thumb" id="sheet-scrubber-thumb"></div>
         </div>
         <div class="sheet-time-row">
           <span id="sheet-time-current">0:00</span>
@@ -239,92 +291,92 @@
         </div>
       </div>
 
+      <!-- Playback Controls -->
       <div class="sheet-controls-row">
-        <button class="btn-sheet-mode" id="btn-sheet-shuffle" title="Shuffle">
+        <button class="sheet-control-btn" id="btn-sheet-shuffle" title="Shuffle">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
         </button>
-        <button class="btn-sheet-step" id="btn-sheet-prev" title="Previous Track">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2.5"></line></svg>
+        <button class="sheet-control-btn" id="btn-sheet-prev" title="Previous Track">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="4" x2="5" y2="20" stroke="currentColor" stroke-width="3"></line></svg>
         </button>
-        <button class="btn-sheet-play-circle" id="btn-sheet-play" title="Play / Pause">
-          <svg id="icon-sheet-play" viewBox="0 0 24 24" width="30" height="30" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-          <svg id="icon-sheet-pause" viewBox="0 0 24 24" width="30" height="30" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        <button class="sheet-btn-play-pause" id="btn-sheet-play" title="Play/Pause">
+          <svg id="icon-sheet-play" viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <svg id="icon-sheet-pause" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
         </button>
-        <button class="btn-sheet-step" id="btn-sheet-next" title="Next Track">
-          <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+        <button class="sheet-control-btn" id="btn-sheet-next" title="Next Track">
+          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="4" x2="19" y2="20" stroke="currentColor" stroke-width="3"></line></svg>
         </button>
-        <button class="btn-sheet-mode" id="btn-sheet-repeat" title="Repeat Mode">
+        <button class="sheet-control-btn" id="btn-sheet-repeat" title="Repeat">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
-          <span class="repeat-badge-label" id="sheet-repeat-badge"></span>
-        </button>
-      </div>
-
-      <div class="sheet-actions-row">
-        <button class="btn-sheet-subaction" id="sheet-playlist-btn">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-          <span>Add to Crate</span>
-        </button>
-        <button class="btn-sheet-subaction" id="sheet-download-btn">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-          <span id="sheet-download-text">Download</span>
+          <span class="sheet-badge-repeat" id="sheet-repeat-badge"></span>
         </button>
       </div>
     </div>
 
-    <!-- Modals -->
-    <!-- 1. Add to Playlist Modal -->
-    <div class="mobile-modal-backdrop" id="modal-add-playlist">
-      <div class="mobile-modal-box">
-        <div class="modal-header-row">
-          <span class="modal-title">Add Track to Crate</span>
-          <button class="btn-icon-top" id="btn-close-playlist-modal">&times;</button>
+    <!-- First Time Genre / Language Onboarding Modal -->
+    <div class="mobile-modal" id="modal-genre-onboarding">
+      <div class="modal-card" style="max-height: 85vh; overflow-y: auto;">
+        <h3 class="modal-title" style="font-size: 18px; margin-bottom: 6px;">What music do you love?</h3>
+        <p style="font-size: 13px; color: var(--text-sub); margin-bottom: 16px;">Pick languages & styles to personalize your daily feed.</p>
+        <div class="onboarding-chips-grid" id="onboarding-chips-grid">
+          <div class="onboard-chip" data-genre="english">🎵 English Pop</div>
+          <div class="onboard-chip" data-genre="hindi">🇮🇳 Hindi / Bollywood</div>
+          <div class="onboard-chip" data-genre="punjabi">🪕 Punjabi Hits</div>
+          <div class="onboard-chip" data-genre="telugu">💫 Telugu Hits</div>
+          <div class="onboard-chip" data-genre="phonk">⚡ Phonk & Drift</div>
+          <div class="onboard-chip" data-genre="lofi">☕ Lofi & Chill</div>
+          <div class="onboard-chip" data-genre="hiphop">🔥 Hip-Hop & Rap</div>
+          <div class="onboard-chip" data-genre="rock">🎸 Rock & Metal</div>
+          <div class="onboard-chip" data-genre="romance">💖 Romantic Melodies</div>
+        </div>
+        <button class="btn-mobile-pill primary" id="btn-confirm-onboarding" style="width: 100%; justify-content: center; padding: 14px; border-radius: 12px; margin-top: 18px; font-weight: 700;">
+          Save & Start Listening
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Crates Modals -->
+    <div class="mobile-modal" id="modal-add-playlist">
+      <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 class="modal-title">Add Track to Crate</h3>
+          <button class="btn-icon-top" id="btn-close-playlist-modal"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div class="track-list" id="modal-crates-list"></div>
       </div>
     </div>
 
-    <!-- 2. Create Crate Modal -->
-    <div class="mobile-modal-backdrop" id="modal-create-crate">
-      <div class="mobile-modal-box">
-        <div class="modal-header-row">
-          <span class="modal-title">Create New Crate</span>
-          <button class="btn-icon-top" id="btn-close-create-modal">&times;</button>
+    <div class="mobile-modal" id="modal-create-crate">
+      <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h3 class="modal-title">Create New Crate</h3>
+          <button class="btn-icon-top" id="btn-close-create-modal"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
-          <input type="text" id="input-crate-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);" placeholder="Crate name (e.g. Midnight Drift)...">
-          <input type="text" id="input-crate-desc" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle);" placeholder="Description (optional)...">
-          <button class="btn-mobile-pill primary" id="btn-confirm-create-crate" style="justify-content: center; padding: 12px; border-radius: 10px; margin-top: 6px;">
-            Create Crate
-          </button>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <input type="text" id="input-crate-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%;" placeholder="Crate title (e.g. Night Cruise)">
+          <input type="text" id="input-crate-desc" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%;" placeholder="Description (optional)">
+          <button class="btn-mobile-pill primary" id="btn-confirm-create-crate" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px;">Create Crate</button>
         </div>
       </div>
     </div>
 
-    <!-- 3. User Profile Modal -->
-    <div class="mobile-modal-backdrop" id="modal-profile">
-      <div class="mobile-modal-box">
-        <div class="modal-header-row">
-          <span class="modal-title">Neural Profile</span>
-          <button class="btn-icon-top" id="btn-close-profile">&times;</button>
-        </div>
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 14px; margin: 16px 0;">
-          <div class="profile-avatar-wrapper" style="position: relative; width: 84px; height: 84px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-magenta); box-shadow: 0 0 20px rgba(236,72,153,0.3);">
-            <img src="assets/default_user.png" id="profile-modal-avatar" style="width: 100%; height: 100%; object-fit: cover;" alt="Avatar">
-          </div>
-          <input type="file" id="input-profile-file" accept="image/*" style="display: none;">
-          <div style="display: flex; gap: 8px;">
-            <button class="btn-mobile-pill secondary" id="btn-change-avatar" style="font-size: 11px; padding: 6px 14px;">Change Avatar</button>
-            <button class="btn-mobile-pill secondary" id="btn-reset-avatar" style="font-size: 11px; padding: 6px 14px;">Reset</button>
-          </div>
+    <!-- Profile Modal -->
+    <div class="mobile-modal" id="modal-profile">
+      <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 class="modal-title">Your Profile</h3>
+          <button class="btn-icon-top" id="btn-close-profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <div>
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Display Name</label>
-            <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Cyber Operator">
+            <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Operator">
           </div>
           <div>
-            <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Bio / Status</label>
-            <input type="text" id="input-profile-bio" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Listening to the grid...">
+            <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Music Preferences</label>
+            <button class="btn-mobile-pill secondary" id="btn-reopen-genres" style="width: 100%; justify-content: center; padding: 10px; border-radius: 10px; margin-top: 4px; font-size: 12px;">
+              Change Preferred Genres & Languages
+            </button>
           </div>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;">
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; text-align: center;">
@@ -333,12 +385,10 @@
             </div>
             <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; text-align: center;">
               <div id="profile-crates-count" style="font-size: 18px; font-weight: 700; color: var(--accent-cyan);">0</div>
-              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Saved Crates</div>
+              <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Offline Tracks</div>
             </div>
           </div>
-          <button class="btn-mobile-pill primary" id="btn-save-profile" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px; margin-top: 4px;">
-            Save Profile
-          </button>
+          <button class="btn-mobile-pill primary" id="btn-save-profile" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px; margin-top: 4px;">Save Profile</button>
         </div>
       </div>
     </div>
@@ -346,9 +396,13 @@
     <!-- Toast Notification -->
     <div class="mobile-toast" id="mobile-toast"></div>
 
-    <!-- Pure Audio Engine Element -->
-    <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline crossorigin="anonymous"></audio>
+    <!-- HTML5 Audio Engine for Offline Storage -->
+    <audio id="mobile-audio-engine" preload="auto" playsinline webkit-playsinline></audio>
 
+    <!-- Invisible YouTube 144p Engine Carrier (Off-screen, zero pixels visible) -->
+    <div id="yt-audio-carrier" style="position: absolute; width: 1px; height: 1px; opacity: 0.001; pointer-events: none; left: -9999px; overflow: hidden;">
+      <div id="yt-player"></div>
+    </div>
   </div>
 
   <!-- Scripts -->

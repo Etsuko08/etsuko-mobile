@@ -143,6 +143,15 @@ public class MainActivity extends BridgeActivity {
             public void onSkipToPrevious() {
                 handleAction(ACTION_PREV);
             }
+
+            @Override
+            public void onSeekTo(long pos) {
+                runOnUiThread(() -> {
+                    if (bridge != null && bridge.getWebView() != null) {
+                        bridge.getWebView().evaluateJavascript("window.player && window.player.seekToMs(" + pos + ");", null);
+                    }
+                });
+            }
         });
         mediaSession.setActive(true);
     }
@@ -186,7 +195,7 @@ public class MainActivity extends BridgeActivity {
         });
     }
 
-    public void updateNotification(String title, String artist, String album, String thumbUrl, boolean isPlaying) {
+    public void updateNotification(String title, String artist, String album, String thumbUrl, boolean isPlaying, long positionMs, long durationMs) {
         this.isMediaPlaying = isPlaying;
 
         if (isPlaying) {
@@ -199,15 +208,18 @@ public class MainActivity extends BridgeActivity {
             }
         }
 
-        // Update MediaSession state
+        // Update MediaSession state with real position & seek support
         int state = isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED;
         long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
-                PlaybackState.ACTION_SKIP_TO_NEXT | PlaybackState.ACTION_SKIP_TO_PREVIOUS;
+                PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT |
+                PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;
 
-        mediaSession.setPlaybackState(new PlaybackState.Builder()
-                .setActions(actions)
-                .setState(state, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1.0f)
-                .build());
+        if (mediaSession != null) {
+            mediaSession.setPlaybackState(new PlaybackState.Builder()
+                    .setActions(actions)
+                    .setState(state, positionMs >= 0 ? positionMs : 0, 1.0f)
+                    .build());
+        }
 
         // Run background thread for artwork loading
         new Thread(() -> {
@@ -230,11 +242,11 @@ public class MainActivity extends BridgeActivity {
             }
 
             final Bitmap finalCover = coverBitmap;
-            runOnUiThread(() -> buildAndPostNotification(title, artist, album, finalCover, isPlaying));
+            runOnUiThread(() -> buildAndPostNotification(title, artist, album, finalCover, isPlaying, durationMs));
         }).start();
     }
 
-    private void buildAndPostNotification(String title, String artist, String album, Bitmap cover, boolean isPlaying) {
+    private void buildAndPostNotification(String title, String artist, String album, Bitmap cover, boolean isPlaying, long durationMs) {
         int flag = PendingIntent.FLAG_UPDATE_CURRENT;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             flag |= PendingIntent.FLAG_IMMUTABLE;
@@ -256,13 +268,16 @@ public class MainActivity extends BridgeActivity {
         int playPauseIcon = isPlaying ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play;
         String playPauseTitle = isPlaying ? "Pause" : "Play";
 
-        // Update MediaSession metadata for Android 11+ quick settings and lockscreen media player
+        // Update MediaSession metadata for Android Quick Settings and Lockscreen Spotify-style player
         if (mediaSession != null) {
             try {
                 MediaMetadata.Builder metaBuilder = new MediaMetadata.Builder()
                         .putString(MediaMetadata.METADATA_KEY_TITLE, title != null && !title.isEmpty() ? title : "Etsuko Music")
                         .putString(MediaMetadata.METADATA_KEY_ARTIST, artist != null && !artist.isEmpty() ? artist : "Playing")
                         .putString(MediaMetadata.METADATA_KEY_ALBUM, album != null && !album.isEmpty() ? album : "Etsuko Neural Audio");
+                if (durationMs > 0) {
+                    metaBuilder.putLong(MediaMetadata.METADATA_KEY_DURATION, durationMs);
+                }
                 if (cover != null) {
                     metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, cover);
                     metaBuilder.putBitmap(MediaMetadata.METADATA_KEY_ART, cover);
@@ -285,7 +300,7 @@ public class MainActivity extends BridgeActivity {
         mediaStyle.setShowActionsInCompactView(0, 1, 2);
 
         Notification notification = builder
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_stat_music)
                 .setLargeIcon(cover)
                 .setContentTitle(title != null && !title.isEmpty() ? title : "Etsuko Music")
                 .setContentText(artist != null && !artist.isEmpty() ? artist : "Playing")
@@ -360,7 +375,32 @@ public class MainActivity extends BridgeActivity {
     public class AndroidMediaBridge {
         @JavascriptInterface
         public void updatePlaybackState(String title, String artist, String album, String thumbUrl, boolean isPlaying) {
-            runOnUiThread(() -> updateNotification(title, artist, album, thumbUrl, isPlaying));
+            runOnUiThread(() -> updateNotification(title, artist, album, thumbUrl, isPlaying, 0, 0));
+        }
+
+        @JavascriptInterface
+        public void updatePlaybackState(String title, String artist, String album, String thumbUrl, boolean isPlaying, double positionSec, double durationSec) {
+            long posMs = (long) (positionSec * 1000);
+            long durMs = (long) (durationSec * 1000);
+            runOnUiThread(() -> updateNotification(title, artist, album, thumbUrl, isPlaying, posMs, durMs));
+        }
+
+        @JavascriptInterface
+        public void updateProgress(double positionSec, double durationSec, boolean isPlaying) {
+            if (mediaSession == null) return;
+            long posMs = (long) (positionSec * 1000);
+            int state = isPlaying ? PlaybackState.STATE_PLAYING : PlaybackState.STATE_PAUSED;
+            long actions = PlaybackState.ACTION_PLAY | PlaybackState.ACTION_PAUSE |
+                    PlaybackState.ACTION_PLAY_PAUSE | PlaybackState.ACTION_SKIP_TO_NEXT |
+                    PlaybackState.ACTION_SKIP_TO_PREVIOUS | PlaybackState.ACTION_SEEK_TO;
+            runOnUiThread(() -> {
+                try {
+                    mediaSession.setPlaybackState(new PlaybackState.Builder()
+                            .setActions(actions)
+                            .setState(state, posMs >= 0 ? posMs : 0, 1.0f)
+                            .build());
+                } catch (Exception ignored) {}
+            });
         }
 
         @JavascriptInterface
