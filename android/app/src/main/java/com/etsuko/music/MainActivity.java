@@ -22,6 +22,8 @@ import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
 
+import com.getcapacitor.BridgeActivity;
+
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
