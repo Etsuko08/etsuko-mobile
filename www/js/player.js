@@ -135,6 +135,11 @@ class MobilePlayer {
     this.sheetQueueCount = document.getElementById('sheet-queue-count');
     this.sheetQueueList = document.getElementById('sheet-queue-list');
 
+    // Related section in Sheet (Spotify Style)
+    this.sheetRelatedSection = document.getElementById('sheet-related-section');
+    this.sheetRelatedTag = document.getElementById('sheet-related-tag');
+    this.sheetRelatedList = document.getElementById('sheet-related-list');
+
     this.timeCurrent = document.getElementById('sheet-time-current');
     this.timeTotal = document.getElementById('sheet-time-total');
     this.scrubberTrack = document.getElementById('sheet-scrubber-track');
@@ -443,6 +448,7 @@ class MobilePlayer {
     this.updateTrackUI(track);
     this.updateMediaSession(track);
     this.renderQueueInSheet();
+    this.loadRelatedTracks(track);
 
     // Save to recents in localStorage
     this.recordRecentTrack(track);
@@ -511,13 +517,31 @@ class MobilePlayer {
     const artist = track.artist || 'Unknown Artist';
 
     // Mini Player
-    if (this.miniCover) this.miniCover.src = thumb;
+    if (this.miniCover) {
+      this.miniCover.onerror = () => {
+        this.miniCover.onerror = () => { this.miniCover.src = 'assets/default_cover.png'; };
+        if (track.videoId) {
+          this.miniCover.src = `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        } else {
+          this.miniCover.src = 'assets/default_cover.png';
+        }
+      };
+      this.miniCover.src = thumb;
+    }
     if (this.miniTitle) this.miniTitle.textContent = title;
     if (this.miniArtist) this.miniArtist.textContent = artist;
     if (this.miniPlayer) this.miniPlayer.style.display = 'flex';
 
     // Full Player Sheet (Pure Album Art Cover, ZERO Video UI)
     if (this.sheetCover) {
+      this.sheetCover.onerror = () => {
+        this.sheetCover.onerror = () => { this.sheetCover.src = 'assets/default_cover.png'; };
+        if (track.videoId) {
+          this.sheetCover.src = `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        } else {
+          this.sheetCover.src = 'assets/default_cover.png';
+        }
+      };
       this.sheetCover.src = thumb;
       this.sheetCover.style.opacity = '1';
     }
@@ -585,7 +609,7 @@ class MobilePlayer {
       const item = document.createElement('div');
       item.className = `sheet-queue-item${isCurrent ? ' current' : ''}`;
       item.innerHTML = `
-        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="sheet-queue-item-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="sheet-queue-item-thumb" alt="" onerror="this.onerror=function(){this.src='assets/default_cover.png'}; if ('${track.videoId}') this.src='https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg'; else this.src='assets/default_cover.png';">
         <div class="sheet-queue-item-info">
           <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${track.title || 'Unknown Title'}</div>
           <div class="sheet-queue-item-artist">${track.artist || 'Unknown Artist'}</div>
@@ -599,6 +623,65 @@ class MobilePlayer {
       });
 
       this.sheetQueueList.appendChild(item);
+    });
+  }
+
+  async loadRelatedTracks(track) {
+    if (!this.sheetRelatedList) return;
+    this.sheetRelatedList.innerHTML = `
+      <div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 11px;">
+        <span style="color: var(--accent-cyan); font-weight: 700;">⚡ FINDING SIMILAR TRACKS...</span>
+      </div>
+    `;
+
+    try {
+      if (window.api && typeof window.api.getRelatedTracks === 'function') {
+        const data = await window.api.getRelatedTracks(track);
+        if (this.sheetRelatedTag && data.displayTag) {
+          this.sheetRelatedTag.textContent = `More Like This • ${data.displayTag}`;
+        }
+        this.renderRelatedTracksList(data.tracks || []);
+      }
+    } catch (e) {
+      console.warn('[Player] loadRelatedTracks notice:', e);
+    }
+  }
+
+  renderRelatedTracksList(tracks) {
+    if (!this.sheetRelatedList) return;
+    this.sheetRelatedList.innerHTML = '';
+
+    if (!tracks || tracks.length === 0) {
+      this.sheetRelatedList.innerHTML = `
+        <div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 12px;">
+          No matching tracks found.
+        </div>
+      `;
+      return;
+    }
+
+    tracks.forEach((item) => {
+      const el = document.createElement('div');
+      el.className = 'sheet-related-item';
+      const thumb = item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : 'assets/default_cover.png');
+      el.innerHTML = `
+        <img src="${thumb}" class="sheet-related-item-thumb" alt="" onerror="this.onerror=function(){this.src='assets/default_cover.png'}; if ('${item.videoId}') this.src='https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg'; else this.src='assets/default_cover.png';">
+        <div class="sheet-related-item-info">
+          <div class="sheet-related-item-title">${item.title || 'Unknown Title'}</div>
+          <div class="sheet-related-item-artist">${item.artist || 'Unknown Artist'} • ${item.duration || '3:30'}</div>
+        </div>
+        <button class="sheet-related-item-play-btn" title="Play">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+        </button>
+      `;
+
+      el.addEventListener('click', () => {
+        // Play selected related song and populate queue
+        const remaining = tracks.filter(t => t.videoId !== item.videoId);
+        this.playTrack(item, [item, ...remaining]);
+      });
+
+      this.sheetRelatedList.appendChild(el);
     });
   }
 

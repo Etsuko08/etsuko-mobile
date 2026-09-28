@@ -233,7 +233,7 @@
     <!-- Floating Mini-Player -->
     <div class="mini-player" id="mini-player">
       <div class="mini-progress-line" id="mini-progress-bar"></div>
-      <img src="assets/default_cover.png" alt="Cover" class="mini-cover-art" id="mini-cover">
+      <img src="assets/default_cover.png" alt="Cover" class="mini-cover-art" id="mini-cover" onerror="this.onerror=null; this.src='assets/default_cover.png';">
       <div class="mini-info-col" id="mini-info-touch-area">
         <div class="mini-title" id="mini-title">Ready to Stream</div>
         <div class="mini-artist" id="mini-artist">Etsuko Studio</div>
@@ -289,7 +289,7 @@
 
       <!-- Pure Album Art Cover Hero -->
       <div class="sheet-cover-container">
-        <img src="assets/default_cover.png" alt="Album Cover" class="sheet-cover" id="sheet-cover">
+        <img src="assets/default_cover.png" alt="Album Cover" class="sheet-cover" id="sheet-cover" onerror="this.onerror=null; this.src='assets/default_cover.png';">
       </div>
 
       <!-- Track Information & Like/Download Action Row -->
@@ -350,6 +350,20 @@
         </div>
         <div class="sheet-queue-list" id="sheet-queue-list">
           <!-- Upcoming tracks in queue -->
+        </div>
+      </div>
+
+      <!-- Spotify-Style Recommended Songs in Same Language / Genre Section -->
+      <div class="sheet-related-section" id="sheet-related-section">
+        <div class="sheet-related-header">
+          <div class="sheet-related-title-box">
+            <span class="sheet-related-title">Recommended For You</span>
+            <div class="sheet-related-subtitle" id="sheet-related-tag">More Like This • Same Language</div>
+          </div>
+          <span class="sheet-related-badge">SIMILAR VIBE</span>
+        </div>
+        <div class="sheet-related-list" id="sheet-related-list">
+          <!-- Dynamically populated related tracks in same language/genre -->
         </div>
       </div>
     </div>

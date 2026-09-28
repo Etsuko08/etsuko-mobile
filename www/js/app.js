@@ -406,6 +406,25 @@ class EtsukoMobileApp {
     }
   }
 
+  getThumbnailSrc(track) {
+    if (!track) return 'assets/default_cover.png';
+    if (track.thumbnail && typeof track.thumbnail === 'string') {
+      if (track.thumbnail.includes('googleusercontent.com') || track.thumbnail.includes('ggpht.com')) {
+        return track.thumbnail.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
+      }
+      return track.thumbnail;
+    }
+    if (track.videoId) {
+      return `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+    }
+    return 'assets/default_cover.png';
+  }
+
+  getImgFallbackAttr(videoId) {
+    if (!videoId) return `onerror="this.src='assets/default_cover.png'"`;
+    return `onerror="if(!this.dataset.t1){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg';}else if(!this.dataset.t2){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${videoId}/mqdefault.jpg';}else{this.src='assets/default_cover.png';}"`;
+  }
+
   renderHorizontalRow(container, tracks) {
     if (!container) return;
     container.innerHTML = '';
@@ -417,7 +436,7 @@ class EtsukoMobileApp {
 
       card.innerHTML = `
         <div class="spotify-card-cover-box">
-          <img src="${track.thumbnail || 'assets/default_cover.png'}" class="spotify-card-cover" alt="Cover" onerror="this.src='assets/default_cover.png'">
+          <img src="${this.getThumbnailSrc(track)}" class="spotify-card-cover" alt="Cover" ${this.getImgFallbackAttr(track.videoId)}>
           <button class="spotify-card-play-btn" title="Play">
             <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
           </button>
@@ -446,17 +465,17 @@ class EtsukoMobileApp {
       const card = document.createElement('div');
       card.className = 'spotify-mix-card';
 
-      const t1 = mix.tracks?.[0]?.thumbnail || 'assets/default_cover.png';
-      const t2 = mix.tracks?.[1]?.thumbnail || 'assets/default_cover.png';
-      const t3 = mix.tracks?.[2]?.thumbnail || 'assets/default_cover.png';
-      const t4 = mix.tracks?.[3]?.thumbnail || 'assets/default_cover.png';
+      const t1 = mix.tracks?.[0];
+      const t2 = mix.tracks?.[1];
+      const t3 = mix.tracks?.[2];
+      const t4 = mix.tracks?.[3];
 
       card.innerHTML = `
         <div class="spotify-mix-artwork-grid">
-          <img src="${t1}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
-          <img src="${t2}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
-          <img src="${t3}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
-          <img src="${t4}" class="spotify-mix-art-thumb" alt="" onerror="this.src='assets/default_cover.png'">
+          <img src="${this.getThumbnailSrc(t1)}" class="spotify-mix-art-thumb" alt="" ${this.getImgFallbackAttr(t1?.videoId)}>
+          <img src="${this.getThumbnailSrc(t2)}" class="spotify-mix-art-thumb" alt="" ${this.getImgFallbackAttr(t2?.videoId)}>
+          <img src="${this.getThumbnailSrc(t3)}" class="spotify-mix-art-thumb" alt="" ${this.getImgFallbackAttr(t3?.videoId)}>
+          <img src="${this.getThumbnailSrc(t4)}" class="spotify-mix-art-thumb" alt="" ${this.getImgFallbackAttr(t4?.videoId)}>
         </div>
         <div class="spotify-mix-info-box" style="border-top: 3px solid ${mix.bannerColor || '#10b981'};">
           <button class="spotify-mix-play-btn" title="Play Mix">
@@ -560,7 +579,7 @@ class EtsukoMobileApp {
       const isLiked = window.api.isLiked(item.videoId);
 
       row.innerHTML = `
-        <img src="${item.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
+        <img src="${this.getThumbnailSrc(item)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(item.videoId)}>
         <div class="track-row-info">
           <div class="track-row-title">${this.escapeHtml(item.title)}</div>
           <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${this.escapeHtml(item.album || 'Single')}</div>
@@ -700,7 +719,7 @@ class EtsukoMobileApp {
       row.className = 'track-row';
       row.innerHTML = `
         <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); width: 20px; text-align: center;">${idx + 1}</div>
-        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
+        <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
         <div class="track-row-info">
           <div class="track-row-title">${this.escapeHtml(track.title)}</div>
           <div class="track-row-artist">${this.escapeHtml(track.artist)}</div>
@@ -778,7 +797,7 @@ class EtsukoMobileApp {
       row.className = 'track-row';
       row.innerHTML = `
         <div style="font-size: 12px; font-weight: 700; color: #10b981; width: 20px; text-align: center;">${idx + 1}</div>
-        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="track-row-thumb" alt="Track" onerror="this.src='assets/default_cover.png'">
+        <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
         <div class="track-row-info">
           <div class="track-row-title">${this.escapeHtml(track.title)}</div>
           <div class="track-row-artist" style="color: #10b981;">⚡ Offline Master • ${this.escapeHtml(track.artist)}</div>
