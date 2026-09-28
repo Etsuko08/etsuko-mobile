@@ -22,11 +22,14 @@ import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
 
-import com.getcapacitor.BridgeActivity;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 public class MainActivity extends BridgeActivity {
     private static final String CHANNEL_ID = "etsuko_playback_channel";
@@ -181,6 +184,10 @@ public class MainActivity extends BridgeActivity {
     private void handleAction(String action) {
         runOnUiThread(() -> {
             if (bridge == null || bridge.getWebView() == null) return;
+            try {
+                bridge.getWebView().onResume();
+                bridge.getWebView().resumeTimers();
+            } catch (Exception ignored) {}
             switch (action) {
                 case ACTION_PLAY_PAUSE:
                     bridge.getWebView().evaluateJavascript("window.player && window.player.togglePlay();", null);
@@ -335,16 +342,22 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onPause() {
         super.onPause();
-        if (isMediaPlaying && bridge != null && bridge.getWebView() != null) {
-            bridge.getWebView().resumeTimers();
+        if (bridge != null && bridge.getWebView() != null) {
+            try {
+                bridge.getWebView().onResume();
+                bridge.getWebView().resumeTimers();
+            } catch (Exception ignored) {}
         }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        if (isMediaPlaying && bridge != null && bridge.getWebView() != null) {
-            bridge.getWebView().resumeTimers();
+        if (bridge != null && bridge.getWebView() != null) {
+            try {
+                bridge.getWebView().onResume();
+                bridge.getWebView().resumeTimers();
+            } catch (Exception ignored) {}
         }
     }
 
@@ -406,6 +419,59 @@ public class MainActivity extends BridgeActivity {
         @JavascriptInterface
         public void stopPlayback() {
             runOnUiThread(() -> cancelNotification());
+        }
+
+        @JavascriptInterface
+        public void nativeSearchAsync(final String query, final String filter, final String callbackId) {
+            new Thread(() -> {
+                String responseJson = "{\"results\":[]}";
+                try {
+                    URL url = new URL("https://music.youtube.com/youtubei/v1/search");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setRequestProperty("Content-Type", "application/json");
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0");
+                    conn.setRequestProperty("origin", "https://music.youtube.com");
+                    conn.setDoOutput(true);
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(12000);
+
+                    String params = "EgWKAQIIAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
+                    if ("albums".equalsIgnoreCase(filter)) {
+                        params = "EgWKAQIBAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
+                    } else if ("artists".equalsIgnoreCase(filter)) {
+                        params = "EgWKAQIgAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
+                    }
+
+                    String bodyStr = "{\"context\":{\"client\":{\"clientName\":\"WEB_REMIX\",\"clientVersion\":\"1.20260928.01.00\",\"hl\":\"en\"},\"user\":{}},\"query\":" + JSONObject.quote(query) + ",\"params\":\"" + params + "\"}";
+                    byte[] bytes = bodyStr.getBytes(StandardCharsets.UTF_8);
+                    conn.getOutputStream().write(bytes);
+
+                    int code = conn.getResponseCode();
+                    InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    reader.close();
+                    responseJson = sb.toString();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                final String finalJson = responseJson;
+                runOnUiThread(() -> {
+                    if (bridge != null && bridge.getWebView() != null) {
+                        String safeId = callbackId.replaceAll("[^a-zA-Z0-9_]", "");
+                        bridge.getWebView().evaluateJavascript(
+                            "window['__native_search_" + safeId + "'] && window['__native_search_" + safeId + "'](" + JSONObject.quote(finalJson) + ");",
+                            null
+                        );
+                    }
+                });
+            }).start();
         }
     }
 }

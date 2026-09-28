@@ -9,6 +9,15 @@ try {
   window.addEventListener('visibilitychange', (e) => {
     e.stopImmediatePropagation();
   }, true);
+  window.addEventListener('blur', () => {
+    if (window.player && window.player.isPlaying && !window.player.userPaused) {
+      setTimeout(() => {
+        if (window.player.isPlaying && !window.player.userPaused && window.player.ytPlayer && typeof window.player.ytPlayer.playVideo === 'function') {
+          try { window.player.ytPlayer.playVideo(); } catch (e) {}
+        }
+      }, 100);
+    }
+  });
 } catch (e) {}
 
 class MobilePlayer {
@@ -88,6 +97,13 @@ class MobilePlayer {
     if (this.sheetDownloadBtn) {
       this.sheetDownloadBtn.addEventListener('click', () => {
         if (this.currentTrack && window.downloader) {
+          this.sheetDownloadBtn.classList.add('downloading-pulse');
+          this.sheetDownloadBtn.style.transform = 'scale(0.78)';
+          setTimeout(() => { this.sheetDownloadBtn.style.transform = 'scale(1.25)'; }, 140);
+          setTimeout(() => { this.sheetDownloadBtn.style.transform = 'scale(1.0)'; }, 280);
+          if (window.app && window.app.showToast) {
+            window.app.showToast(`Starting download: ${this.currentTrack.title}`);
+          }
           window.downloader.startDownload(this.currentTrack);
         }
       });
@@ -184,9 +200,19 @@ class MobilePlayer {
       if (this.ytPlayer && this.ytPlayer.setPlaybackQuality) {
         try { this.ytPlayer.setPlaybackQuality('small'); } catch (e) {} // 144p bandwidth saving
       }
+      this.userPaused = false;
       this.onPlayState(true);
       this.startTimeTicker();
     } else if (event.data === 2) { // Paused
+      if (this.isPlaying && !this.userPaused) {
+        // Intercept involuntary background auto-pause triggered by Android minimize or screen off
+        setTimeout(() => {
+          if (this.isPlaying && !this.userPaused && this.ytPlayer && typeof this.ytPlayer.playVideo === 'function') {
+            try { this.ytPlayer.playVideo(); } catch (e) {}
+          }
+        }, 80);
+        return;
+      }
       this.onPlayState(false);
       this.stopTimeTicker();
     } else if (event.data === 0) { // Ended

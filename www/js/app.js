@@ -41,14 +41,17 @@ class EtsukoMobileApp {
     this.navBtns = document.querySelectorAll('.nav-tab-btn');
 
     // Top Filter Pills
+    this.topFilterPillsContainer = document.getElementById('top-filter-pills');
     this.topFilterPills = document.querySelectorAll('.top-filter-pill');
 
     // Home Sections
     this.jumpBackRow = document.getElementById('jump-back-row');
     this.recentsRow = document.getElementById('recents-row');
+    this.trendingHitsRow = document.getElementById('trending-hits-row');
     this.dailyPicksRow = document.getElementById('daily-picks-row');
     this.topMixesRow = document.getElementById('top-mixes-row');
     this.popularAlbumsRow = document.getElementById('popular-albums-row');
+    this.podcastsRow = document.getElementById('podcasts-row');
     this.dailyTagDate = document.getElementById('daily-tag-date');
 
     // Search
@@ -213,13 +216,16 @@ class EtsukoMobileApp {
     // Downloads Link Downloader
     if (this.btnStartYtDownload) {
       this.btnStartYtDownload.addEventListener('click', () => {
-        const url = this.inputYtDownloadUrl.value;
+        const url = this.inputYtDownloadUrl ? this.inputYtDownloadUrl.value : '';
         if (!url || !url.trim()) {
           this.showToast('Please paste a YouTube link or video ID');
           return;
         }
+        this.btnStartYtDownload.style.transform = 'scale(0.88)';
+        setTimeout(() => { this.btnStartYtDownload.style.transform = 'scale(1.0)'; }, 150);
+        this.showToast('Connecting stream & starting download...');
         if (window.downloader) {
-          window.downloader.downloadFromUrl(url);
+          window.downloader.downloadFromUrl(url.trim());
           this.inputYtDownloadUrl.value = '';
         }
       });
@@ -352,6 +358,11 @@ class EtsukoMobileApp {
       btn.classList.toggle('active', match);
     });
 
+    // The filter pills [All], [Music], [Podcasts] should ONLY show on Home (view-discover)!
+    if (this.topFilterPillsContainer) {
+      this.topFilterPillsContainer.style.display = (viewId === 'view-discover') ? 'flex' : 'none';
+    }
+
     const viewport = document.getElementById('view-viewport');
     if (viewport) viewport.scrollTo({ top: 0, behavior: 'smooth' });
 
@@ -371,11 +382,24 @@ class EtsukoMobileApp {
         this.dailyTagDate.textContent = d.toLocaleDateString('en-US', options).toUpperCase();
       }
 
-      this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
-      this.renderHorizontalRow(this.recentsRow, feed.recents);
+      // Jump back in & Recents: ONLY display if user has actual history!
+      const jumpSection = document.getElementById('section-jump-back');
+      const recentsSection = document.getElementById('section-recents');
+      const hasHistory = feed.recents && feed.recents.length > 0;
+
+      if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
+      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
+
+      if (hasHistory) {
+        this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
+        this.renderHorizontalRow(this.recentsRow, feed.recents);
+      }
+
+      this.renderHorizontalRow(this.trendingHitsRow, feed.trendingHits);
       this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
       this.renderTopMixes(this.topMixesRow, feed.topMixes);
       this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums);
+      this.renderHorizontalRow(this.podcastsRow, feed.podcasts);
     } catch (e) {
       console.warn('[HomeFeed] Error:', e);
     }
@@ -448,18 +472,26 @@ class EtsukoMobileApp {
   filterHomeFeed(filter) {
     const jumpSection = document.getElementById('section-jump-back');
     const recentsSection = document.getElementById('section-recents');
+    const trendingSection = document.getElementById('section-trending-hits');
     const dailySection = document.getElementById('section-daily-picks');
     const mixesSection = document.getElementById('section-top-mixes');
     const albumsSection = document.getElementById('section-popular-albums');
+    const podcastsSection = document.getElementById('section-podcasts');
+
+    const hasHistory = window.api && window.api.getRecentTracks().length > 0;
 
     if (filter === 'all') {
-      [jumpSection, recentsSection, dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+      if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
+      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
+      [trendingSection, dailySection, mixesSection, albumsSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     } else if (filter === 'music') {
-      [jumpSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'block'));
-      [mixesSection].forEach(s => s && (s.style.display = 'none'));
-    } else { // podcasts / chill
-      [jumpSection, mixesSection].forEach(s => s && (s.style.display = 'block'));
-      [recentsSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
+      if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
+      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
+      [trendingSection, dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+      if (podcastsSection) podcastsSection.style.display = 'none';
+    } else { // podcasts
+      [jumpSection, recentsSection, trendingSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
+      [mixesSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     }
   }
 
@@ -534,8 +566,14 @@ class EtsukoMobileApp {
         </div>
       `;
 
-      row.querySelector('.btn-dl-row').addEventListener('click', (e) => {
+      const btnDl = row.querySelector('.btn-dl-row');
+      btnDl.addEventListener('click', (e) => {
         e.stopPropagation();
+        btnDl.classList.add('downloading-pulse');
+        btnDl.style.transform = 'scale(0.78)';
+        setTimeout(() => { btnDl.style.transform = 'scale(1.25)'; }, 140);
+        setTimeout(() => { btnDl.style.transform = 'scale(1.0)'; }, 280);
+        this.showToast(`Starting download: ${item.title}`);
         if (window.downloader) window.downloader.startDownload(item);
       });
 
@@ -837,24 +875,48 @@ class EtsukoMobileApp {
   }
 
   loadProfile() {
-    const name = localStorage.getItem('etsuko_user_name') || 'Cyber Operator';
-    if (this.inputProfileName) this.inputProfileName.value = name;
+    const name = localStorage.getItem('etsuko_user_name') || '';
+    if (this.inputProfileName) {
+      this.inputProfileName.value = name;
+      this.inputProfileName.placeholder = 'Enter your name';
+    }
   }
 
   saveProfile() {
-    if (this.inputProfileName && this.inputProfileName.value.trim()) {
-      const name = this.inputProfileName.value.trim();
+    const name = this.inputProfileName ? this.inputProfileName.value.trim() : '';
+    if (name) {
       localStorage.setItem('etsuko_user_name', name);
-      if (this.topAvatarInitial) this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
-      this.showToast('Profile updated!');
+      if (this.topAvatarInitial) {
+        this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
+      }
+      this.showToast('Profile saved!');
+    } else {
+      localStorage.removeItem('etsuko_user_name');
+      this.setDefaultAvatar();
+      this.showToast('Profile reset to default');
     }
     this.modalProfile.classList.remove('active');
   }
 
   loadUserProfileOnStartup() {
-    const name = localStorage.getItem('etsuko_user_name') || 'E';
+    const name = localStorage.getItem('etsuko_user_name') || '';
+    if (name && name.trim()) {
+      if (this.topAvatarInitial) {
+        this.topAvatarInitial.textContent = name.trim().charAt(0).toUpperCase();
+      }
+    } else {
+      this.setDefaultAvatar();
+    }
+  }
+
+  setDefaultAvatar() {
     if (this.topAvatarInitial) {
-      this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
+      this.topAvatarInitial.innerHTML = `
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+      `;
     }
   }
 

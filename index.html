@@ -18,12 +18,14 @@
 <body>
   <div id="app-root">
     <!-- Top Mobile Navigation (Spotify Style) -->
-    <header class="mobile-top-bar spotify-top-bar">
+    <header class="mobile-top-bar spotify-top-bar" id="mobile-top-bar">
       <div class="user-avatar-badge" id="btn-open-profile" title="Profile">
-        <span class="user-avatar-initial" id="top-avatar-initial">E</span>
+        <span class="user-avatar-initial" id="top-avatar-initial">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </span>
         <span class="user-online-dot"></span>
       </div>
-      <div class="top-filter-pills">
+      <div class="top-filter-pills" id="top-filter-pills">
         <button class="top-filter-pill active" data-filter="all">All</button>
         <button class="top-filter-pill" data-filter="music">Music</button>
         <button class="top-filter-pill" data-filter="podcasts">Podcasts</button>
@@ -34,55 +36,77 @@
     <main class="view-viewport" id="view-viewport">
       <!-- 1. Discover / Home View (Spotify Feed Style) -->
       <section class="page-view active" id="view-discover">
-        <!-- Section 1: Jump back in -->
-        <div class="spotify-section" id="section-jump-back">
+        <!-- Section: Jump back in (Shown when user has played tracks) -->
+        <div class="spotify-section" id="section-jump-back" style="display: none;">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Jump back in</h2>
           </div>
           <div class="spotify-h-scroll" id="jump-back-row">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated from actual history -->
           </div>
         </div>
 
-        <!-- Section 2: Recents -->
-        <div class="spotify-section" id="section-recents">
+        <!-- Section: Recents (Shown when user has played tracks) -->
+        <div class="spotify-section" id="section-recents" style="display: none;">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Recents</h2>
             <button class="spotify-see-all-btn" id="btn-see-all-recents">Show all</button>
           </div>
           <div class="spotify-h-scroll" id="recents-row">
-            <!-- Dynamically populated -->
+            <!-- Dynamically populated from actual history -->
           </div>
         </div>
 
-        <!-- Section 3: Recommended for today (Daily seeded recommendations) -->
+        <!-- Section: Hot Right Now / Global Trending -->
+        <div class="spotify-section" id="section-trending-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Hot right now</h2>
+            <span class="spotify-daily-tag" style="background: rgba(0, 240, 255, 0.12); color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.3);">VIRAL</span>
+          </div>
+          <div class="spotify-h-scroll" id="trending-hits-row">
+            <!-- Populated with global trending hits -->
+          </div>
+        </div>
+
+        <!-- Section: Recommended for today (Daily seeded recommendations) -->
         <div class="spotify-section" id="section-daily-picks">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Recommended for today</h2>
             <span class="spotify-daily-tag" id="daily-tag-date">TODAY</span>
           </div>
           <div class="spotify-h-scroll" id="daily-picks-row">
-            <!-- Dynamically populated -->
+            <!-- Dynamically rotated daily at midnight -->
           </div>
         </div>
 
-        <!-- Section 4: Your top mixes -->
+        <!-- Section: Your top mixes -->
         <div class="spotify-section" id="section-top-mixes">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Your top mixes</h2>
           </div>
           <div class="spotify-h-scroll" id="top-mixes-row">
-            <!-- Pop Mix, 2020s Mix, Phonk Mix, Bollywood Romance, etc. -->
+            <!-- Pop Mix, 2020s Mix, Phonk Mix, Bollywood, Lo-Fi, Hip-Hop -->
           </div>
         </div>
 
-        <!-- Section 5: Popular albums and singles -->
+        <!-- Section: Popular albums and singles -->
         <div class="spotify-section" id="section-popular-albums">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Popular albums and singles</h2>
           </div>
           <div class="spotify-h-scroll" id="popular-albums-row">
             <!-- Curated Album Cards -->
+          </div>
+        </div>
+
+        <!-- Section: Podcasts & Audio Shows (Shown on All and Podcasts pills) -->
+        <div class="spotify-section" id="section-podcasts">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Podcasts & Audio Shows</h2>
+            <span class="spotify-daily-tag" style="background: rgba(168, 85, 247, 0.12); color: #a855f7; border-color: rgba(168, 85, 247, 0.3);">SHOWS</span>
+          </div>
+          <div class="spotify-h-scroll" id="podcasts-row">
+            <!-- Curated Podcast Cards -->
           </div>
         </div>
       </section>
@@ -168,7 +192,7 @@
           <div class="yt-link-input-row">
             <input type="text" id="input-yt-download-url" placeholder="Paste YouTube link or video ID..." autocomplete="off">
             <button id="btn-start-yt-download" class="btn-mobile-pill primary">
-              <span>Download (144p)</span>
+              <span>Download</span>
             </button>
           </div>
         </div>
@@ -370,7 +394,7 @@
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <div>
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Display Name</label>
-            <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Operator">
+            <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Enter your name" value="">
           </div>
           <div>
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Music Preferences</label>
