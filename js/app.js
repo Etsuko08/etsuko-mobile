@@ -36,7 +36,9 @@ class EtsukoMobileApp {
       'view-discover': document.getElementById('view-discover'),
       'view-search': document.getElementById('view-search'),
       'view-library': document.getElementById('view-library'),
-      'view-downloads': document.getElementById('view-downloads')
+      'view-downloads': document.getElementById('view-downloads'),
+      'view-album-detail': document.getElementById('view-album-detail'),
+      'view-artist-detail': document.getElementById('view-artist-detail')
     };
     this.navBtns = document.querySelectorAll('.nav-tab-btn');
 
@@ -58,7 +60,13 @@ class EtsukoMobileApp {
     this.btnSearchBack = document.getElementById('btn-search-back');
     this.searchInput = document.getElementById('mobile-search-input');
     this.btnSearchClear = document.getElementById('btn-search-clear');
-    this.searchChips = document.querySelectorAll('.chip-btn');
+    this.searchChips = document.querySelectorAll('.search-filter-chips .chip-btn');
+    this.searchFilterChipsContainer = document.getElementById('search-filter-chips');
+    this.searchDefaultContainer = document.getElementById('search-default-container');
+    this.searchBrowseGrid = document.getElementById('search-browse-grid');
+    this.searchRecentBox = document.getElementById('search-recent-box');
+    this.recentSearchesList = document.getElementById('recent-searches-list');
+    this.btnClearRecentSearches = document.getElementById('btn-clear-recent-searches');
     this.searchResultsList = document.getElementById('search-results-list');
 
     // Library
@@ -73,6 +81,28 @@ class EtsukoMobileApp {
     this.activeCrateTitle = document.getElementById('active-crate-title');
     this.btnPlayAllCrate = document.getElementById('btn-play-all-crate');
     this.btnDeleteActiveCrate = document.getElementById('btn-delete-active-crate');
+    this.libraryFilterChips = document.querySelectorAll('[data-lib-filter]');
+    this.librarySearchInput = document.getElementById('library-search-input');
+    this.btnLibrarySort = document.getElementById('btn-library-sort');
+    this.currentLibFilter = 'all';
+    this.currentLibSort = 'recent';
+
+    // Detail Views (Album & Artist)
+    this.btnBackFromAlbum = document.getElementById('btn-back-from-album');
+    this.albumDetailCover = document.getElementById('album-detail-cover');
+    this.albumDetailTitle = document.getElementById('album-detail-title');
+    this.albumDetailArtist = document.getElementById('album-detail-artist');
+    this.btnAlbumPlayAll = document.getElementById('btn-album-play-all');
+    this.btnAlbumShuffle = document.getElementById('btn-album-shuffle');
+    this.albumTracksList = document.getElementById('album-tracks-list');
+    this.activeAlbumTracks = [];
+
+    this.btnBackFromArtist = document.getElementById('btn-back-from-artist');
+    this.artistDetailAvatar = document.getElementById('artist-detail-avatar');
+    this.artistDetailName = document.getElementById('artist-detail-name');
+    this.btnArtistPlayTop = document.getElementById('btn-artist-play-top');
+    this.artistTracksList = document.getElementById('artist-tracks-list');
+    this.activeArtistTracks = [];
 
     // Sheet Player Elements
     this.playerSheet = document.getElementById('player-sheet');
@@ -156,7 +186,7 @@ class EtsukoMobileApp {
         clearTimeout(this.searchDebounceTimer);
         this.searchDebounceTimer = setTimeout(() => {
           this.executeSearch(val);
-        }, 320);
+        }, 280);
       });
     }
 
@@ -164,8 +194,18 @@ class EtsukoMobileApp {
       this.btnSearchClear.addEventListener('click', () => {
         this.searchInput.value = '';
         this.btnSearchClear.style.display = 'none';
-        this.searchResultsList.innerHTML = '';
+        if (this.searchFilterChipsContainer) this.searchFilterChipsContainer.style.display = 'none';
+        if (this.searchResultsList) this.searchResultsList.style.display = 'none';
+        if (this.searchDefaultContainer) this.searchDefaultContainer.style.display = 'block';
+        this.loadRecentSearches();
         this.searchInput.focus();
+      });
+    }
+
+    if (this.btnClearRecentSearches) {
+      this.btnClearRecentSearches.addEventListener('click', () => {
+        try { localStorage.removeItem('etsuko_recent_searches'); } catch (e) {}
+        if (this.searchRecentBox) this.searchRecentBox.style.display = 'none';
       });
     }
 
@@ -179,6 +219,79 @@ class EtsukoMobileApp {
         }
       });
     });
+
+    // Library Filter Chips & In-Library Search
+    this.libraryFilterChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        this.libraryFilterChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        this.currentLibFilter = chip.getAttribute('data-lib-filter') || 'all';
+        this.applyLibraryFilter();
+      });
+    });
+
+    if (this.librarySearchInput) {
+      this.librarySearchInput.addEventListener('input', () => {
+        this.applyLibraryFilter();
+      });
+    }
+
+    if (this.btnLibrarySort) {
+      this.btnLibrarySort.addEventListener('click', () => {
+        this.currentLibSort = this.currentLibSort === 'recent' ? 'alpha' : 'recent';
+        this.showToast(this.currentLibSort === 'recent' ? 'Sorted by Recently Added' : 'Sorted Alphabetically');
+        this.applyLibraryFilter();
+      });
+    }
+
+    // Detail Views (Album & Artist) Navigation Events
+    if (this.btnBackFromAlbum) {
+      this.btnBackFromAlbum.addEventListener('click', () => {
+        this.switchView('view-discover');
+      });
+    }
+
+    if (this.btnAlbumPlayAll) {
+      this.btnAlbumPlayAll.addEventListener('click', () => {
+        if (this.activeAlbumTracks && this.activeAlbumTracks.length > 0) {
+          window.player.playTrack(this.activeAlbumTracks[0], this.activeAlbumTracks);
+          this.openPlayerSheet();
+        }
+      });
+    }
+
+    if (this.btnAlbumShuffle) {
+      this.btnAlbumShuffle.addEventListener('click', () => {
+        if (this.activeAlbumTracks && this.activeAlbumTracks.length > 0) {
+          const shuffled = [...this.activeAlbumTracks].sort(() => Math.random() - 0.5);
+          window.player.playTrack(shuffled[0], shuffled);
+          this.openPlayerSheet();
+        }
+      });
+    }
+
+    if (this.btnBackFromArtist) {
+      this.btnBackFromArtist.addEventListener('click', () => {
+        this.switchView('view-discover');
+      });
+    }
+
+    if (this.btnArtistPlayTop) {
+      this.btnArtistPlayTop.addEventListener('click', () => {
+        if (this.activeArtistTracks && this.activeArtistTracks.length > 0) {
+          window.player.playTrack(this.activeArtistTracks[0], this.activeArtistTracks);
+          this.openPlayerSheet();
+        }
+      });
+    }
+
+    // Downloads Search
+    if (this.downloadsSearchInput) {
+      this.downloadsSearchInput.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase().trim();
+        this.filterDownloadedTracks(query);
+      });
+    }
 
     // Library Events
     if (this.cardLikes) {
@@ -374,6 +487,7 @@ class EtsukoMobileApp {
   // --- Spotify-Style Home Feed Loading ---
   async loadHomeFeed() {
     try {
+      this.updateGreetingHeader();
       const feed = await window.api.getHomeFeed();
 
       // Today date tag
@@ -399,7 +513,7 @@ class EtsukoMobileApp {
       this.renderHorizontalRow(this.trendingHitsRow, feed.trendingHits);
       this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
       this.renderTopMixes(this.topMixesRow, feed.topMixes);
-      this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums);
+      this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums, true);
       this.renderHorizontalRow(this.podcastsRow, feed.podcasts);
     } catch (e) {
       console.warn('[HomeFeed] Error:', e);
@@ -425,7 +539,7 @@ class EtsukoMobileApp {
     return `onerror="if(!this.dataset.t1){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg';}else if(!this.dataset.t2){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${videoId}/mqdefault.jpg';}else{this.src='assets/default_cover.png';}"`;
   }
 
-  renderHorizontalRow(container, tracks) {
+  renderHorizontalRow(container, tracks, isAlbum = false) {
     if (!container) return;
     container.innerHTML = '';
 
@@ -442,15 +556,24 @@ class EtsukoMobileApp {
           </button>
         </div>
         <div class="spotify-card-meta">
-          <span class="spotify-card-tag">${track.tag || 'Track'}</span>
-          <div class="spotify-card-title">${this.escapeHtml(track.title)}</div>
+          <span class="spotify-card-tag">${isAlbum ? 'Album' : (track.tag || 'Track')}</span>
+          <div class="spotify-card-title">${this.escapeHtml(isAlbum && track.album && track.album !== 'Top Hit' && track.album !== 'Single' ? track.album : track.title)}</div>
           <div class="spotify-card-artist">${this.escapeHtml(track.artist)}</div>
         </div>
       `;
 
-      card.addEventListener('click', () => {
-        window.player.playTrack(track, tracks);
-        this.openPlayerSheet();
+      card.addEventListener('click', (e) => {
+        if (isAlbum) {
+          if (e.target.closest('.spotify-card-play-btn')) {
+            window.player.playTrack(track, tracks);
+            this.openPlayerSheet();
+          } else {
+            this.openAlbumDetail(track, tracks);
+          }
+        } else {
+          window.player.playTrack(track, tracks);
+          this.openPlayerSheet();
+        }
       });
 
       container.appendChild(card);
@@ -523,21 +646,150 @@ class EtsukoMobileApp {
     }
   }
 
-  // --- Search Engine (Instant & Pure UI) ---
+  updateGreetingHeader() {
+    const greetingEl = document.getElementById('home-greeting-text');
+    if (!greetingEl) return;
+    const hour = new Date().getHours();
+    let greet = 'Good evening';
+    if (hour >= 5 && hour < 12) greet = 'Good morning';
+    else if (hour >= 12 && hour < 17) greet = 'Good afternoon';
+    else if (hour >= 17 && hour < 22) greet = 'Good evening';
+    else greet = 'Late night vibes';
+
+    let username = '';
+    try {
+      const profile = localStorage.getItem('etsuko_user_profile');
+      if (profile) {
+        const parsed = JSON.parse(profile);
+        if (parsed && parsed.name) username = parsed.name.trim();
+      }
+    } catch (e) {}
+
+    greetingEl.textContent = username ? `${greet}, ${username}` : greet;
+  }
+
+  // --- Search Engine (Instant, Browse Categories, Recent Searches) ---
+  initSearchTabState() {
+    this.renderBrowseCategories();
+    this.loadRecentSearches();
+    if (!this.searchInput || !this.searchInput.value.trim()) {
+      if (this.searchDefaultContainer) this.searchDefaultContainer.style.display = 'block';
+      if (this.searchFilterChipsContainer) this.searchFilterChipsContainer.style.display = 'none';
+      if (this.searchResultsList) {
+        this.searchResultsList.style.display = 'none';
+        this.searchResultsList.innerHTML = '';
+      }
+    }
+  }
+
+  renderBrowseCategories() {
+    if (!this.searchBrowseGrid) return;
+    const categories = [
+      { id: 'pop', name: 'Pop Hits', badge: 'CHARTS', bg: 'linear-gradient(135deg, #ec4899, #8b5cf6)', icon: '🎵', query: 'Top Pop Hits 2024' },
+      { id: 'hindi', name: 'Bollywood Romance', badge: 'TRENDING', bg: 'linear-gradient(135deg, #f43f5e, #fb923c)', icon: '🇮🇳', query: 'Bollywood Romantic Melodies' },
+      { id: 'punjabi', name: 'Punjabi Heat', badge: 'VIRAL', bg: 'linear-gradient(135deg, #f59e0b, #ef4444)', icon: '🪕', query: 'Punjabi Hot Hits' },
+      { id: 'phonk', name: 'Phonk & Drift', badge: 'ENERGY', bg: 'linear-gradient(135deg, #8b5cf6, #06b6d4)', icon: '⚡', query: 'Drift Phonk Best' },
+      { id: 'hiphop', name: 'Hip-Hop / Rap', badge: 'BEATS', bg: 'linear-gradient(135deg, #ea580c, #b91c1c)', icon: '🔥', query: 'Hip Hop Rap Hits' },
+      { id: 'lofi', name: 'Lofi Chill Study', badge: 'CALM', bg: 'linear-gradient(135deg, #10b981, #0284c7)', icon: '☕', query: 'Lofi Hip Hop Study Session' },
+      { id: 'rock', name: 'Rock & Metal', badge: 'CLASSIC', bg: 'linear-gradient(135deg, #e11d48, #475569)', icon: '🎸', query: 'Rock Anthems' },
+      { id: 'telugu', name: 'South Mega Hits', badge: 'HOT', bg: 'linear-gradient(135deg, #6366f1, #06b6d4)', icon: '💫', query: 'Telugu Hits 2024' },
+      { id: 'workout', name: 'Workout Gym Beats', badge: 'FOCUS', bg: 'linear-gradient(135deg, #84cc16, #059669)', icon: '🏃', query: 'Gym Workout Music' },
+      { id: 'gaming', name: 'Gaming Night', badge: 'DRIVE', bg: 'linear-gradient(135deg, #06b6d4, #3b82f6)', icon: '🎮', query: 'Gaming Beats EDM' },
+      { id: 'chill', name: 'Late Night Drive', badge: 'NIGHT', bg: 'linear-gradient(135deg, #4f46e5, #0f172a)', icon: '🌙', query: 'Late Night Chill Songs' },
+      { id: 'podcasts', name: 'Top Podcasts', badge: 'TALK', bg: 'linear-gradient(135deg, #a855f7, #6366f1)', icon: '🎙️', query: 'Popular Podcasts Audio' }
+    ];
+
+    this.searchBrowseGrid.innerHTML = '';
+    categories.forEach(cat => {
+      const card = document.createElement('div');
+      card.className = 'search-genre-card';
+      card.style.background = cat.bg;
+      card.innerHTML = `
+        <div class="search-genre-title">${cat.name}</div>
+        <div class="search-genre-badge">${cat.badge}</div>
+        <div class="search-genre-icon">${cat.icon}</div>
+      `;
+      card.addEventListener('click', () => {
+        if (this.searchInput) {
+          this.searchInput.value = cat.name;
+          if (this.btnSearchClear) this.btnSearchClear.style.display = 'flex';
+          this.saveRecentSearch(cat.name);
+          this.executeSearch(cat.query);
+        }
+      });
+      this.searchBrowseGrid.appendChild(card);
+    });
+  }
+
+  loadRecentSearches() {
+    if (!this.searchRecentBox || !this.recentSearchesList) return;
+    try {
+      const raw = localStorage.getItem('etsuko_recent_searches');
+      const list = raw ? JSON.parse(raw) : [];
+      if (list.length === 0) {
+        this.searchRecentBox.style.display = 'none';
+        return;
+      }
+      this.searchRecentBox.style.display = 'block';
+      this.recentSearchesList.innerHTML = '';
+      list.slice(0, 6).forEach(q => {
+        const chip = document.createElement('div');
+        chip.className = 'recent-search-chip';
+        chip.innerHTML = `
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>${this.escapeHtml(q)}</span>
+        `;
+        chip.addEventListener('click', () => {
+          if (this.searchInput) {
+            this.searchInput.value = q;
+            if (this.btnSearchClear) this.btnSearchClear.style.display = 'flex';
+            this.executeSearch(q);
+          }
+        });
+        this.recentSearchesList.appendChild(chip);
+      });
+    } catch (e) {
+      this.searchRecentBox.style.display = 'none';
+    }
+  }
+
+  saveRecentSearch(query) {
+    if (!query || !query.trim()) return;
+    try {
+      const q = query.trim();
+      const raw = localStorage.getItem('etsuko_recent_searches');
+      let list = raw ? JSON.parse(raw) : [];
+      list = list.filter(item => item.toLowerCase() !== q.toLowerCase());
+      list.unshift(q);
+      if (list.length > 10) list = list.slice(0, 10);
+      localStorage.setItem('etsuko_recent_searches', JSON.stringify(list));
+      this.loadRecentSearches();
+    } catch (e) {}
+  }
+
   async executeSearch(query) {
     if (!query || !query.trim()) {
-      this.searchResultsList.innerHTML = '';
+      if (this.searchDefaultContainer) this.searchDefaultContainer.style.display = 'block';
+      if (this.searchFilterChipsContainer) this.searchFilterChipsContainer.style.display = 'none';
+      if (this.searchResultsList) {
+        this.searchResultsList.style.display = 'none';
+        this.searchResultsList.innerHTML = '';
+      }
+      this.loadRecentSearches();
       return;
     }
-    const q = query.trim();
-    const reqId = ++this.currentSearchRequestId;
 
+    const q = query.trim();
+    if (this.searchDefaultContainer) this.searchDefaultContainer.style.display = 'none';
+    if (this.searchFilterChipsContainer) this.searchFilterChipsContainer.style.display = 'flex';
+    if (this.searchResultsList) this.searchResultsList.style.display = 'block';
+
+    const reqId = ++this.currentSearchRequestId;
     if (this.searchAbortController) {
       this.searchAbortController.abort();
     }
     this.searchAbortController = new AbortController();
 
-    // Clean loading skeleton (Zero mention of YouTube)
     this.searchResultsList.innerHTML = `
       <div style="padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
         <div class="search-pulse-dot"></div>
@@ -550,6 +802,7 @@ class EtsukoMobileApp {
       if (reqId !== this.currentSearchRequestId) return;
 
       const results = data.results || [];
+      this.saveRecentSearch(q);
       this.renderSearchResults(results);
     } catch (e) {
       if (e.name === 'AbortError') return;
@@ -566,13 +819,62 @@ class EtsukoMobileApp {
     this.searchResultsList.innerHTML = '';
     if (items.length === 0) {
       this.searchResultsList.innerHTML = `
-        <div style="padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px;">
+        <div style="padding: 32px 16px; text-align: center; color: var(--text-muted); font-size: 13px;">
           No matching results found.
         </div>
       `;
       return;
     }
 
+    if (this.currentSearchFilter === 'artists') {
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.innerHTML = `
+          <img src="${this.getThumbnailSrc(item)}" class="track-row-thumb" alt="Artist" style="border-radius: 50%; width: 46px; height: 46px; object-fit: cover; border: 1.5px solid var(--accent-cyan);" ${this.getImgFallbackAttr(item.videoId)}>
+          <div class="track-row-info">
+            <div class="track-row-title">${this.escapeHtml(item.artist || item.title)}</div>
+            <div class="track-row-artist" style="color: var(--accent-cyan); font-weight: 700;">Verified Artist • Popular: ${this.escapeHtml(item.title)}</div>
+          </div>
+          <div class="track-row-actions">
+            <button class="btn-track-action" title="Open Artist Profile" style="color: var(--accent-cyan);">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            </button>
+          </div>
+        `;
+        row.addEventListener('click', () => {
+          this.openArtistDetail(item.artist || item.title, this.getThumbnailSrc(item), items);
+        });
+        this.searchResultsList.appendChild(row);
+      });
+      return;
+    }
+
+    if (this.currentSearchFilter === 'albums') {
+      items.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.innerHTML = `
+          <img src="${this.getThumbnailSrc(item)}" class="track-row-thumb" alt="Album" style="border-radius: 10px; width: 48px; height: 48px; object-fit: cover;" ${this.getImgFallbackAttr(item.videoId)}>
+          <div class="track-row-info">
+            <div class="track-row-title">${this.escapeHtml(item.album && item.album !== 'Top Hit' && item.album !== 'Single' ? item.album : item.title)}</div>
+            <div class="track-row-artist">Album • ${this.escapeHtml(item.artist)}</div>
+          </div>
+          <div class="track-row-actions">
+            <button class="btn-track-action" title="Open Album" style="color: var(--accent-cyan);">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            </button>
+          </div>
+        `;
+        row.addEventListener('click', () => {
+          this.openAlbumDetail(item, items);
+        });
+        this.searchResultsList.appendChild(row);
+      });
+      return;
+    }
+
+    // Default 'songs' (Tracks)
     items.forEach(item => {
       const row = document.createElement('div');
       row.className = 'track-row';
@@ -620,6 +922,122 @@ class EtsukoMobileApp {
       });
 
       this.searchResultsList.appendChild(row);
+    });
+  }
+
+  // --- Detail Views (Album & Artist) Navigation ---
+  openAlbumDetail(albumItem, trackPool = []) {
+    if (!this.views['view-album-detail']) return;
+
+    const title = albumItem.album && albumItem.album !== 'Top Hit' && albumItem.album !== 'Single' ? albumItem.album : albumItem.title;
+    const artist = albumItem.artist || 'Featured Artist';
+    const thumb = this.getThumbnailSrc(albumItem);
+
+    if (this.albumDetailTitle) this.albumDetailTitle.textContent = title;
+    if (this.albumDetailArtist) this.albumDetailArtist.textContent = artist;
+    if (this.albumDetailCover) this.albumDetailCover.src = thumb;
+
+    const matching = trackPool.filter(t => (t.album && t.album === title) || (t.artist && t.artist.toLowerCase() === artist.toLowerCase()));
+    const finalTracks = matching.length > 0 ? matching : [albumItem, ...trackPool.slice(0, 6)];
+    this.activeAlbumTracks = finalTracks;
+
+    if (this.albumTracksList) {
+      this.albumTracksList.innerHTML = '';
+      finalTracks.forEach((track, idx) => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.innerHTML = `
+          <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); width: 22px; text-align: center;">${idx + 1}</div>
+          <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
+          <div class="track-row-info">
+            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+            <div class="track-row-artist">${this.escapeHtml(track.artist)} • ${this.escapeHtml(track.duration || '3:30')}</div>
+          </div>
+          <button class="btn-track-action" title="Play">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+        `;
+        row.addEventListener('click', () => {
+          window.player.playTrack(track, finalTracks);
+          this.openPlayerSheet();
+        });
+        this.albumTracksList.appendChild(row);
+      });
+    }
+
+    this.switchView('view-album-detail');
+  }
+
+  openArtistDetail(artistName, avatarUrl, trackPool = []) {
+    if (!this.views['view-artist-detail']) return;
+
+    if (this.artistDetailName) this.artistDetailName.textContent = artistName;
+    if (this.artistDetailAvatar) this.artistDetailAvatar.src = avatarUrl || 'assets/default_cover.png';
+
+    const matching = trackPool.filter(t => t.artist && t.artist.toLowerCase().includes(artistName.toLowerCase()));
+    const finalTracks = matching.length > 0 ? matching : trackPool.slice(0, 8);
+    this.activeArtistTracks = finalTracks;
+
+    if (this.artistTracksList) {
+      this.artistTracksList.innerHTML = '';
+      finalTracks.forEach((track, idx) => {
+        const row = document.createElement('div');
+        row.className = 'track-row';
+        row.innerHTML = `
+          <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); width: 22px; text-align: center;">${idx + 1}</div>
+          <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
+          <div class="track-row-info">
+            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+            <div class="track-row-artist">${this.escapeHtml(track.album || 'Top Hit')} • ${this.escapeHtml(track.duration || '3:30')}</div>
+          </div>
+          <button class="btn-track-action" title="Play">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          </button>
+        `;
+        row.addEventListener('click', () => {
+          window.player.playTrack(track, finalTracks);
+          this.openPlayerSheet();
+        });
+        this.artistTracksList.appendChild(row);
+      });
+    }
+
+    this.switchView('view-artist-detail');
+  }
+
+  applyLibraryFilter() {
+    const q = (this.librarySearchInput ? this.librarySearchInput.value : '').toLowerCase().trim();
+    const filter = this.currentLibFilter || 'all';
+
+    if (this.cardLikes) {
+      this.cardLikes.style.display = (filter === 'all' || filter === 'liked') && !q ? 'block' : 'none';
+    }
+
+    const cratesHeader = document.getElementById('header-crates-title');
+    if (cratesHeader) {
+      cratesHeader.style.display = (filter === 'all' || filter === 'playlists') ? 'flex' : 'none';
+    }
+
+    if (this.playlistsList) {
+      if (filter === 'liked') {
+        this.playlistsList.style.display = 'none';
+      } else {
+        this.playlistsList.style.display = 'flex';
+        const items = this.playlistsList.querySelectorAll('.track-row');
+        items.forEach(item => {
+          const text = item.textContent.toLowerCase();
+          item.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+        });
+      }
+    }
+  }
+
+  filterDownloadedTracks(query) {
+    if (!this.downloadedTracksList) return;
+    const rows = this.downloadedTracksList.querySelectorAll('.track-row');
+    rows.forEach(r => {
+      const txt = r.textContent.toLowerCase();
+      r.style.display = (!query || txt.includes(query)) ? 'flex' : 'none';
     });
   }
 
@@ -771,6 +1189,18 @@ class EtsukoMobileApp {
       }
 
       this.renderDownloadedTracksList(tracks);
+
+      if (typeof window.downloader.getStorageStats === 'function') {
+        const stats = await window.downloader.getStorageStats();
+        const actualMbEl = document.getElementById('storage-actual-mb');
+        const fillEl = document.getElementById('storage-meter-fill');
+        const detailsEl = document.getElementById('storage-details-text');
+        if (actualMbEl) actualMbEl.textContent = `${stats.actualMB} MB`;
+        if (fillEl) fillEl.style.width = `${Math.min(stats.percentage, 100)}%`;
+        if (detailsEl) {
+          detailsEl.textContent = `${stats.actualMB} MB used by audio tracks • System estimate: ${stats.systemEstimateMB} MB (${stats.percentage}%)`;
+        }
+      }
     } catch (e) {
       console.warn('[Downloads] Error loading:', e);
     }

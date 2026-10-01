@@ -302,6 +302,52 @@ class OfflineDownloader {
     }
     return `${Math.round(bytesPerSec / 1024)} KB/s`;
   }
+
+  async getActualStorageUsage() {
+    try {
+      const db = await this.ensureDB();
+      return new Promise((resolve) => {
+        const tx = db.transaction(this.storeName, 'readonly');
+        const store = tx.objectStore(this.storeName);
+        const req = store.getAll();
+        req.onsuccess = () => {
+          let actualBytes = 0;
+          const items = req.result || [];
+          for (const item of items) {
+            if (item.audioBlob && item.audioBlob.size) actualBytes += item.audioBlob.size;
+            if (item.thumbnailBlob && item.thumbnailBlob.size) actualBytes += item.thumbnailBlob.size;
+            if (item.fileSizeBytes) actualBytes += item.fileSizeBytes;
+          }
+          resolve({
+            trackCount: items.length,
+            actualBytes: actualBytes,
+            actualMB: (actualBytes / (1024 * 1024)).toFixed(1)
+          });
+        };
+        req.onerror = () => resolve({ trackCount: 0, actualBytes: 0, actualMB: '0.0' });
+      });
+    } catch (e) {
+      return { trackCount: 0, actualBytes: 0, actualMB: '0.0' };
+    }
+  }
+
+  async getStorageStats() {
+    const actual = await this.getActualStorageUsage();
+    let browserEstimateMB = '0.0';
+    let availableQuotaGB = '0.0';
+    if (navigator.storage && navigator.storage.estimate) {
+      try {
+        const est = await navigator.storage.estimate();
+        browserEstimateMB = ((est.usage || 0) / (1024 * 1024)).toFixed(1);
+        availableQuotaGB = (((est.quota || 0) - (est.usage || 0)) / (1024 * 1024 * 1024)).toFixed(1);
+      } catch (e) {}
+    }
+    return {
+      ...actual,
+      browserEstimateMB,
+      availableQuotaGB
+    };
+  }
 }
 
 // Global Downloader Singleton

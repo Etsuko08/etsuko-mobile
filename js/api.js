@@ -673,6 +673,104 @@ class EtsukoAPI {
     };
   }
 
+  cleanTitle(title) {
+    if (!title) return '';
+    return title
+      .replace(/\s*[\(\[](official\s*(music\s*)?video|video|audio|lyrics|visualizer|full\s*song|hd|4k|mv)[\)\]]/gi, '')
+      .replace(/\s*-\s*official\s*video/gi, '')
+      .trim();
+  }
+
+  async getLyrics(title, artist, duration = null) {
+    if (!title) return { type: 'unavailable', message: 'No lyrics available' };
+    const cleanedTitle = this.cleanTitle(title);
+    const cleanedArtist = (artist && artist !== 'Unknown Artist') ? artist.replace(/\s*-\s*Topic/i, '').trim() : '';
+    const cacheKey = `lyrics_${cleanedTitle}_${cleanedArtist}`.toLowerCase();
+
+    if (!this._lyricsCache) this._lyricsCache = new Map();
+    if (this._lyricsCache.has(cacheKey)) {
+      return this._lyricsCache.get(cacheKey);
+    }
+
+    try {
+      let url = `https://lrclib.net/api/get?track_name=${encodeURIComponent(cleanedTitle)}`;
+      if (cleanedArtist) {
+        url += `&artist_name=${encodeURIComponent(cleanedArtist)}`;
+      }
+      if (duration && duration > 0) {
+        url += `&duration=${Math.round(duration)}`;
+      }
+
+      let res = await fetch(url, { headers: { 'User-Agent': 'EtsukoMusicApp/1.0' } });
+      if (!res.ok && res.status === 404) {
+        // Fallback fuzzy search on LRCLIB
+        const query = `${cleanedTitle} ${cleanedArtist}`.trim();
+        const searchUrl = `https://lrclib.net/api/search?q=${encodeURIComponent(query)}`;
+        const searchRes = await fetch(searchUrl, { headers: { 'User-Agent': 'EtsukoMusicApp/1.0' } });
+        if (searchRes.ok) {
+          const list = await searchRes.json();
+          if (Array.isArray(list) && list.length > 0) {
+            res = { ok: true, status: 200, json: async () => list[0] };
+          }
+        }
+      }
+
+      if (!res.ok) {
+        const fallbackResult = { type: 'unavailable', message: 'Lyrics not available for this track' };
+        this._lyricsCache.set(cacheKey, fallbackResult);
+        return fallbackResult;
+      }
+
+      const data = await res.json();
+      if (!data) {
+        const fallbackResult = { type: 'unavailable', message: 'Lyrics not available for this track' };
+        this._lyricsCache.set(cacheKey, fallbackResult);
+        return fallbackResult;
+      }
+
+      if (data.instrumental) {
+        const result = { type: 'instrumental', message: 'Instrumental track • Enjoy the music' };
+        this._lyricsCache.set(cacheKey, result);
+        return result;
+      }
+
+      if (data.syncedLyrics && typeof data.syncedLyrics === 'string') {
+        const lines = [];
+        const rawLines = data.syncedLyrics.split('\n');
+        for (const line of rawLines) {
+          const match = line.match(/^\[(\d{2}):(\d{2}(?:\.\d{1,3})?)\](.*)$/);
+          if (match) {
+            const mins = parseFloat(match[1]);
+            const secs = parseFloat(match[2]);
+            const text = match[3].trim();
+            lines.push({
+              time: mins * 60 + secs,
+              text: text || '♪'
+            });
+          }
+        }
+        if (lines.length > 0) {
+          const result = { type: 'synced', lines };
+          this._lyricsCache.set(cacheKey, result);
+          return result;
+        }
+      }
+
+      if (data.plainLyrics && typeof data.plainLyrics === 'string') {
+        const result = { type: 'plain', text: data.plainLyrics };
+        this._lyricsCache.set(cacheKey, result);
+        return result;
+      }
+
+      const fallbackResult = { type: 'unavailable', message: 'Lyrics not available for this track' };
+      this._lyricsCache.set(cacheKey, fallbackResult);
+      return fallbackResult;
+    } catch (e) {
+      console.warn('[API] Lyrics fetch notice:', e);
+      return { type: 'unavailable', message: 'Lyrics unavailable' };
+    }
+  }
+
   getUserGenres() {
     try {
       const raw = localStorage.getItem(this.localGenresKey);

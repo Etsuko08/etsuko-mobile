@@ -36,6 +36,12 @@
     <main class="view-viewport" id="view-viewport">
       <!-- 1. Discover / Home View (Spotify Feed Style) -->
       <section class="page-view active" id="view-discover">
+        <!-- Dynamic Time-Based Personalized Greeting -->
+        <div class="home-greeting-banner" id="home-greeting-banner" style="margin: 6px 0 16px 0;">
+          <h1 class="home-greeting-text" id="home-greeting-text" style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 2px; letter-spacing: -0.5px;">Good evening</h1>
+          <div class="home-greeting-sub" id="home-greeting-sub" style="font-size: 12px; color: var(--text-muted); font-weight: 600;">Curated for your soundspace</div>
+        </div>
+
         <!-- Section: Jump back in (Shown when user has played tracks) -->
         <div class="spotify-section" id="section-jump-back" style="display: none;">
           <div class="spotify-section-header">
@@ -126,19 +132,58 @@
           </div>
         </div>
 
-        <div class="search-filter-chips">
+        <!-- Filter Chips: Shown when search query is active -->
+        <div class="search-filter-chips" id="search-filter-chips" style="display: none;">
           <button class="chip-btn active" data-filter="songs">Tracks</button>
           <button class="chip-btn" data-filter="albums">Albums</button>
           <button class="chip-btn" data-filter="artists">Artists</button>
         </div>
 
-        <div class="track-list" id="search-results-list">
+        <!-- Default Explore & Browse View (Shown when input is empty) -->
+        <div id="search-default-container">
+          <!-- Recent Searches (Dynamic) -->
+          <div id="search-recent-box" style="display: none; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <span style="font-size: 13px; font-weight: 700; color: #fff;">Recent Searches</span>
+              <button id="btn-clear-recent-searches" style="background: none; border: none; font-size: 11px; font-weight: 700; color: var(--accent-cyan); cursor: pointer;">Clear All</button>
+            </div>
+            <div class="recent-searches-chips" id="recent-searches-list"></div>
+          </div>
+
+          <!-- Explore All / Browse Genres Grid -->
+          <div class="search-browse-section">
+            <div style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 14px; letter-spacing: 0.3px;">Explore All Genres</div>
+            <div class="search-browse-grid" id="search-browse-grid">
+              <!-- Dynamically populated Spotify-style categories -->
+            </div>
+          </div>
+        </div>
+
+        <div class="track-list" id="search-results-list" style="display: none;">
           <!-- Search results -->
         </div>
       </section>
 
       <!-- 3. Library View -->
       <section class="page-view" id="view-library">
+        <!-- Library Filter Chips & In-Library Search -->
+        <div class="library-filter-chips" style="display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; scrollbar-width: none;">
+          <button class="chip-btn active" data-lib-filter="all">All</button>
+          <button class="chip-btn" data-lib-filter="playlists">Playlists</button>
+          <button class="chip-btn" data-lib-filter="liked">Liked Songs</button>
+          <button class="chip-btn" data-lib-filter="downloads">Downloaded</button>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 14px;">
+          <div class="mobile-search-box" style="flex: 1; margin-bottom: 0; padding: 6px 12px;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="library-search-input" placeholder="Search your collection..." style="background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%;">
+          </div>
+          <button id="btn-library-sort" class="btn-icon-top" title="Sort Order" style="width: 38px; height: 38px; background: rgba(255,255,255,0.06); border-radius: 12px; flex-shrink: 0;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 5h10M11 9h7M11 13h4M3 17l3 3 3-3M6 18V4"></path></svg>
+          </button>
+        </div>
+
         <!-- Liked Tracks Header Card -->
         <div class="mobile-hero-card" id="card-open-likes" style="background: linear-gradient(135deg, rgba(80, 7, 36, 0.7), rgba(15, 23, 42, 0.8)); border-color: rgba(236, 72, 153, 0.4); cursor: pointer;">
           <div class="hero-tag" style="color: var(--accent-pink);">COLLECTION</div>
@@ -150,7 +195,7 @@
           </button>
         </div>
 
-        <div class="section-header">
+        <div class="section-header" id="header-crates-title">
           <h3 class="section-title">Your Playlists & Crates</h3>
           <button class="btn-mobile-pill secondary" id="btn-create-crate-modal" style="padding: 4px 12px; font-size: 11px;">
             + New Crate
@@ -183,6 +228,23 @@
 
       <!-- 4. Offline Downloads View -->
       <section class="page-view" id="view-downloads">
+        <!-- Storage Usage Indicator Card -->
+        <div class="downloads-storage-card" id="downloads-storage-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--accent-cyan)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span style="font-size: 13px; font-weight: 700; color: #fff;">Offline Audio Storage</span>
+            </div>
+            <span style="font-size: 12px; font-weight: 800; color: var(--accent-cyan);" id="storage-actual-mb">0.0 MB</span>
+          </div>
+          <div class="storage-meter-track" style="height: 6px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 6px;">
+            <div class="storage-meter-fill" id="storage-meter-fill" style="width: 3%; height: 100%; background: linear-gradient(90deg, var(--accent-cyan), #10b981); border-radius: 4px;"></div>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted);" id="storage-details-text">
+            0 tracks stored • Device storage ready
+          </div>
+        </div>
+
         <!-- Download from YouTube URL Card -->
         <div class="yt-link-downloader-card">
           <div class="yt-link-header">
@@ -213,6 +275,12 @@
           </div>
         </div>
 
+        <!-- Downloads Search Bar -->
+        <div class="mobile-search-box" style="margin-top: 14px; margin-bottom: 12px; padding: 6px 12px;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input type="text" id="downloads-search-input" placeholder="Search downloaded songs..." style="background: none; border: none; outline: none; color: #fff; font-size: 13px; width: 100%;">
+        </div>
+
         <!-- Offline Library Section -->
         <div class="downloads-vault-header">
           <div>
@@ -227,6 +295,59 @@
 
         <!-- Downloaded Tracks List -->
         <div class="track-list" id="downloaded-tracks-list"></div>
+      </section>
+
+      <!-- 5. Album Detail View -->
+      <section class="page-view" id="view-album-detail" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <button class="btn-mobile-pill secondary" id="btn-back-from-album" style="padding: 6px 12px;">
+            ← Back
+          </button>
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ALBUM</span>
+          <div style="width: 40px;"></div>
+        </div>
+        <div class="detail-hero-box" id="album-detail-hero" style="text-align: center; margin-bottom: 20px;">
+          <img id="album-detail-cover" src="assets/default_cover.png" alt="Album" style="width: 150px; height: 150px; border-radius: 16px; object-fit: cover; box-shadow: 0 12px 30px rgba(0,0,0,0.8); margin-bottom: 12px;">
+          <h2 id="album-detail-title" style="font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px;">Album Title</h2>
+          <div id="album-detail-artist" style="font-size: 13px; color: var(--accent-cyan); font-weight: 600; margin-bottom: 14px;">Artist Name</div>
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="btn-mobile-pill primary" id="btn-album-play-all" style="padding: 10px 20px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play All</span>
+            </button>
+            <button class="btn-mobile-pill secondary" id="btn-album-shuffle" style="padding: 10px 16px;">
+              <span>Shuffle</span>
+            </button>
+          </div>
+        </div>
+        <div class="track-list" id="album-tracks-list"></div>
+      </section>
+
+      <!-- 6. Artist Detail View -->
+      <section class="page-view" id="view-artist-detail" style="display: none;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <button class="btn-mobile-pill secondary" id="btn-back-from-artist" style="padding: 6px 12px;">
+            ← Back
+          </button>
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">ARTIST</span>
+          <div style="width: 40px;"></div>
+        </div>
+        <div class="detail-hero-box" id="artist-detail-hero" style="text-align: center; margin-bottom: 20px;">
+          <img id="artist-detail-avatar" src="assets/default_cover.png" alt="Artist" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.8); margin-bottom: 12px; border: 2px solid var(--accent-cyan);">
+          <div style="display: flex; align-items: center; justify-content: center; gap: 6px; margin-bottom: 4px;">
+            <h2 id="artist-detail-name" style="font-size: 20px; font-weight: 800; color: #fff;">Artist Name</h2>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--accent-cyan)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+          </div>
+          <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">Verified Artist • Top Hits</div>
+          <button class="btn-mobile-pill primary" id="btn-artist-play-top" style="padding: 10px 22px; margin: 0 auto;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+            <span>Play Top Hits</span>
+          </button>
+        </div>
+        <div class="section-header" style="margin-top: 18px; margin-bottom: 10px;">
+          <h3 class="section-title">Popular Tracks</h3>
+        </div>
+        <div class="track-list" id="artist-tracks-list"></div>
       </section>
     </main>
 
@@ -346,10 +467,27 @@
       <div class="sheet-queue-section" id="sheet-queue-section">
         <div class="sheet-queue-header">
           <span class="sheet-queue-title">Up Next in Queue</span>
-          <span class="sheet-queue-count" id="sheet-queue-count">0 tracks</span>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span class="sheet-queue-count" id="sheet-queue-count">0 tracks</span>
+            <button class="sheet-queue-btn-clear" id="btn-clear-queue" title="Clear Queue">Clear</button>
+          </div>
         </div>
         <div class="sheet-queue-list" id="sheet-queue-list">
           <!-- Upcoming tracks in queue -->
+        </div>
+      </div>
+
+      <!-- Spotify-Style Synced Lyrics Section -->
+      <div class="sheet-lyrics-section" id="sheet-lyrics-section">
+        <div class="sheet-lyrics-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <span class="sheet-lyrics-title">Lyrics</span>
+          </div>
+          <span class="sheet-lyrics-badge" id="sheet-lyrics-status">SYNCED</span>
+        </div>
+        <div class="sheet-lyrics-scroll-box" id="sheet-lyrics-container">
+          <div class="sheet-lyrics-placeholder">Loading lyrics...</div>
         </div>
       </div>
 

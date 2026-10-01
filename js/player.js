@@ -134,6 +134,14 @@ class MobilePlayer {
     this.sheetQueueSection = document.getElementById('sheet-queue-section');
     this.sheetQueueCount = document.getElementById('sheet-queue-count');
     this.sheetQueueList = document.getElementById('sheet-queue-list');
+    this.btnClearQueue = document.getElementById('btn-clear-queue');
+
+    // Lyrics section in Sheet
+    this.sheetLyricsSection = document.getElementById('sheet-lyrics-section');
+    this.sheetLyricsStatus = document.getElementById('sheet-lyrics-status');
+    this.sheetLyricsContainer = document.getElementById('sheet-lyrics-container');
+    this.currentLyricsData = null;
+    this.lastActiveLyricIdx = -1;
 
     // Related section in Sheet (Spotify Style)
     this.sheetRelatedSection = document.getElementById('sheet-related-section');
@@ -195,6 +203,7 @@ class MobilePlayer {
     if (this.btnSheetNext) this.btnSheetNext.addEventListener('click', () => this.next());
     if (this.btnSheetShuffle) this.btnSheetShuffle.addEventListener('click', () => this.toggleShuffle());
     if (this.btnSheetRepeat) this.btnSheetRepeat.addEventListener('click', () => this.toggleRepeat());
+    if (this.btnClearQueue) this.btnClearQueue.addEventListener('click', () => this.clearUpcomingQueue());
 
     if (this.sheetLikeBtn) {
       this.sheetLikeBtn.addEventListener('click', (e) => {
@@ -449,6 +458,8 @@ class MobilePlayer {
     this.updateMediaSession(track);
     this.renderQueueInSheet();
     this.loadRelatedTracks(track);
+    this.loadLyrics(track);
+    this.updateSheetAtmosphere(track);
 
     // Save to recents in localStorage
     this.recordRecentTrack(track);
@@ -685,6 +696,153 @@ class MobilePlayer {
     });
   }
 
+  updateSheetAtmosphere(track) {
+    if (!this.playerSheet) return;
+    const tones = {
+      hindi: 'rgba(236, 72, 153, 0.22)',
+      punjabi: 'rgba(245, 158, 11, 0.22)',
+      phonk: 'rgba(139, 92, 246, 0.25)',
+      pop: 'rgba(0, 240, 255, 0.22)',
+      hiphop: 'rgba(239, 68, 68, 0.22)',
+      rock: 'rgba(168, 85, 247, 0.22)',
+      lofi: 'rgba(16, 185, 129, 0.22)'
+    };
+    const titleLower = ((track.title || '') + ' ' + (track.album || '')).toLowerCase();
+    const artistLower = (track.artist || '').toLowerCase();
+    let chosenTone = 'rgba(0, 240, 255, 0.2)';
+    if (/moose|karan|aujla|dhillon|dosanjh|shubh/i.test(artistLower)) chosenTone = tones.punjabi;
+    else if (/arijit|shreya|pritam|atif|kumar|bollywood/i.test(artistLower + titleLower)) chosenTone = tones.hindi;
+    else if (/phonk|kordhell|interworld|drift|moondeity|hensonn/i.test(titleLower + artistLower)) chosenTone = tones.phonk;
+    else if (/hiphop|rap|kendrick|eminem|travis|drake|carti|future/i.test(titleLower + artistLower)) chosenTone = tones.hiphop;
+    else if (/rock|linkin|monkeys|queen|dragons|republic|avicii/i.test(titleLower + artistLower)) chosenTone = tones.rock;
+    else if (/lofi|chill|study|sleep|peace/i.test(titleLower)) chosenTone = tones.lofi;
+    else if (/sabrina|billie|taylor|weeknd|gaga|dua|olivia/i.test(artistLower)) chosenTone = tones.pop;
+
+    this.playerSheet.style.background = `radial-gradient(circle at 50% 18%, ${chosenTone} 0%, rgba(10, 12, 20, 0.95) 75%), #07080d`;
+  }
+
+  clearUpcomingQueue() {
+    if (!this.queue || this.queue.length <= 1) return;
+    this.queue = [this.currentTrack];
+    this.queueIndex = 0;
+    this.renderQueueInSheet();
+    if (window.app && window.app.showToast) {
+      window.app.showToast('Cleared upcoming queue');
+    }
+  }
+
+  async loadLyrics(track) {
+    if (!this.sheetLyricsContainer) return;
+    this.currentLyricsData = null;
+    this.lastActiveLyricIdx = -1;
+
+    if (this.sheetLyricsStatus) {
+      this.sheetLyricsStatus.textContent = 'SEARCHING';
+      this.sheetLyricsStatus.style.borderColor = 'rgba(255,255,255,0.2)';
+      this.sheetLyricsStatus.style.color = 'var(--text-muted)';
+    }
+
+    this.sheetLyricsContainer.innerHTML = `
+      <div class="sheet-lyrics-placeholder">
+        <div class="search-pulse-dot" style="margin-bottom: 8px;"></div>
+        Tuning in lyrics...
+      </div>
+    `;
+
+    try {
+      if (!window.api || typeof window.api.getLyrics !== 'function') return;
+      const lyrics = await window.api.getLyrics(track.title, track.artist, this.getDuration());
+      this.currentLyricsData = lyrics;
+
+      if (lyrics.type === 'synced' && Array.isArray(lyrics.lines) && lyrics.lines.length > 0) {
+        if (this.sheetLyricsStatus) {
+          this.sheetLyricsStatus.textContent = 'SYNCED';
+          this.sheetLyricsStatus.style.borderColor = 'rgba(0, 240, 255, 0.4)';
+          this.sheetLyricsStatus.style.color = 'var(--accent-cyan)';
+        }
+        this.renderSyncedLyrics(lyrics.lines);
+      } else if (lyrics.type === 'plain' && lyrics.text) {
+        if (this.sheetLyricsStatus) {
+          this.sheetLyricsStatus.textContent = 'PLAIN';
+          this.sheetLyricsStatus.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+          this.sheetLyricsStatus.style.color = '#fff';
+        }
+        this.sheetLyricsContainer.innerHTML = `
+          <div style="font-size: 15px; font-weight: 600; line-height: 1.6; color: rgba(255,255,255,0.75); white-space: pre-wrap; padding: 6px;">
+            ${lyrics.text}
+          </div>
+        `;
+      } else {
+        if (this.sheetLyricsStatus) {
+          this.sheetLyricsStatus.textContent = lyrics.type === 'instrumental' ? 'AUDIO' : 'OFFLINE';
+          this.sheetLyricsStatus.style.borderColor = 'rgba(255,255,255,0.15)';
+          this.sheetLyricsStatus.style.color = 'var(--text-muted)';
+        }
+        this.sheetLyricsContainer.innerHTML = `
+          <div class="sheet-lyrics-placeholder">
+            ${lyrics.message || 'Lyrics unavailable for this track.'}
+          </div>
+        `;
+      }
+    } catch (e) {
+      console.warn('[Player] loadLyrics notice:', e);
+      if (this.sheetLyricsContainer) {
+        this.sheetLyricsContainer.innerHTML = `
+          <div class="sheet-lyrics-placeholder">Lyrics unavailable for this track.</div>
+        `;
+      }
+    }
+  }
+
+  renderSyncedLyrics(lines) {
+    if (!this.sheetLyricsContainer) return;
+    this.sheetLyricsContainer.innerHTML = '';
+    lines.forEach((line, idx) => {
+      const p = document.createElement('div');
+      p.className = 'sheet-lyrics-line';
+      p.dataset.time = line.time;
+      p.dataset.index = idx;
+      p.textContent = line.text;
+      p.addEventListener('click', () => {
+        this.seekTo(line.time);
+      });
+      this.sheetLyricsContainer.appendChild(p);
+    });
+  }
+
+  syncLyricsTime(currentTime) {
+    if (!this.currentLyricsData || this.currentLyricsData.type !== 'synced' || !this.sheetLyricsContainer) return;
+    const lines = this.currentLyricsData.lines;
+    if (!lines || lines.length === 0) return;
+
+    let activeIdx = -1;
+    for (let i = 0; i < lines.length; i++) {
+      if (currentTime >= lines[i].time - 0.25) {
+        activeIdx = i;
+      } else {
+        break;
+      }
+    }
+
+    if (activeIdx !== this.lastActiveLyricIdx) {
+      this.lastActiveLyricIdx = activeIdx;
+      const allLines = this.sheetLyricsContainer.querySelectorAll('.sheet-lyrics-line');
+      allLines.forEach((el, idx) => {
+        if (idx === activeIdx) {
+          el.classList.add('active');
+          const containerHeight = this.sheetLyricsContainer.clientHeight;
+          const lineOffset = el.offsetTop - this.sheetLyricsContainer.offsetTop;
+          this.sheetLyricsContainer.scrollTo({
+            top: Math.max(0, lineOffset - containerHeight / 2 + el.clientHeight / 2),
+            behavior: 'smooth'
+          });
+        } else {
+          el.classList.remove('active');
+        }
+      });
+    }
+  }
+
   togglePlay() {
     if (!this.currentTrack) {
       if (this.queue.length > 0) this.playTrack(this.queue[0]);
@@ -778,7 +936,7 @@ class MobilePlayer {
     }
   }
 
-  onEnded() {
+  async onEnded() {
     if (this.repeatMode === 2) {
       // Repeat One
       this.seekTo(0);
@@ -787,7 +945,34 @@ class MobilePlayer {
       } else {
         this.audio.play().catch(() => {});
       }
+    } else if (this.queueIndex < this.queue.length - 1) {
+      this.next();
+    } else if (this.repeatMode === 1) {
+      // Repeat All
+      this.queueIndex = 0;
+      this.playTrack(this.queue[0]);
     } else {
+      // Autoplay: Fetch related tracks and append to queue so music never stops
+      try {
+        if (window.api && typeof window.api.getRelatedTracks === 'function' && this.currentTrack) {
+          const recs = await window.api.getRelatedTracks(this.currentTrack);
+          if (recs && Array.isArray(recs.tracks) && recs.tracks.length > 0) {
+            const fresh = recs.tracks.filter(t => !this.queue.some(q => q.videoId === t.videoId));
+            if (fresh.length > 0) {
+              this.queue = [...this.queue, ...fresh];
+              this.queueIndex++;
+              this.renderQueueInSheet();
+              this.playTrack(this.queue[this.queueIndex]);
+              if (window.app && window.app.showToast) {
+                window.app.showToast(`Autoplaying: ${this.queue[this.queueIndex].title}`);
+              }
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[Player] Autoplay notice:', e);
+      }
       this.next();
     }
   }
@@ -857,6 +1042,8 @@ class MobilePlayer {
     window.dispatchEvent(new CustomEvent('etsuko:mobile-time-update', {
       detail: { currentTime: cur, duration: dur }
     }));
+
+    this.syncLyricsTime(cur);
   }
 
   formatTime(secs) {
@@ -892,6 +1079,16 @@ class MobilePlayer {
       if (window.app && window.app.showToast) {
         window.app.showToast(this.isShuffle ? 'Shuffle On' : 'Shuffle Off');
       }
+    }
+
+    if (this.isShuffle && this.queue.length > this.queueIndex + 1) {
+      const remaining = this.queue.slice(this.queueIndex + 1);
+      for (let i = remaining.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [remaining[i], remaining[j]] = [remaining[j], remaining[i]];
+      }
+      this.queue = [...this.queue.slice(0, this.queueIndex + 1), ...remaining];
+      this.renderQueueInSheet();
     }
   }
 
