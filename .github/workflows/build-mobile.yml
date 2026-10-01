@@ -38,33 +38,41 @@ jobs:
       - name: Set Execution Permissions for Gradle Wrapper
         run: chmod +x android/gradlew
 
-      - name: Build Android Debug APK
+      - name: Build Android APK
         run: |
           cd android
           ./gradlew assembleDebug --stacktrace
 
-      - name: Upload Debug APK Artifact
+      - name: Prepare Etsuko APK
+        run: |
+          mkdir -p release-apk
+          find android/app/build/outputs/apk/debug/ -name "*.apk" -exec cp {} release-apk/Etsuko.apk \;
+          cp release-apk/Etsuko.apk Etsuko.apk
+
+      - name: Upload Etsuko APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: etsuko-mobile-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: etsuko-apk
+          path: release-apk/Etsuko.apk
           retention-days: 14
 
-      - name: Create GitHub Release with APK
+      - name: Create or Update GitHub Release with Etsuko APK
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: mobile-v1.0.0
-          name: Etsuko Mobile v1.0.0 — Android APK
+          tag_name: v1.0.1
+          name: Etsuko Mobile — Android APK
           body: |
-            ### Etsuko Mobile v1.0.0 (Neural Audio Studio)
-            - **Installable Android APK** built automatically.
-            - Touch-first OLED cyberpunk UI with bottom navigation.
-            - Floating mini-player & full-screen swipeable now-playing sheet.
-            - Lockscreen playback & MediaSession controls.
-            - Background streaming & karaoke synced lyrics.
+            ### Etsuko Mobile (Neural Audio Studio)
+            - **Installable Android APK (`Etsuko.apk`)** ready to install.
+            - Pure music streaming with high-res dynamic album artwork.
+            - Full-screen sheet player with reordered lyrics & queue.
+            - Smart cultural & diverse recommendations (zero repetitive clones).
+            - Pure container-scoped lyrics auto-scroll with Follow toggle.
           files: |
-            android/app/build/outputs/apk/debug/app-debug.apk
+            Etsuko.apk
+          make_latest: true
+          overwrite: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
