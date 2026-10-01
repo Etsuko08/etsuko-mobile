@@ -27,6 +27,7 @@ class OfflineDownloader {
       request.onsuccess = (e) => {
         this.db = e.target.result;
         console.log('[Etsuko] Offline Storage Engine Ready (IndexedDB)');
+        this.purgeCorruptedDownloads();
         resolve(this.db);
       };
 
@@ -35,6 +36,26 @@ class OfflineDownloader {
         reject(e.target.error);
       };
     });
+  }
+
+  async purgeCorruptedDownloads() {
+    try {
+      if (!this.db) return;
+      const tx = this.db.transaction(this.storeName, 'readwrite');
+      const store = tx.objectStore(this.storeName);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const records = req.result || [];
+        records.forEach(rec => {
+          if (!rec.audioBlob || rec.audioBlob.size < 50000) {
+            console.log('[Downloader] Purged invalid/dummy offline file:', rec.videoId, rec.title);
+            store.delete(rec.videoId);
+          }
+        });
+      };
+    } catch (e) {
+      console.warn('[Downloader] Purge error:', e);
+    }
   }
 
   async ensureDB() {
@@ -52,7 +73,10 @@ class OfflineDownloader {
         const tx = db.transaction(this.storeName, 'readonly');
         const store = tx.objectStore(this.storeName);
         const req = store.get(videoId);
-        req.onsuccess = () => resolve(!!req.result);
+        req.onsuccess = () => {
+          const rec = req.result;
+          resolve(!!(rec && rec.audioBlob && rec.audioBlob.size > 50000));
+        };
         req.onerror = () => resolve(false);
       });
     } catch (e) {
@@ -69,13 +93,12 @@ class OfflineDownloader {
         const store = tx.objectStore(this.storeName);
         const req = store.get(videoId);
         req.onsuccess = () => {
-          if (req.result) {
+          const rec = req.result;
+          if (rec && rec.audioBlob && rec.audioBlob.size > 50000) {
             let blobUrl = null;
-            if (req.result.audioBlob) {
-              try { blobUrl = URL.createObjectURL(req.result.audioBlob); } catch (e) {}
-            }
+            try { blobUrl = URL.createObjectURL(rec.audioBlob); } catch (e) {}
             resolve({
-              ...req.result,
+              ...rec,
               streamUrl: blobUrl,
               isOffline: true
             });
@@ -98,7 +121,8 @@ class OfflineDownloader {
         const store = tx.objectStore(this.storeName);
         const req = store.getAll();
         req.onsuccess = () => {
-          const list = (req.result || []).map(item => ({
+          const validRecords = (req.result || []).filter(item => item && item.audioBlob && item.audioBlob.size > 50000);
+          const list = validRecords.map(item => ({
             ...item,
             streamUrl: item.audioBlob ? URL.createObjectURL(item.audioBlob) : null,
             thumbnail: item.thumbnailBlob ? URL.createObjectURL(item.thumbnailBlob) : (item.thumbnail || 'assets/default_cover.png'),
@@ -249,9 +273,33 @@ class OfflineDownloader {
       downloadTask.speedText = 'Finalizing...';
       window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
 
-      // Create offline audio carrier blob (WebM audio container)
-      const silenceBytes = new Uint8Array(44);
-      const audioBlob = new Blob([silenceBytes], { type: 'audio/webm' });
+      // Attempt to fetch genuine playable audio stream
+      let audioBlob = null;
+      try {
+        const streamInfoRes = await fetch(`https://pipedapi.kavin.rocks/streams/${track.videoId}`, { signal: AbortSignal.timeout(5000) });
+        if (streamInfoRes.ok) {
+          const streamInfo = await streamInfoRes.json();
+          const audioStreams = (streamInfo.audioStreams || []).sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0));
+          if (audioStreams.length > 0 && audioStreams[0].url) {
+            const audioDataRes = await fetch(audioStreams[0].url, { signal: AbortSignal.timeout(12000) });
+            if (audioDataRes.ok) {
+              const fetchedBlob = await audioDataRes.blob();
+              if (fetchedBlob && fetchedBlob.size > 50000) {
+                audioBlob = fetchedBlob;
+              }
+            }
+          }
+        }
+      } catch (streamErr) {}
+
+      if (!audioBlob || audioBlob.size < 50000) {
+        this.activeDownloads.delete(track.videoId);
+        if (window.app && window.app.showToast) {
+          window.app.showToast(`Direct offline download unavailable for this track. Streaming online.`);
+        }
+        window.dispatchEvent(new CustomEvent('etsuko:download-error', { detail: { videoId: track.videoId, error: new Error('Stream unavailable for offline download') } }));
+        return;
+      }
 
       const db = await this.ensureDB();
       const record = {
@@ -263,8 +311,8 @@ class OfflineDownloader {
         thumbnail: track.thumbnail || `https://i.ytimg.com/vi/${track.videoId}/hq720.jpg`,
         thumbnailBlob: thumbBlob,
         audioBlob: audioBlob,
-        mimeType: 'audio/webm',
-        size: downloadTask.totalBytes,
+        mimeType: audioBlob.type || 'audio/webm',
+        size: audioBlob.size || downloadTask.totalBytes,
         downloadedAt: Date.now()
       };
 

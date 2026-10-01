@@ -75,6 +75,94 @@
           </div>
         </div>
 
+        <!-- Section: Bollywood & Hindi Romance -->
+        <div class="spotify-section" id="section-hindi-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Bollywood & Hindi Romance</h2>
+            <span class="spotify-daily-tag" style="background: rgba(236, 72, 153, 0.12); color: var(--accent-pink); border-color: rgba(236, 72, 153, 0.3);">ROMANCE</span>
+          </div>
+          <div class="spotify-h-scroll" id="hindi-hits-row">
+            <!-- Bollywood & Hindi Romance tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Urdu & Sufi Melodies -->
+        <div class="spotify-section" id="section-urdu-sufi">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Urdu & Sufi Melodies</h2>
+            <span class="spotify-daily-tag" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">SUFI</span>
+          </div>
+          <div class="spotify-h-scroll" id="urdu-sufi-row">
+            <!-- Urdu & Sufi Melodies tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Punjabi Bangers -->
+        <div class="spotify-section" id="section-punjabi-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Punjabi Bangers</h2>
+            <span class="spotify-daily-tag" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">VIRAL</span>
+          </div>
+          <div class="spotify-h-scroll" id="punjabi-hits-row">
+            <!-- Punjabi Bangers tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Global Pop Hits -->
+        <div class="spotify-section" id="section-pop-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Global Pop Hits</h2>
+            <span class="spotify-daily-tag" style="background: rgba(0, 240, 255, 0.12); color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.3);">CHARTS</span>
+          </div>
+          <div class="spotify-h-scroll" id="pop-hits-row">
+            <!-- Global Pop Hits tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Phonk & Midnight Drift -->
+        <div class="spotify-section" id="section-phonk-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Phonk & Midnight Drift</h2>
+            <span class="spotify-daily-tag" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">DRIFT</span>
+          </div>
+          <div class="spotify-h-scroll" id="phonk-hits-row">
+            <!-- Phonk & Drift tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Hip-Hop & Rap Heavyweights -->
+        <div class="spotify-section" id="section-hiphop-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Hip-Hop & Rap Heavyweights</h2>
+            <span class="spotify-daily-tag" style="background: rgba(234, 88, 12, 0.12); color: #ea580c; border-color: rgba(234, 88, 12, 0.3);">BEATS</span>
+          </div>
+          <div class="spotify-h-scroll" id="hiphop-hits-row">
+            <!-- Hip-Hop & Rap tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Rock Classics & Alt Anthems -->
+        <div class="spotify-section" id="section-rock-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Rock Classics & Alt Anthems</h2>
+            <span class="spotify-daily-tag" style="background: rgba(225, 29, 72, 0.12); color: #e11d48; border-color: rgba(225, 29, 72, 0.3);">ROCK</span>
+          </div>
+          <div class="spotify-h-scroll" id="rock-hits-row">
+            <!-- Rock Classics tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Lo-Fi Beats & Study Chill -->
+        <div class="spotify-section" id="section-lofi-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Lo-Fi Beats & Study Chill</h2>
+            <span class="spotify-daily-tag" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">CHILL</span>
+          </div>
+          <div class="spotify-h-scroll" id="lofi-hits-row">
+            <!-- Lo-Fi Beats tracks -->
+          </div>
+        </div>
+
         <!-- Section: Popular albums and singles -->
         <div class="spotify-section" id="section-popular-albums">
           <div class="spotify-section-header">
@@ -453,7 +541,7 @@
             <span class="sheet-lyrics-badge" id="sheet-lyrics-status">SYNCED</span>
           </div>
         </div>
-        <div class="sheet-lyrics-scroll-box" id="sheet-lyrics-container">
+        <div class="sheet-lyrics-scroll-box" id="sheet-lyrics-container" dir="auto">
           <div class="sheet-lyrics-placeholder">Loading lyrics...</div>
         </div>
       </div>
@@ -542,6 +630,30 @@
           <button class="btn-icon-top" id="btn-close-profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px;">
+          <!-- Profile Avatar Section -->
+          <div style="display: flex; flex-direction: column; align-items: center; margin-bottom: 6px;">
+            <div class="profile-avatar-wrapper" id="profile-avatar-wrapper" style="position: relative; width: 88px; height: 88px; cursor: pointer;">
+              <div id="profile-avatar-circle" style="width: 88px; height: 88px; border-radius: 50%; background: linear-gradient(135deg, rgba(0,240,255,0.18), rgba(168,85,247,0.25)); border: 2px solid var(--accent-cyan); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.6);">
+                <span id="profile-avatar-fallback" style="font-size: 32px; font-weight: 800; color: #fff;">
+                  <svg viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                </span>
+                <img id="profile-avatar-preview" src="" alt="Profile Photo" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+              </div>
+              <div id="btn-trigger-avatar-pick" title="Change photo" style="position: absolute; bottom: 0; right: 0; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-cyan); color: #000; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.6);">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+              </div>
+            </div>
+            <input type="file" id="input-profile-avatar-file" accept="image/*" style="display: none;">
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button type="button" class="btn-mobile-pill secondary" id="btn-pick-avatar" style="padding: 5px 12px; font-size: 11px;">
+                Choose Photo
+              </button>
+              <button type="button" class="btn-mobile-pill secondary" id="btn-remove-avatar" style="padding: 5px 12px; font-size: 11px; display: none; color: #ef4444; border-color: rgba(239,68,68,0.35);">
+                Remove
+              </button>
+            </div>
+          </div>
+
           <div>
             <label style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Display Name</label>
             <input type="text" id="input-profile-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%; margin-top: 4px;" placeholder="Enter your name" value="">

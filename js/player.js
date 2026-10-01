@@ -394,8 +394,13 @@ class MobilePlayer {
     });
     this.audio.addEventListener('ended', () => this.onEnded());
     this.audio.addEventListener('error', (e) => {
-      console.warn('[Player] HTML5 audio error:', e);
-      this.onPlayState(false);
+      console.warn('[Player] HTML5 audio error, falling back to YouTube engine:', e);
+      if (this.currentTrack && this.currentTrack.videoId) {
+        this.activeEngine = 'youtube';
+        this.playYouTubeTrack(this.currentTrack.videoId);
+      } else {
+        this.onPlayState(false);
+      }
     });
   }
 
@@ -528,7 +533,7 @@ class MobilePlayer {
       return;
     }
 
-    if (offlineTrack && offlineTrack.streamUrl) {
+    if (offlineTrack && offlineTrack.streamUrl && offlineTrack.audioBlob && offlineTrack.audioBlob.size > 50000) {
       // Offline Playback Engine
       this.activeEngine = 'audio';
       if (this.ytReady && this.ytPlayer && this.ytPlayer.pauseVideo) {
@@ -539,7 +544,11 @@ class MobilePlayer {
       this.userPaused = false;
       this.audio.src = offlineTrack.streamUrl;
       this.audio.currentTime = 0;
-      this.audio.play().catch(() => {});
+      this.audio.play().catch((err) => {
+        console.warn('[Player] Offline play failed, falling back to YouTube engine:', err);
+        this.activeEngine = 'youtube';
+        this.playYouTubeTrack(track.videoId);
+      });
       this.onPlayState(true);
       this.updateNativeMedia(track, true);
     } else {
@@ -926,7 +935,8 @@ class MobilePlayer {
     this.sheetLyricsContainer.innerHTML = '';
     lines.forEach((line, idx) => {
       const p = document.createElement('div');
-      p.className = 'sheet-lyrics-line';
+      p.className = 'sheet-lyrics-line upcoming';
+      p.setAttribute('dir', 'auto');
       p.dataset.time = line.time;
       p.dataset.index = idx;
       p.textContent = line.text;
@@ -957,17 +967,24 @@ class MobilePlayer {
       allLines.forEach((el, idx) => {
         if (idx === activeIdx) {
           el.classList.add('active');
-          // Purely container-scoped scroll — NEVER call el.scrollIntoView() which jumps the whole player sheet!
+          el.classList.remove('passed');
+          el.classList.remove('upcoming');
+          // Spotify Follow Mode: pin active line near the top (~18-20% from container top / lineOffset - 24px)
           if (!this.userScrolledLyrics) {
-            const containerHeight = this.sheetLyricsContainer.clientHeight;
             const lineOffset = el.offsetTop - this.sheetLyricsContainer.offsetTop;
             this.sheetLyricsContainer.scrollTo({
-              top: Math.max(0, lineOffset - containerHeight / 2 + el.clientHeight / 2),
+              top: Math.max(0, lineOffset - 24),
               behavior: 'smooth'
             });
           }
+        } else if (idx < activeIdx) {
+          el.classList.remove('active');
+          el.classList.add('passed');
+          el.classList.remove('upcoming');
         } else {
           el.classList.remove('active');
+          el.classList.remove('passed');
+          el.classList.add('upcoming');
         }
       });
     }
@@ -977,10 +994,9 @@ class MobilePlayer {
     if (!this.sheetLyricsContainer || this.lastActiveLyricIdx < 0) return;
     const activeEl = this.sheetLyricsContainer.querySelector(`.sheet-lyrics-line[data-index="${this.lastActiveLyricIdx}"]`);
     if (activeEl) {
-      const containerHeight = this.sheetLyricsContainer.clientHeight;
       const lineOffset = activeEl.offsetTop - this.sheetLyricsContainer.offsetTop;
       this.sheetLyricsContainer.scrollTo({
-        top: Math.max(0, lineOffset - containerHeight / 2 + activeEl.clientHeight / 2),
+        top: Math.max(0, lineOffset - 24),
         behavior: 'smooth'
       });
     }

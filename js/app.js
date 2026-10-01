@@ -54,6 +54,14 @@ class EtsukoMobileApp {
     this.trendingHitsRow = document.getElementById('trending-hits-row');
     this.dailyPicksRow = document.getElementById('daily-picks-row');
     this.topMixesRow = document.getElementById('top-mixes-row');
+    this.hindiHitsRow = document.getElementById('hindi-hits-row');
+    this.urduSufiRow = document.getElementById('urdu-sufi-row');
+    this.punjabiHitsRow = document.getElementById('punjabi-hits-row');
+    this.popHitsRow = document.getElementById('pop-hits-row');
+    this.phonkHitsRow = document.getElementById('phonk-hits-row');
+    this.hiphopHitsRow = document.getElementById('hiphop-hits-row');
+    this.rockHitsRow = document.getElementById('rock-hits-row');
+    this.lofiHitsRow = document.getElementById('lofi-hits-row');
     this.popularAlbumsRow = document.getElementById('popular-albums-row');
     this.podcastsRow = document.getElementById('podcasts-row');
     this.dailyTagDate = document.getElementById('daily-tag-date');
@@ -149,6 +157,15 @@ class EtsukoMobileApp {
     this.profileCratesCount = document.getElementById('profile-crates-count');
     this.btnSaveProfile = document.getElementById('btn-save-profile');
     this.topAvatarInitial = document.getElementById('top-avatar-initial');
+    this.profileAvatarWrapper = document.getElementById('profile-avatar-wrapper');
+    this.profileAvatarCircle = document.getElementById('profile-avatar-circle');
+    this.profileAvatarFallback = document.getElementById('profile-avatar-fallback');
+    this.profileAvatarPreview = document.getElementById('profile-avatar-preview');
+    this.inputProfileAvatarFile = document.getElementById('input-profile-avatar-file');
+    this.btnPickAvatar = document.getElementById('btn-pick-avatar');
+    this.btnRemoveAvatar = document.getElementById('btn-remove-avatar');
+    this.btnTriggerAvatarPick = document.getElementById('btn-trigger-avatar-pick');
+    this.pendingAvatarData = undefined;
 
     // Toast
     this.toast = document.getElementById('mobile-toast');
@@ -412,6 +429,71 @@ class EtsukoMobileApp {
       });
     }
 
+    // Profile Avatar Picker Events
+    const triggerFilePicker = () => {
+      if (this.inputProfileAvatarFile) this.inputProfileAvatarFile.click();
+    };
+
+    if (this.profileAvatarWrapper) {
+      this.profileAvatarWrapper.addEventListener('click', triggerFilePicker);
+    }
+    if (this.btnPickAvatar) {
+      this.btnPickAvatar.addEventListener('click', triggerFilePicker);
+    }
+    if (this.btnTriggerAvatarPick) {
+      this.btnTriggerAvatarPick.addEventListener('click', (e) => {
+        e.stopPropagation();
+        triggerFilePicker();
+      });
+    }
+
+    if (this.inputProfileAvatarFile) {
+      this.inputProfileAvatarFile.addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (re) => {
+          const img = new Image();
+          img.onload = () => {
+            const maxDim = 256;
+            let w = img.width;
+            let h = img.height;
+            if (w > h) {
+              if (w > maxDim) {
+                h = Math.round((h * maxDim) / w);
+                w = maxDim;
+              }
+            } else {
+              if (h > maxDim) {
+                w = Math.round((w * maxDim) / h);
+                h = maxDim;
+              }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+            this.pendingAvatarData = dataUrl;
+            this.setAvatarPreviewUI(dataUrl);
+          };
+          img.src = re.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    if (this.btnRemoveAvatar) {
+      this.btnRemoveAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.pendingAvatarData = null;
+        if (this.inputProfileAvatarFile) this.inputProfileAvatarFile.value = '';
+        this.setAvatarPreviewUI(null);
+      });
+    }
+
     // Onboarding Chips
     this.onboardChips.forEach(chip => {
       chip.addEventListener('click', () => {
@@ -520,6 +602,14 @@ class EtsukoMobileApp {
 
       this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
       this.renderTopMixes(this.topMixesRow, feed.topMixes);
+      this.renderHorizontalRow(this.hindiHitsRow, feed.hindiHits);
+      this.renderHorizontalRow(this.urduSufiRow, feed.urduSufi);
+      this.renderHorizontalRow(this.punjabiHitsRow, feed.punjabiHits);
+      this.renderHorizontalRow(this.popHitsRow, feed.popHits);
+      this.renderHorizontalRow(this.phonkHitsRow, feed.phonkHits);
+      this.renderHorizontalRow(this.hiphopHitsRow, feed.hiphopHits);
+      this.renderHorizontalRow(this.rockHitsRow, feed.rockHits);
+      this.renderHorizontalRow(this.lofiHitsRow, feed.lofiHits);
       this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums, true);
       this.renderHorizontalRow(this.podcastsRow, feed.podcasts);
     } catch (e) {
@@ -649,18 +739,35 @@ class EtsukoMobileApp {
     const albumsSection = document.getElementById('section-popular-albums');
     const podcastsSection = document.getElementById('section-podcasts');
 
+    const musicSections = [
+      dailySection,
+      mixesSection,
+      document.getElementById('section-hindi-hits'),
+      document.getElementById('section-urdu-sufi'),
+      document.getElementById('section-punjabi-hits'),
+      document.getElementById('section-pop-hits'),
+      document.getElementById('section-phonk-hits'),
+      document.getElementById('section-hiphop-hits'),
+      document.getElementById('section-rock-hits'),
+      document.getElementById('section-lofi-hits'),
+      albumsSection
+    ];
+
     const hasHistory = window.api && window.api.getRecentTracks().length > 0;
 
     if (filter === 'all') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      [dailySection, mixesSection, albumsSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
+      musicSections.forEach(s => s && (s.style.display = 'block'));
+      if (podcastsSection) podcastsSection.style.display = 'block';
     } else if (filter === 'music') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      [dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+      musicSections.forEach(s => s && (s.style.display = 'block'));
       if (podcastsSection) podcastsSection.style.display = 'none';
     } else { // podcasts
-      [jumpSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
-      [mixesSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
+      if (jumpSection) jumpSection.style.display = 'none';
+      musicSections.forEach(s => s && (s.style.display = 'none'));
+      if (mixesSection) mixesSection.style.display = 'block';
+      if (podcastsSection) podcastsSection.style.display = 'block';
     }
   }
 
@@ -1374,38 +1481,70 @@ class EtsukoMobileApp {
     this.loadProfile();
   }
 
+  setAvatarPreviewUI(dataUrl) {
+    if (dataUrl) {
+      if (this.profileAvatarPreview) {
+        this.profileAvatarPreview.src = dataUrl;
+        this.profileAvatarPreview.style.display = 'block';
+      }
+      if (this.profileAvatarFallback) this.profileAvatarFallback.style.display = 'none';
+      if (this.btnRemoveAvatar) this.btnRemoveAvatar.style.display = 'inline-flex';
+    } else {
+      if (this.profileAvatarPreview) {
+        this.profileAvatarPreview.src = '';
+        this.profileAvatarPreview.style.display = 'none';
+      }
+      if (this.profileAvatarFallback) this.profileAvatarFallback.style.display = 'flex';
+      if (this.btnRemoveAvatar) this.btnRemoveAvatar.style.display = 'none';
+    }
+  }
+
   loadProfile() {
+    this.pendingAvatarData = undefined;
     const name = localStorage.getItem('etsuko_user_name') || '';
+    const avatar = localStorage.getItem('etsuko_user_avatar');
     if (this.inputProfileName) {
       this.inputProfileName.value = name;
       this.inputProfileName.placeholder = 'Enter your name';
     }
+    this.setAvatarPreviewUI(avatar);
   }
 
   saveProfile() {
     const name = this.inputProfileName ? this.inputProfileName.value.trim() : '';
     if (name) {
       localStorage.setItem('etsuko_user_name', name);
-      if (this.topAvatarInitial) {
-        this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
-      }
-      this.updateGreetingHeader();
-      this.showToast('Profile saved!');
     } else {
       localStorage.removeItem('etsuko_user_name');
-      this.setDefaultAvatar();
-      this.updateGreetingHeader();
-      this.showToast('Profile reset to default');
     }
+
+    if (this.pendingAvatarData !== undefined) {
+      if (this.pendingAvatarData) {
+        localStorage.setItem('etsuko_user_avatar', this.pendingAvatarData);
+      } else {
+        localStorage.removeItem('etsuko_user_avatar');
+      }
+    }
+
+    const currentAvatar = localStorage.getItem('etsuko_user_avatar');
+    this.updateTopBarAvatar(currentAvatar, name);
+    this.updateGreetingHeader();
+    this.showToast('Profile saved!');
     this.modalProfile.classList.remove('active');
   }
 
   loadUserProfileOnStartup() {
     const name = localStorage.getItem('etsuko_user_name') || '';
-    if (name && name.trim()) {
-      if (this.topAvatarInitial) {
-        this.topAvatarInitial.textContent = name.trim().charAt(0).toUpperCase();
-      }
+    const avatar = localStorage.getItem('etsuko_user_avatar');
+    this.updateTopBarAvatar(avatar, name);
+  }
+
+  updateTopBarAvatar(avatarData, name) {
+    if (!this.topAvatarInitial) return;
+    if (avatarData) {
+      this.topAvatarInitial.innerHTML = `<img src="${avatarData}" alt="Avatar">`;
+    } else if (name && name.trim()) {
+      this.topAvatarInitial.textContent = name.trim().charAt(0).toUpperCase();
     } else {
       this.setDefaultAvatar();
     }

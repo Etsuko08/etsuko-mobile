@@ -183,13 +183,88 @@ const CATALOG_POPULAR_ALBUMS = [
   { videoId: "J7p4bzqLvCw", title: "After Hours", artist: "The Weeknd", album: "After Hours", tag: "Album", thumbnail: "https://yt3.googleusercontent.com/R_cjQK3wwLPEzri1jerx-79zgzGocoKvwGU3NMONaTsaMM0Idd641pfB8r5jgfpn6I8JAoFtf9RBIcI=w544-h544-l90-rj" }
 ];
 
+const CATALOG_HINDI_HITS = [
+  { videoId: "Umqb9KENgmk", title: "Tum Hi Ho", artist: "Arijit Singh", album: "Aashiqui 2", duration: "4:22", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/Umqb9KENgmk/hqdefault.jpg" },
+  { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", album: "Brahmastra", duration: "4:28", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg" },
+  { videoId: "V_jp5_VAzXk", title: "Chaleya", artist: "Arijit Singh, Shilpa Rao", album: "Jawan", duration: "3:20", tag: "Romance", thumbnail: "https://i.ytimg.com/vi/V_jp5_VAzXk/hqdefault.jpg" },
+  { videoId: "cbqbx7h0p9E", title: "Tum Se Hi", artist: "Mohit Chauhan, Pritam", album: "Jab We Met", duration: "5:21", tag: "Classic", thumbnail: "https://i.ytimg.com/vi/cbqbx7h0p9E/hqdefault.jpg" },
+  { videoId: "5y_KpD_aUfk", title: "Zara Sa", artist: "KK, Pritam", album: "Jannat", duration: "5:03", tag: "Melody", thumbnail: "https://i.ytimg.com/vi/5y_KpD_aUfk/hqdefault.jpg" },
+  { videoId: "ElZfdU54Cp8", title: "Apna Bana Le", artist: "Arijit Singh, Sachin-Jigar", album: "Bhediya", duration: "4:21", tag: "Soul", thumbnail: "https://i.ytimg.com/vi/ElZfdU54Cp8/hqdefault.jpg" },
+  { videoId: "gvyUuxdRdR4", title: "O Maahi", artist: "Arijit Singh, Pritam", album: "Dunki", duration: "3:53", tag: "Hit", thumbnail: "https://i.ytimg.com/vi/gvyUuxdRdR4/hqdefault.jpg" },
+  { videoId: "284Ov7ysmfA", title: "Channa Mereya", artist: "Arijit Singh, Pritam", album: "Ae Dil Hai Mushkil", duration: "4:49", tag: "Heartbreak", thumbnail: "https://i.ytimg.com/vi/284Ov7ysmfA/hqdefault.jpg" }
+];
+
+const CATALOG_URDU_SUFI = [
+  { videoId: "kw4tT7SCmaY", title: "Afreen Afreen", artist: "Rahat Fateh Ali Khan, Momina Mustehsan", album: "Coke Studio", duration: "6:44", tag: "Sufi", thumbnail: "https://i.ytimg.com/vi/kw4tT7SCmaY/hqdefault.jpg" },
+  { videoId: "c7TX12j_sY8", title: "Tajdar-e-Haram", artist: "Atif Aslam", album: "Coke Studio", duration: "10:28", tag: "Qawwali", thumbnail: "https://i.ytimg.com/vi/c7TX12j_sY8/hqdefault.jpg" },
+  { videoId: "2kfmxHqM_eI", title: "Pehli Dafa", artist: "Atif Aslam", album: "Pehli Dafa", duration: "4:43", tag: "Romantic", thumbnail: "https://i.ytimg.com/vi/2kfmxHqM_eI/hqdefault.jpg" },
+  { videoId: "zJmU2j3O6Wc", title: "Kahani Suno 2.0", artist: "Kaifi Khalil", album: "Kahani Suno", duration: "2:54", tag: "Ghazal", thumbnail: "https://i.ytimg.com/vi/zJmU2j3O6Wc/hqdefault.jpg" },
+  { videoId: "2JzQhLqA5Q4", title: "Jhoom", artist: "Ali Zafar", album: "Jhoom", duration: "4:32", tag: "Acoustic", thumbnail: "https://i.ytimg.com/vi/2JzQhLqA5Q4/hqdefault.jpg" },
+  { videoId: "v_ysZ_0w2Wk", title: "O Re Piya", artist: "Rahat Fateh Ali Khan", album: "Aaja Nachle", duration: "6:19", tag: "Soul", thumbnail: "https://i.ytimg.com/vi/v_ysZ_0w2Wk/hqdefault.jpg" },
+  { videoId: "RLzC55ai0eo", title: "Heeriye", artist: "Jasleen Royal, Arijit Singh", album: "Heeriye", duration: "3:14", tag: "Indie", thumbnail: "https://i.ytimg.com/vi/RLzC55ai0eo/hqdefault.jpg" }
+];
+
+const CATALOG_PUNJABI_HITS = [
+  { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", album: "Bad Newz", duration: "3:26", tag: "Banger", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hqdefault.jpg" },
+  { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla, Ikky", album: "Four You", duration: "2:36", tag: "Heat", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hqdefault.jpg" },
+  { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", album: "Still Rollin", duration: "3:03", tag: "Viral", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hqdefault.jpg" },
+  { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", album: "One Love", duration: "2:40", tag: "Vibe", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hqdefault.jpg" },
+  { videoId: "VNs_cCtdbPc", title: "Baller", artist: "Shubh, Ikky", album: "Baller", duration: "2:28", tag: "Club", thumbnail: "https://i.ytimg.com/vi/VNs_cCtdbPc/hqdefault.jpg" },
+  { videoId: "cl0a3i2wFcc", title: "G.O.A.T.", artist: "Diljit Dosanjh", album: "G.O.A.T.", duration: "3:43", tag: "Legend", thumbnail: "https://i.ytimg.com/vi/cl0a3i2wFcc/hqdefault.jpg" },
+  { videoId: "vX2cDW8LUWk", title: "Lover", artist: "Diljit Dosanjh", album: "MoonChild Era", duration: "3:07", tag: "Pop", thumbnail: "https://i.ytimg.com/vi/vX2cDW8LUWk/hqdefault.jpg" }
+];
+
+const CATALOG_POP_HITS = [
+  { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", album: "Die With A Smile", duration: "4:12", tag: "Global #1", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" },
+  { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", album: "Short n' Sweet", duration: "2:56", tag: "Pop", thumbnail: "https://yt3.googleusercontent.com/bTWlZSenrOAYgH4r6NAzyDraWQR_wLl3OuRexJ_8h3NZUVHEilRSzUmKNa9YMOFSVcF0YtOuzKdXrt2UHg=w544-h544-l90-rj" },
+  { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", album: "HIT ME HARD AND SOFT", duration: "3:31", tag: "Alternative", thumbnail: "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj" },
+  { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", album: "Lover", duration: "2:59", tag: "Pop", thumbnail: "https://yt3.googleusercontent.com/OhxDTHQOQzSrcdgH9hzqzp1v22GYDE-QKnkryvCeq4ddx-3K3_c8oDXN0E6NvHlMn1q4XV59aHr0oL4f=w544-h544-l90-rj" },
+  { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", album: "After Hours", duration: "3:22", tag: "Synth", thumbnail: "https://yt3.googleusercontent.com/R_cjQK3wwLPEzri1jerx-79zgzGocoKvwGU3NMONaTsaMM0Idd641pfB8r5jgfpn6I8JAoFtf9RBIcI=w544-h544-l90-rj" },
+  { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", album: "Future Nostalgia", duration: "3:24", tag: "Disco", thumbnail: "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj" },
+  { videoId: "aHmg0jsmNhg", title: "vampire", artist: "Olivia Rodrigo", album: "GUTS", duration: "3:40", tag: "Rock Pop", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" }
+];
+
+const CATALOG_PHONK_HITS = [
+  { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", album: "Close Eyes", duration: "2:12", tag: "Drift", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg" },
+  { videoId: "fzeoo8n8RZo", title: "Murder In My Mind", artist: "Kordhell", album: "Murder In My Mind", duration: "2:25", tag: "Aggressive", thumbnail: "https://i.ytimg.com/vi/fzeoo8n8RZo/hqdefault.jpg" },
+  { videoId: "NS9z2QHcZdY", title: "Metamorphosis", artist: "INTERWORLD", album: "Metamorphosis", duration: "2:22", tag: "Dark", thumbnail: "https://i.ytimg.com/vi/NS9z2QHcZdY/hqdefault.jpg" },
+  { videoId: "dvQJIgjlR3I", title: "Neon Blade", artist: "MoonDeity", album: "Neon Blade", duration: "4:24", tag: "Cyber", thumbnail: "https://i.ytimg.com/vi/dvQJIgjlR3I/hqdefault.jpg" },
+  { videoId: "pIZ0QRWK0zg", title: "Sahara", artist: "Hensonn", album: "Sahara", duration: "2:51", tag: "Bass", thumbnail: "https://i.ytimg.com/vi/pIZ0QRWK0zg/hqdefault.jpg" },
+  { videoId: "_yZ6x3qJ7j0", title: "Disaster", artist: "KSLV Noh", album: "Disaster", duration: "2:16", tag: "Drift", thumbnail: "https://i.ytimg.com/vi/_yZ6x3qJ7j0/hqdefault.jpg" }
+];
+
+const CATALOG_HIPHOP_HITS = [
+  { videoId: "phLb_SoPBlA", title: "Not Like Us", artist: "Kendrick Lamar", album: "Not Like Us", duration: "4:35", tag: "West Coast", thumbnail: "https://yt3.googleusercontent.com/8qk3C_zpd2FXHVN8BpMBFL6h9J5BlKlbcKOlvDMvIgBWBsAblDoTjU98RGbFH9DxtnN1X5zRzc9sSvWr=w544-h544-l90-rj" },
+  { videoId: "xIQpLlYC8xA", title: "Houdini", artist: "Eminem", album: "The Death of Slim Shady", duration: "3:48", tag: "Rap", thumbnail: "https://yt3.googleusercontent.com/Xx3dX1EJDirqwpfQL05uAgmKGYpzTcFDXjjHqjNpIhgY5MWTJRLSlOjaYVtup2Ku6gBYEqXoxw5aGKC3=w544-h544-l90-rj" },
+  { videoId: "2nR1zrNzgcY", title: "FE!N (feat. Playboi Carti)", artist: "Travis Scott", album: "UTOPIA", duration: "3:12", tag: "Trap", thumbnail: "https://yt3.googleusercontent.com/eBvJuWpjg0Mx8DBa5WIhCzEopXyMnxkjWSU895BDGjTpNeqrliLrv3zGqNNuCUoXL1EkEAr5VQ3cx2pW=w544-h544-l90-rj" },
+  { videoId: "FrsOnNxIrg8", title: "God's Plan", artist: "Drake", album: "Scorpion", duration: "3:19", tag: "Hip-Hop", thumbnail: "https://yt3.googleusercontent.com/9Oe4acEXgmAlCKgcgI6JlSXi2Tj30u6anzvfGBrunGO-fLhBTgzy-ei1ugPJpZDD5ArKFod9H4RTA5g0=w544-h544-l90-rj" },
+  { videoId: "3_g2un5M350", title: "Starboy", artist: "The Weeknd", album: "Starboy", duration: "3:51", tag: "R&B / Rap", thumbnail: "https://yt3.googleusercontent.com/dcxXIIlest09vnvKznWM9VWQXu1EL7lKxBzXGzwgmVjmMNBm1dEWT_0qn1xrEZYyKF_qRE1TLq8P_JY_mQ=w544-h544-l90-rj" },
+  { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", album: "Hollywood's Bleeding", duration: "3:36", tag: "Melodic", thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj" }
+];
+
+const CATALOG_ROCK_HITS = [
+  { videoId: "eVTXPUF4Oz4", title: "In the End", artist: "Linkin Park", album: "Hybrid Theory", duration: "3:36", tag: "Nu-Metal", thumbnail: "https://i.ytimg.com/vi/eVTXPUF4Oz4/hqdefault.jpg" },
+  { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know?", artist: "Arctic Monkeys", album: "AM", duration: "4:32", tag: "Indie Rock", thumbnail: "https://yt3.googleusercontent.com/7a03Ybk8vbe8c4dl4E8l77Y4e9aEWjQvTfOAdLdXxsnjZ57gYQ8FsKra9SgXAHT-jtiwuq6lukCfbRKL=w544-h544-l90-rj" },
+  { videoId: "BSTsnWoslP4", title: "Bohemian Rhapsody", artist: "Queen", album: "A Night at the Opera", duration: "5:55", tag: "Masterpiece", thumbnail: "https://yt3.googleusercontent.com/nLn1gxvYiZqzXOY9HyUXVXbFtmR5nhY8sDpbvBT1aw-Ejjsz__Nz90sZoc4nZgff2sf8WjowuVRVBlBTww=w544-h544-l90-rj" },
+  { videoId: "9ssQKlLxBdQ", title: "Thunder", artist: "Imagine Dragons", album: "Evolve", duration: "3:08", tag: "Arena Rock", thumbnail: "https://yt3.googleusercontent.com/weYQWfEwWNPOuAm34geXN1LkSYPlsJay78NnQgHC3PKsyZcdvBHIsMtqoFh3rioA4XgMdHMQd3h6vH6mbA=w544-h544-l90-rj" },
+  { videoId: "_GWKkqNoyEA", title: "Counting Stars", artist: "OneRepublic", album: "Native", duration: "4:18", tag: "Alt-Pop", thumbnail: "https://yt3.googleusercontent.com/m2pZLjozMvQBj21LgvAIslVPP-T2xQlxbxCTJ98vpPN8HZ0fgR-wisJQ2IzrKS2yLTAYBjs0TpOYnIY=w544-h544-l90-rj" },
+  { videoId: "2NiyrtYegso", title: "Wake Me Up", artist: "Avicii", album: "True", duration: "4:08", tag: "EDM Rock", thumbnail: "https://yt3.googleusercontent.com/XincHWEjkXhpbavoQEHWRbTcVdvHsujjr7OAw-73KUCILFgjLdevPW8vkoaRMibnwkTtGWkEDyKbuNeK=w544-h544-l90-rj" }
+];
+
+const CATALOG_LOFI_HITS = [
+  { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", album: "Lofi Study Session", duration: "3:40", tag: "Focus", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hqdefault.jpg" },
+  { videoId: "4EQkYVtE-28", title: "Circles (Chill Acoustic)", artist: "Post Malone", album: "Acoustic", duration: "3:36", tag: "Chill", thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj" },
+  { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know? (Acoustic)", artist: "Arctic Monkeys", album: "Chill", duration: "4:32", tag: "Acoustic", thumbnail: "https://yt3.googleusercontent.com/7a03Ybk8vbe8c4dl4E8l77Y4e9aEWjQvTfOAdLdXxsnjZ57gYQ8FsKra9SgXAHT-jtiwuq6lukCfbRKL=w544-h544-l90-rj" },
+  { videoId: "aHmg0jsmNhg", title: "vampire (Lofi)", artist: "Olivia Rodrigo", album: "Lofi Beats", duration: "3:40", tag: "Cozy", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" }
+];
+
 const CATALOG_PODCASTS = [
-  { videoId: "ruVJE9po3-U", title: "The Joe Rogan Experience", artist: "Joe Rogan", album: "Comedy & Culture", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/fGvJuevlubATxjOoCdHgRtzTXmqZID29j0ld957O3t67z87U-u8k0jKk9sH4E0P-eTj5sJgNog=w544-h544-l90-rj" },
-  { videoId: "NYFGCESmikA", title: "Lex Fridman Podcast", artist: "Lex Fridman", album: "AI & Science", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_kUu72v3W2g1hGv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
-  { videoId: "iRR2yCoIaYY", title: "Huberman Lab", artist: "Dr. Andrew Huberman", album: "Neuroscience", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_nNf1N6k4gO-jS3r4f7d4E6x3G1p6g2H9e1v9q0Qw=w544-h544-l90-rj" },
-  { videoId: "VHUrdELKjDw", title: "The Diary Of A CEO", artist: "Steven Bartlett", album: "Business & Life", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_k0xW4v9g1hGv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
-  { videoId: "Rn6gRENRzAE", title: "Rotten Mango", artist: "Stephanie Soo", album: "True Crime Stories", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_m6v4e9h2Gv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
-  { videoId: "oErYYBNCHh4", title: "Hardcore History", artist: "Dan Carlin", album: "Epic History", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_n2f6e9h2Gv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" }
+  { videoId: "ruVJE9po3-U", title: "The Joe Rogan Experience", artist: "Joe Rogan", album: "Comedy & Culture", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/ruVJE9po3-U/hqdefault.jpg" },
+  { videoId: "NYFGCESmikA", title: "Lex Fridman Podcast", artist: "Lex Fridman", album: "AI & Science", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/NYFGCESmikA/hqdefault.jpg" },
+  { videoId: "iRR2yCoIaYY", title: "Huberman Lab", artist: "Dr. Andrew Huberman", album: "Neuroscience", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/iRR2yCoIaYY/hqdefault.jpg" },
+  { videoId: "VHUrdELKjDw", title: "The Diary Of A CEO", artist: "Steven Bartlett", album: "Business & Life", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/VHUrdELKjDw/hqdefault.jpg" },
+  { videoId: "Rn6gRENRzAE", title: "Rotten Mango", artist: "Stephanie Soo", album: "True Crime Stories", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/Rn6gRENRzAE/hqdefault.jpg" },
+  { videoId: "oErYYBNCHh4", title: "Hardcore History", artist: "Dan Carlin", album: "Epic History", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/oErYYBNCHh4/hqdefault.jpg" }
 ];
 
 class EtsukoAPI {
@@ -221,7 +296,7 @@ class EtsukoAPI {
     // 1. Jump back in: ONLY actual user history (empty for new users)
     const recents = this.getRecentTracks();
 
-    // 2. Recommended for today: Seeded by current date (changes every midnight!)
+    // 2. Recommended for today: Seeded by current date or user taste
     const dailyPicks = this.getDailyPicks();
 
     // 3. Top Mixes: Dynamically personalized if history exists
@@ -229,9 +304,16 @@ class EtsukoAPI {
 
     return {
       jumpBackIn: recents.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
-      trendingHits: CATALOG_TRENDING_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       dailyPicks: dailyPicks.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       topMixes: topMixes,
+      hindiHits: CATALOG_HINDI_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      urduSufi: CATALOG_URDU_SUFI.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      punjabiHits: CATALOG_PUNJABI_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      popHits: CATALOG_POP_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      phonkHits: CATALOG_PHONK_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      hiphopHits: CATALOG_HIPHOP_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      rockHits: CATALOG_ROCK_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
+      lofiHits: CATALOG_LOFI_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       popularAlbums: CATALOG_POPULAR_ALBUMS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       podcasts: CATALOG_PODCASTS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) }))
     };
