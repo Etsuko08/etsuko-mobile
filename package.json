@@ -8,16 +8,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/khalilmalik0808/etsuko-mobile.git"
+    "url": "git+https://github.com/Etsuko08/etsuko-mobile.git"
   },
   "keywords": [],
-  "author": "",
+  "author": "Etsuko08",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
-    "url": "https://github.com/khalilmalik0808/etsuko-mobile/issues"
+    "url": "https://github.com/Etsuko08/etsuko-mobile/issues"
   },
-  "homepage": "https://github.com/khalilmalik0808/etsuko-mobile#readme",
+  "homepage": "https://github.com/Etsuko08/etsuko-mobile#readme",
   "dependencies": {
     "@capacitor/android": "^8.5.2",
     "@capacitor/cli": "^8.5.2",
