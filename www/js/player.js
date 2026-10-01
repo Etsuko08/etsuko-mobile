@@ -434,7 +434,10 @@ class MobilePlayer {
   }
 
   async playTrack(track, queueList = null) {
-    if (!track) return;
+    if (!track || !track.videoId) return;
+
+    this._playRequestId = (this._playRequestId || 0) + 1;
+    const currentReq = this._playRequestId;
 
     // Automatically expand full player sheet like Spotify whenever any track starts
     if (window.app && typeof window.app.openPlayerSheet === 'function') {
@@ -442,7 +445,7 @@ class MobilePlayer {
     }
 
     if (queueList && Array.isArray(queueList)) {
-      this.queue = [...queueList];
+      this.queue = queueList.filter(t => t && t.videoId);
       this.queueIndex = this.queue.findIndex(t => t.videoId === track.videoId);
       if (this.queueIndex === -1) {
         this.queue.unshift(track);
@@ -480,6 +483,11 @@ class MobilePlayer {
       } catch (e) {}
     }
 
+    // Guard against race conditions when another track is selected during async check
+    if (this._playRequestId !== currentReq) {
+      return;
+    }
+
     if (offlineTrack && offlineTrack.streamUrl) {
       // Offline Playback Engine
       this.activeEngine = 'audio';
@@ -509,6 +517,7 @@ class MobilePlayer {
   }
 
   playYouTubeTrack(videoId) {
+    if (!videoId) return;
     if (!this.ytReady || !this.ytPlayer || !this.ytPlayer.loadVideoById) {
       this.pendingVideoId = videoId;
       return;
@@ -838,12 +847,16 @@ class MobilePlayer {
       allLines.forEach((el, idx) => {
         if (idx === activeIdx) {
           el.classList.add('active');
-          const containerHeight = this.sheetLyricsContainer.clientHeight;
-          const lineOffset = el.offsetTop - this.sheetLyricsContainer.offsetTop;
-          this.sheetLyricsContainer.scrollTo({
-            top: Math.max(0, lineOffset - containerHeight / 2 + el.clientHeight / 2),
-            behavior: 'smooth'
-          });
+          try {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          } catch (e) {
+            const containerHeight = this.sheetLyricsContainer.clientHeight;
+            const lineOffset = el.offsetTop - this.sheetLyricsContainer.offsetTop;
+            this.sheetLyricsContainer.scrollTo({
+              top: Math.max(0, lineOffset - containerHeight / 2 + el.clientHeight / 2),
+              behavior: 'smooth'
+            });
+          }
         } else {
           el.classList.remove('active');
         }

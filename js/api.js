@@ -67,27 +67,39 @@ const CATALOG_TOP_MIXES = [
   {
     id: "pop_mix",
     title: "Pop Mix",
-    subtitle: "Sabrina Carpenter, Taylor Swift, Dua Lipa",
+    subtitle: "Sabrina Carpenter, Taylor Swift, Dua Lipa, Bruno Mars",
     gradient: "linear-gradient(135deg, #10b981, #064e3b)",
     bannerColor: "#10b981",
     tracks: [
       { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", thumbnail: "https://yt3.googleusercontent.com/bTWlZSenrOAYgH4r6NAzyDraWQR_wLl3OuRexJ_8h3NZUVHEilRSzUmKNa9YMOFSVcF0YtOuzKdXrt2UHg=w544-h544-l90-rj" },
       { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://yt3.googleusercontent.com/OhxDTHQOQzSrcdgH9hzqzp1v22GYDE-QKnkryvCeq4ddx-3K3_c8oDXN0E6NvHlMn1q4XV59aHr0oL4f=w544-h544-l90-rj" },
       { videoId: "OsfAnsMY21M", title: "Levitating", artist: "Dua Lipa", thumbnail: "https://yt3.googleusercontent.com/UpJ_IhBqyhQV9b2UGcDxxWDm14kRQ2eY1o9S96AGsbE7Ol8isbpbPA0Yefvg8S8ZGAX9L1g4xaj21zVJ=w544-h544-l90-rj" },
-      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" }
+      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" },
+      { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", thumbnail: "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj" },
+      { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", thumbnail: "https://yt3.googleusercontent.com/R_cjQK3wwLPEzri1jerx-79zgzGocoKvwGU3NMONaTsaMM0Idd641pfB8r5jgfpn6I8JAoFtf9RBIcI=w544-h544-l90-rj" },
+      { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj" },
+      { videoId: "aHmg0jsmNhg", title: "vampire", artist: "Olivia Rodrigo", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" },
+      { videoId: "AdEKgwUqPKI", title: "Kill Bill", artist: "SZA", thumbnail: "https://yt3.googleusercontent.com/tw5VGXEsehs9OpwnpbubqGp_3Pq9so7QShdyJSlCpXeI2mLRvqRqLNbA7EC4zcNWrFE0_lj9HxpZ23v6=w544-h544-l90-rj" },
+      { videoId: "_GWKkqNoyEA", title: "Counting Stars", artist: "OneRepublic", thumbnail: "https://yt3.googleusercontent.com/m2pZLjozMvQBj21LgvAIslVPP-T2xQlxbxCTJ98vpPN8HZ0fgR-wisJQ2IzrKS2yLTAYBjs0TpOYnIY=w544-h544-l90-rj" }
     ]
   },
   {
     id: "2020s_mix",
     title: "2020s Mix",
-    subtitle: "The Weeknd, Billie Eilish, Post Malone",
+    subtitle: "The Weeknd, Billie Eilish, Kendrick Lamar, Eminem",
     gradient: "linear-gradient(135deg, #a855f7, #581c87)",
     bannerColor: "#a855f7",
     tracks: [
       { videoId: "WKZO-CWeOVA", title: "BIRDS OF A FEATHER", artist: "Billie Eilish", thumbnail: "https://yt3.googleusercontent.com/mXJjWX4E6Gpr03CUYl18PdVXlczmoL2Tm-LEBGafIr_8smlHnl8AHniJu0_7Y80e-aeloJxcryQQx0ZJ=w544-h544-l90-rj" },
       { videoId: "J7p4bzqLvCw", title: "Blinding Lights", artist: "The Weeknd", thumbnail: "https://yt3.googleusercontent.com/R_cjQK3wwLPEzri1jerx-79zgzGocoKvwGU3NMONaTsaMM0Idd641pfB8r5jgfpn6I8JAoFtf9RBIcI=w544-h544-l90-rj" },
       { videoId: "4EQkYVtE-28", title: "Circles", artist: "Post Malone", thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj" },
-      { videoId: "3_g2un5M350", title: "Starboy", artist: "The Weeknd", thumbnail: "https://yt3.googleusercontent.com/dcxXIIlest09vnvKznWM9VWQXu1EL7lKxBzXGzwgmVjmMNBm1dEWT_0qn1xrEZYyKF_qRE1TLq8P_JY_mQ=w544-h544-l90-rj" }
+      { videoId: "3_g2un5M350", title: "Starboy", artist: "The Weeknd", thumbnail: "https://yt3.googleusercontent.com/dcxXIIlest09vnvKznWM9VWQXu1EL7lKxBzXGzwgmVjmMNBm1dEWT_0qn1xrEZYyKF_qRE1TLq8P_JY_mQ=w544-h544-l90-rj" },
+      { videoId: "phLb_SoPBlA", title: "Not Like Us", artist: "Kendrick Lamar", thumbnail: "https://yt3.googleusercontent.com/8qk3C_zpd2FXHVN8BpMBFL6h9J5BlKlbcKOlvDMvIgBWBsAblDoTjU98RGbFH9DxtnN1X5zRzc9sSvWr=w544-h544-l90-rj" },
+      { videoId: "xIQpLlYC8xA", title: "Houdini", artist: "Eminem", thumbnail: "https://yt3.googleusercontent.com/Xx3dX1EJDirqwpfQL05uAgmKGYpzTcFDXjjHqjNpIhgY5MWTJRLSlOjaYVtup2Ku6gBYEqXoxw5aGKC3=w544-h544-l90-rj" },
+      { videoId: "2nR1zrNzgcY", title: "FE!N", artist: "Travis Scott", thumbnail: "https://yt3.googleusercontent.com/eBvJuWpjg0Mx8DBa5WIhCzEopXyMnxkjWSU895BDGjTpNeqrliLrv3zGqNNuCUoXL1EkEAr5VQ3cx2pW=w544-h544-l90-rj" },
+      { videoId: "aHmg0jsmNhg", title: "vampire", artist: "Olivia Rodrigo", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" },
+      { videoId: "kIft-LUHHVA", title: "Espresso", artist: "Sabrina Carpenter", thumbnail: "https://yt3.googleusercontent.com/bTWlZSenrOAYgH4r6NAzyDraWQR_wLl3OuRexJ_8h3NZUVHEilRSzUmKNa9YMOFSVcF0YtOuzKdXrt2UHg=w544-h544-l90-rj" },
+      { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" }
     ]
   },
   {
@@ -100,20 +112,28 @@ const CATALOG_TOP_MIXES = [
       { videoId: "1-xGerv5FOk", title: "Close Eyes", artist: "DVRST", thumbnail: "https://i.ytimg.com/vi/1-xGerv5FOk/hqdefault.jpg" },
       { videoId: "fzeoo8n8RZo", title: "Murder In My Mind", artist: "Kordhell", thumbnail: "https://i.ytimg.com/vi/fzeoo8n8RZo/hqdefault.jpg" },
       { videoId: "NS9z2QHcZdY", title: "Metamorphosis", artist: "INTERWORLD", thumbnail: "https://i.ytimg.com/vi/NS9z2QHcZdY/hqdefault.jpg" },
-      { videoId: "dvQJIgjlR3I", title: "Neon Blade", artist: "MoonDeity", thumbnail: "https://i.ytimg.com/vi/dvQJIgjlR3I/hqdefault.jpg" }
+      { videoId: "dvQJIgjlR3I", title: "Neon Blade", artist: "MoonDeity", thumbnail: "https://i.ytimg.com/vi/dvQJIgjlR3I/hqdefault.jpg" },
+      { videoId: "v3-b4Tq7-70", title: "Live Another Day", artist: "Kordhell", thumbnail: "https://i.ytimg.com/vi/v3-b4Tq7-70/hqdefault.jpg" },
+      { videoId: "_yZ6x3qJ7j0", title: "Disaster", artist: "KSLV Noh", thumbnail: "https://i.ytimg.com/vi/_yZ6x3qJ7j0/hqdefault.jpg" },
+      { videoId: "NfH7K7kXy78", title: "Sahara", artist: "Hensonn", thumbnail: "https://i.ytimg.com/vi/NfH7K7kXy78/hqdefault.jpg" },
+      { videoId: "b1gT268U55A", title: "Why Not", artist: "Ghostface Playa", thumbnail: "https://i.ytimg.com/vi/b1gT268U55A/hqdefault.jpg" }
     ]
   },
   {
     id: "romance_mix",
     title: "Melodic Romance",
-    subtitle: "Arijit Singh, Pritam, Lady Gaga",
+    subtitle: "Arijit Singh, Pritam, Jubin Nautiyal",
     gradient: "linear-gradient(135deg, #f43f5e, #881337)",
     bannerColor: "#f43f5e",
     tracks: [
       { videoId: "Umqb9KENgmk", title: "Tum Hi Ho", artist: "Arijit Singh", thumbnail: "https://i.ytimg.com/vi/Umqb9KENgmk/hqdefault.jpg" },
       { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg" },
       { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" },
-      { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://yt3.googleusercontent.com/OhxDTHQOQzSrcdgH9hzqzp1v22GYDE-QKnkryvCeq4ddx-3K3_c8oDXN0E6NvHlMn1q4XV59aHr0oL4f=w544-h544-l90-rj" }
+      { videoId: "aC9HkZW2hZk", title: "Cruel Summer", artist: "Taylor Swift", thumbnail: "https://yt3.googleusercontent.com/OhxDTHQOQzSrcdgH9hzqzp1v22GYDE-QKnkryvCeq4ddx-3K3_c8oDXN0E6NvHlMn1q4XV59aHr0oL4f=w544-h544-l90-rj" },
+      { videoId: "284Ov7ysmfA", title: "Channa Mereya", artist: "Arijit Singh", thumbnail: "https://i.ytimg.com/vi/284Ov7ysmfA/hqdefault.jpg" },
+      { videoId: "gvyUuxdRdR4", title: "Raataan Lambiyan", artist: "Jubin Nautiyal", thumbnail: "https://i.ytimg.com/vi/gvyUuxdRdR4/hqdefault.jpg" },
+      { videoId: "cZ_v3Z9vF1Y", title: "Shayad", artist: "Arijit Singh", thumbnail: "https://i.ytimg.com/vi/cZ_v3Z9vF1Y/hqdefault.jpg" },
+      { videoId: "sK7riqg2mr4", title: "Agar Tum Saath Ho", artist: "Alka Yagnik, Arijit Singh", thumbnail: "https://i.ytimg.com/vi/sK7riqg2mr4/hqdefault.jpg" }
     ]
   },
   {
@@ -126,7 +146,11 @@ const CATALOG_TOP_MIXES = [
       { videoId: "LK7-_dgAVQE", title: "Tauba Tauba", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/LK7-_dgAVQE/hqdefault.jpg" },
       { videoId: "cWMxCE2HTag", title: "Softly", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/cWMxCE2HTag/hqdefault.jpg" },
       { videoId: "4TYv2PhG89A", title: "Cheques", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4TYv2PhG89A/hqdefault.jpg" },
-      { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hqdefault.jpg" }
+      { videoId: "4tywp83zkmk", title: "One Love", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/4tywp83zkmk/hqdefault.jpg" },
+      { videoId: "VNs_cCtdbPc", title: "Baller", artist: "Shubh, Ikky", thumbnail: "https://i.ytimg.com/vi/VNs_cCtdbPc/hqdefault.jpg" },
+      { videoId: "P8tDk24mI2Y", title: "Winning Speech", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/P8tDk24mI2Y/hqdefault.jpg" },
+      { videoId: "7B_X_i8GvYQ", title: "King Shit", artist: "Shubh", thumbnail: "https://i.ytimg.com/vi/7B_X_i8GvYQ/hqdefault.jpg" },
+      { videoId: "5TzY_G-r19g", title: "Jee Ni Lagda", artist: "Karan Aujla", thumbnail: "https://i.ytimg.com/vi/5TzY_G-r19g/hqdefault.jpg" }
     ]
   },
   {
@@ -139,7 +163,11 @@ const CATALOG_TOP_MIXES = [
       { videoId: "kAw9xGI8vgk", title: "Deep Chill Lofi Study", artist: "Lumosound", thumbnail: "https://i.ytimg.com/vi/kAw9xGI8vgk/hqdefault.jpg" },
       { videoId: "4EQkYVtE-28", title: "Circles (Chill Acoustic)", artist: "Post Malone", thumbnail: "https://yt3.googleusercontent.com/YoQ-A-GOpgeE8tgdF3Rcf5z9V8NIIKjLH6_7X3QphIQUwVHioLu7Ik2wQzU0oCkyNm1TeLDLDYvomJ8=w544-h544-l90-rj" },
       { videoId: "bpOSxM0rNPM", title: "Do I Wanna Know? (Acoustic)", artist: "Arctic Monkeys", thumbnail: "https://yt3.googleusercontent.com/7a03Ybk8vbe8c4dl4E8l77Y4e9aEWjQvTfOAdLdXxsnjZ57gYQ8FsKra9SgXAHT-jtiwuq6lukCfbRKL=w544-h544-l90-rj" },
-      { videoId: "aHmg0jsmNhg", title: "vampire (Lofi)", artist: "Olivia Rodrigo", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" }
+      { videoId: "aHmg0jsmNhg", title: "vampire (Lofi)", artist: "Olivia Rodrigo", thumbnail: "https://yt3.googleusercontent.com/F32A1XBuQEkcOnYin-1BURG2MK_q12Ebovqwe8im8KXf8BHJ_jXW_7NnK73K6QOH-1D6QZKrrZGbNrlS=w544-h544-l90-rj" },
+      { videoId: "4D7u5KF7SP8", title: "Get Lucky", artist: "Daft Punk", thumbnail: "https://yt3.googleusercontent.com/N55arCGj69gtw6thXK8JUPisxoVYiwuIEQ7I6SGlkEyNcSJ7xIWPe76Vuu1SiUqRyx5w9qvR_zV8fV3CWQ=w544-h544-l90-rj" },
+      { videoId: "J7p4bzqLvCw", title: "Blinding Lights (Acoustic)", artist: "The Weeknd", thumbnail: "https://yt3.googleusercontent.com/R_cjQK3wwLPEzri1jerx-79zgzGocoKvwGU3NMONaTsaMM0Idd641pfB8r5jgfpn6I8JAoFtf9RBIcI=w544-h544-l90-rj" },
+      { videoId: "_GWKkqNoyEA", title: "Counting Stars", artist: "OneRepublic", thumbnail: "https://yt3.googleusercontent.com/m2pZLjozMvQBj21LgvAIslVPP-T2xQlxbxCTJ98vpPN8HZ0fgR-wisJQ2IzrKS2yLTAYBjs0TpOYnIY=w544-h544-l90-rj" },
+      { videoId: "2NiyrtYegso", title: "Wake Me Up", artist: "Avicii", thumbnail: "https://yt3.googleusercontent.com/XincHWEjkXhpbavoQEHWRbTcVdvHsujjr7OAw-73KUCILFgjLdevPW8vkoaRMibnwkTtGWkEDyKbuNeK=w544-h544-l90-rj" }
     ]
   }
 ];
@@ -156,12 +184,12 @@ const CATALOG_POPULAR_ALBUMS = [
 ];
 
 const CATALOG_PODCASTS = [
-  { videoId: "ruVJE9po3-U", title: "The Joe Rogan Experience", artist: "Joe Rogan", album: "Comedy & Culture", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/ruVJE9po3-U/hqdefault.jpg" },
-  { videoId: "NYFGCESmikA", title: "Lex Fridman Podcast", artist: "Lex Fridman", album: "AI & Science", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/NYFGCESmikA/hqdefault.jpg" },
-  { videoId: "iRR2yCoIaYY", title: "Huberman Lab", artist: "Dr. Andrew Huberman", album: "Neuroscience", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/iRR2yCoIaYY/hqdefault.jpg" },
-  { videoId: "VHUrdELKjDw", title: "The Diary Of A CEO", artist: "Steven Bartlett", album: "Business & Life", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/VHUrdELKjDw/hqdefault.jpg" },
-  { videoId: "Rn6gRENRzAE", title: "Rotten Mango", artist: "Stephanie Soo", album: "True Crime Stories", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/Rn6gRENRzAE/hqdefault.jpg" },
-  { videoId: "oErYYBNCHh4", title: "Hardcore History", artist: "Dan Carlin", album: "Epic History", tag: "Podcast", thumbnail: "https://i.ytimg.com/vi/oErYYBNCHh4/hqdefault.jpg" }
+  { videoId: "ruVJE9po3-U", title: "The Joe Rogan Experience", artist: "Joe Rogan", album: "Comedy & Culture", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/fGvJuevlubATxjOoCdHgRtzTXmqZID29j0ld957O3t67z87U-u8k0jKk9sH4E0P-eTj5sJgNog=w544-h544-l90-rj" },
+  { videoId: "NYFGCESmikA", title: "Lex Fridman Podcast", artist: "Lex Fridman", album: "AI & Science", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_kUu72v3W2g1hGv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
+  { videoId: "iRR2yCoIaYY", title: "Huberman Lab", artist: "Dr. Andrew Huberman", album: "Neuroscience", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_nNf1N6k4gO-jS3r4f7d4E6x3G1p6g2H9e1v9q0Qw=w544-h544-l90-rj" },
+  { videoId: "VHUrdELKjDw", title: "The Diary Of A CEO", artist: "Steven Bartlett", album: "Business & Life", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_k0xW4v9g1hGv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
+  { videoId: "Rn6gRENRzAE", title: "Rotten Mango", artist: "Stephanie Soo", album: "True Crime Stories", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_m6v4e9h2Gv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" },
+  { videoId: "oErYYBNCHh4", title: "Hardcore History", artist: "Dan Carlin", album: "Epic History", tag: "Podcast", thumbnail: "https://yt3.googleusercontent.com/ytc/AIdro_n2f6e9h2Gv8e57H_iYcZ2n0h4K9m9-j9r4Vw=w544-h544-l90-rj" }
 ];
 
 class EtsukoAPI {
@@ -196,15 +224,76 @@ class EtsukoAPI {
     // 2. Recommended for today: Seeded by current date (changes every midnight!)
     const dailyPicks = this.getDailyPicks();
 
+    // 3. Top Mixes: Dynamically personalized if history exists
+    const topMixes = await this.getPersonalizedMixes();
+
     return {
       jumpBackIn: recents.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
-      recents: recents.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       trendingHits: CATALOG_TRENDING_HITS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       dailyPicks: dailyPicks.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
-      topMixes: CATALOG_TOP_MIXES,
+      topMixes: topMixes,
       popularAlbums: CATALOG_POPULAR_ALBUMS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) })),
       podcasts: CATALOG_PODCASTS.map(t => ({ ...t, isLiked: this.isLiked(t.videoId) }))
     };
+  }
+
+  async getPersonalizedMixes() {
+    try {
+      const recents = this.getRecentTracks();
+      const likes = await this.getLikedTracks();
+      const userPool = [...likes, ...recents];
+
+      if (!userPool || userPool.length === 0) {
+        return CATALOG_TOP_MIXES;
+      }
+
+      // Deduplicate user pool tracks by videoId
+      const seen = new Set();
+      const uniqueUserTracks = [];
+      for (const t of userPool) {
+        if (t && t.videoId && !seen.has(t.videoId)) {
+          seen.add(t.videoId);
+          uniqueUserTracks.push(t);
+        }
+      }
+
+      if (uniqueUserTracks.length === 0) {
+        return CATALOG_TOP_MIXES;
+      }
+
+      const primaryArtist = uniqueUserTracks[0]?.artist?.split(',')[0]?.trim() || 'Your';
+      const dynamicMix1 = {
+        id: "personal_mix_1",
+        title: `${primaryArtist} Mix`,
+        subtitle: `${uniqueUserTracks.slice(0, 3).map(t => t.artist).join(', ')}`,
+        gradient: "linear-gradient(135deg, #10b981, #064e3b)",
+        bannerColor: "#10b981",
+        tracks: [
+          ...uniqueUserTracks.slice(0, 5),
+          ...CATALOG_TRENDING_HITS.filter(t => !seen.has(t.videoId)).slice(0, 5)
+        ].slice(0, 10)
+      };
+
+      const dynamicMix2 = {
+        id: "personal_mix_2",
+        title: "Daily Flow",
+        subtitle: "Personalized rotation based on what you love",
+        gradient: "linear-gradient(135deg, #a855f7, #581c87)",
+        bannerColor: "#a855f7",
+        tracks: [
+          ...uniqueUserTracks.slice(2, 6),
+          ...this.getDailyPicks().filter(t => !seen.has(t.videoId)).slice(0, 6)
+        ].slice(0, 10)
+      };
+
+      return [
+        dynamicMix1,
+        dynamicMix2,
+        ...CATALOG_TOP_MIXES.slice(1, 4)
+      ];
+    } catch (e) {
+      return CATALOG_TOP_MIXES;
+    }
   }
 
   getRecentTracks() {

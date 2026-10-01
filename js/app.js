@@ -503,17 +503,14 @@ class EtsukoMobileApp {
         this.dailyTagDate.textContent = d.toLocaleDateString('en-US', options).toUpperCase();
       }
 
-      // Jump back in & Recents: ONLY display if user has actual history!
+      // Jump back in: ONLY display if user has actual history!
       const jumpSection = document.getElementById('section-jump-back');
-      const recentsSection = document.getElementById('section-recents');
-      const hasHistory = feed.recents && feed.recents.length > 0;
+      const hasHistory = feed.jumpBackIn && feed.jumpBackIn.length > 0;
 
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
 
       if (hasHistory) {
         this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
-        this.renderHorizontalRow(this.recentsRow, feed.recents);
       }
 
       this.renderHorizontalRow(this.trendingHitsRow, feed.trendingHits);
@@ -643,7 +640,6 @@ class EtsukoMobileApp {
 
   filterHomeFeed(filter) {
     const jumpSection = document.getElementById('section-jump-back');
-    const recentsSection = document.getElementById('section-recents');
     const trendingSection = document.getElementById('section-trending-hits');
     const dailySection = document.getElementById('section-daily-picks');
     const mixesSection = document.getElementById('section-top-mixes');
@@ -654,15 +650,13 @@ class EtsukoMobileApp {
 
     if (filter === 'all') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
       [trendingSection, dailySection, mixesSection, albumsSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     } else if (filter === 'music') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      if (recentsSection) recentsSection.style.display = hasHistory ? 'block' : 'none';
       [trendingSection, dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
       if (podcastsSection) podcastsSection.style.display = 'none';
     } else { // podcasts
-      [jumpSection, recentsSection, trendingSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
+      [jumpSection, trendingSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
       [mixesSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     }
   }
@@ -677,15 +671,7 @@ class EtsukoMobileApp {
     else if (hour >= 17 && hour < 22) greet = 'Good evening';
     else greet = 'Late night vibes';
 
-    let username = '';
-    try {
-      const profile = localStorage.getItem('etsuko_user_profile');
-      if (profile) {
-        const parsed = JSON.parse(profile);
-        if (parsed && parsed.name) username = parsed.name.trim();
-      }
-    } catch (e) {}
-
+    const username = (localStorage.getItem('etsuko_user_name') || '').trim();
     greetingEl.textContent = username ? `${greet}, ${username}` : greet;
   }
 
@@ -958,32 +944,43 @@ class EtsukoMobileApp {
     if (this.albumDetailArtist) this.albumDetailArtist.textContent = artist;
     if (this.albumDetailCover) this.albumDetailCover.src = thumb;
 
-    const matching = trackPool.filter(t => (t.album && t.album === title) || (t.artist && t.artist.toLowerCase() === artist.toLowerCase()));
-    const finalTracks = matching.length > 0 ? matching : [albumItem, ...trackPool.slice(0, 6)];
+    // Filter matching tracks if pool exists
+    let finalTracks = [];
+    if (trackPool && trackPool.length > 0) {
+      const matching = trackPool.filter(t => t && t.videoId && ((t.album && t.album === title) || (t.artist && t.artist.toLowerCase() === artist.toLowerCase())));
+      finalTracks = matching.length > 0 ? matching : trackPool.filter(t => t && t.videoId);
+    }
+    if (finalTracks.length === 0 && albumItem.videoId) {
+      finalTracks = [albumItem];
+    }
     this.activeAlbumTracks = finalTracks;
 
     if (this.albumTracksList) {
       this.albumTracksList.innerHTML = '';
-      finalTracks.forEach((track, idx) => {
-        const row = document.createElement('div');
-        row.className = 'track-row';
-        row.innerHTML = `
-          <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); width: 22px; text-align: center;">${idx + 1}</div>
-          <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
-            <div class="track-row-artist">${this.escapeHtml(track.artist)} • ${this.escapeHtml(track.duration || '3:30')}</div>
-          </div>
-          <button class="btn-track-action" title="Play">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-          </button>
-        `;
-        row.addEventListener('click', () => {
-          window.player.playTrack(track, finalTracks);
-          this.openPlayerSheet();
+      if (finalTracks.length === 0) {
+        this.albumTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No tracks available.</div>';
+      } else {
+        finalTracks.forEach((track, idx) => {
+          const row = document.createElement('div');
+          row.className = 'track-row';
+          row.innerHTML = `
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-muted); width: 22px; text-align: center;">${idx + 1}</div>
+            <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
+            <div class="track-row-info">
+              <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+              <div class="track-row-artist">${this.escapeHtml(track.artist)} • ${this.escapeHtml(track.duration || '3:30')}</div>
+            </div>
+            <button class="btn-track-action" title="Play">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            </button>
+          `;
+          row.addEventListener('click', () => {
+            window.player.playTrack(track, finalTracks);
+            this.openPlayerSheet();
+          });
+          this.albumTracksList.appendChild(row);
         });
-        this.albumTracksList.appendChild(row);
-      });
+      }
     }
 
     this.switchView('view-album-detail');
@@ -995,32 +992,39 @@ class EtsukoMobileApp {
     if (this.artistDetailName) this.artistDetailName.textContent = artistName;
     if (this.artistDetailAvatar) this.artistDetailAvatar.src = avatarUrl || 'assets/default_cover.png';
 
-    const matching = trackPool.filter(t => t.artist && t.artist.toLowerCase().includes(artistName.toLowerCase()));
-    const finalTracks = matching.length > 0 ? matching : trackPool.slice(0, 8);
+    let finalTracks = [];
+    if (trackPool && trackPool.length > 0) {
+      const matching = trackPool.filter(t => t && t.videoId && t.artist && t.artist.toLowerCase().includes(artistName.toLowerCase()));
+      finalTracks = matching.length > 0 ? matching : trackPool.filter(t => t && t.videoId).slice(0, 8);
+    }
     this.activeArtistTracks = finalTracks;
 
     if (this.artistTracksList) {
       this.artistTracksList.innerHTML = '';
-      finalTracks.forEach((track, idx) => {
-        const row = document.createElement('div');
-        row.className = 'track-row';
-        row.innerHTML = `
-          <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); width: 22px; text-align: center;">${idx + 1}</div>
-          <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
-          <div class="track-row-info">
-            <div class="track-row-title">${this.escapeHtml(track.title)}</div>
-            <div class="track-row-artist">${this.escapeHtml(track.album || 'Top Hit')} • ${this.escapeHtml(track.duration || '3:30')}</div>
-          </div>
-          <button class="btn-track-action" title="Play">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-          </button>
-        `;
-        row.addEventListener('click', () => {
-          window.player.playTrack(track, finalTracks);
-          this.openPlayerSheet();
+      if (finalTracks.length === 0) {
+        this.artistTracksList.innerHTML = '<div style="padding: 24px; text-align: center; color: var(--text-muted);">No tracks available.</div>';
+      } else {
+        finalTracks.forEach((track, idx) => {
+          const row = document.createElement('div');
+          row.className = 'track-row';
+          row.innerHTML = `
+            <div style="font-size: 12px; font-weight: 700; color: var(--accent-cyan); width: 22px; text-align: center;">${idx + 1}</div>
+            <img src="${this.getThumbnailSrc(track)}" class="track-row-thumb" alt="Track" ${this.getImgFallbackAttr(track.videoId)}>
+            <div class="track-row-info">
+              <div class="track-row-title">${this.escapeHtml(track.title)}</div>
+              <div class="track-row-artist">${this.escapeHtml(track.album || 'Top Hit')} • ${this.escapeHtml(track.duration || '3:30')}</div>
+            </div>
+            <button class="btn-track-action" title="Play">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            </button>
+          `;
+          row.addEventListener('click', () => {
+            window.player.playTrack(track, finalTracks);
+            this.openPlayerSheet();
+          });
+          this.artistTracksList.appendChild(row);
         });
-        this.artistTracksList.appendChild(row);
-      });
+      }
     }
 
     this.switchView('view-artist-detail');
@@ -1382,10 +1386,12 @@ class EtsukoMobileApp {
       if (this.topAvatarInitial) {
         this.topAvatarInitial.textContent = name.charAt(0).toUpperCase();
       }
+      this.updateGreetingHeader();
       this.showToast('Profile saved!');
     } else {
       localStorage.removeItem('etsuko_user_name');
       this.setDefaultAvatar();
+      this.updateGreetingHeader();
       this.showToast('Profile reset to default');
     }
     this.modalProfile.classList.remove('active');
