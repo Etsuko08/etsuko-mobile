@@ -54,25 +54,14 @@
         </div>
 
 
-        <!-- Section: Hot Right Now / Global Trending -->
-        <div class="spotify-section" id="section-trending-hits">
-          <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Hot right now</h2>
-            <span class="spotify-daily-tag" style="background: rgba(0, 240, 255, 0.12); color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.3);">VIRAL</span>
-          </div>
-          <div class="spotify-h-scroll" id="trending-hits-row">
-            <!-- Populated with global trending hits -->
-          </div>
-        </div>
-
-        <!-- Section: Recommended for today (Daily seeded recommendations) -->
+        <!-- Section: Recommended For You (Personalized & Fresh Discovery) -->
         <div class="spotify-section" id="section-daily-picks">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Recommended for today</h2>
+            <h2 class="spotify-section-title">Recommended For You</h2>
             <span class="spotify-daily-tag" id="daily-tag-date">TODAY</span>
           </div>
           <div class="spotify-h-scroll" id="daily-picks-row">
-            <!-- Dynamically rotated daily at midnight -->
+            <!-- Dynamically populated from listening preferences & discovery -->
           </div>
         </div>
 
@@ -450,7 +439,26 @@
         </button>
       </div>
 
-      <!-- Up Next / Queue Drawer inside Sheet -->
+      <!-- 1. Spotify-Style Synced Lyrics Section (Directly Below Controls) -->
+      <div class="sheet-lyrics-section" id="sheet-lyrics-section">
+        <div class="sheet-lyrics-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <span class="sheet-lyrics-title">Lyrics</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="sheet-lyrics-follow-btn" id="sheet-lyrics-follow-btn" style="display: none;" title="Follow Current Lyric">
+              <span>● Follow</span>
+            </button>
+            <span class="sheet-lyrics-badge" id="sheet-lyrics-status">SYNCED</span>
+          </div>
+        </div>
+        <div class="sheet-lyrics-scroll-box" id="sheet-lyrics-container">
+          <div class="sheet-lyrics-placeholder">Loading lyrics...</div>
+        </div>
+      </div>
+
+      <!-- 2. Up Next / Queue Drawer inside Sheet -->
       <div class="sheet-queue-section" id="sheet-queue-section">
         <div class="sheet-queue-header">
           <span class="sheet-queue-title">Up Next in Queue</span>
@@ -464,26 +472,12 @@
         </div>
       </div>
 
-      <!-- Spotify-Style Synced Lyrics Section -->
-      <div class="sheet-lyrics-section" id="sheet-lyrics-section">
-        <div class="sheet-lyrics-header">
-          <div style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
-            <span class="sheet-lyrics-title">Lyrics</span>
-          </div>
-          <span class="sheet-lyrics-badge" id="sheet-lyrics-status">SYNCED</span>
-        </div>
-        <div class="sheet-lyrics-scroll-box" id="sheet-lyrics-container">
-          <div class="sheet-lyrics-placeholder">Loading lyrics...</div>
-        </div>
-      </div>
-
-      <!-- Spotify-Style Recommended Songs in Same Language / Genre Section -->
+      <!-- 3. Recommended For You Section (Dynamic Based on Current Track) -->
       <div class="sheet-related-section" id="sheet-related-section">
         <div class="sheet-related-header">
           <div class="sheet-related-title-box">
             <span class="sheet-related-title">Recommended For You</span>
-            <div class="sheet-related-subtitle" id="sheet-related-tag">More Like This • Same Language</div>
+            <div class="sheet-related-subtitle" id="sheet-related-tag">More Like This · Based on your current track</div>
           </div>
           <span class="sheet-related-badge">SIMILAR VIBE</span>
         </div>

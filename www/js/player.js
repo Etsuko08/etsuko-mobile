@@ -140,8 +140,11 @@ class MobilePlayer {
     this.sheetLyricsSection = document.getElementById('sheet-lyrics-section');
     this.sheetLyricsStatus = document.getElementById('sheet-lyrics-status');
     this.sheetLyricsContainer = document.getElementById('sheet-lyrics-container');
+    this.sheetLyricsFollowBtn = document.getElementById('sheet-lyrics-follow-btn');
     this.currentLyricsData = null;
     this.lastActiveLyricIdx = -1;
+    this.userScrolledLyrics = false;
+    this.lyricsScrollTimeout = null;
 
     // Related section in Sheet (Spotify Style)
     this.sheetRelatedSection = document.getElementById('sheet-related-section');
@@ -253,6 +256,34 @@ class MobilePlayer {
       this.scrubberTrack.addEventListener('touchstart', (e) => doSeek(e), { passive: true });
       this.scrubberTrack.addEventListener('touchmove', (e) => doSeek(e), { passive: true });
       this.scrubberTrack.addEventListener('click', (e) => doSeek(e));
+    }
+
+    // Lyrics container touch/scroll detection (pauses auto-scroll until Follow is tapped)
+    if (this.sheetLyricsContainer) {
+      const handleUserLyricsScroll = () => {
+        if (!this.currentLyricsData || this.currentLyricsData.type !== 'synced') return;
+        this.userScrolledLyrics = true;
+        if (this.sheetLyricsFollowBtn) this.sheetLyricsFollowBtn.style.display = 'inline-flex';
+        clearTimeout(this.lyricsScrollTimeout);
+        this.lyricsScrollTimeout = setTimeout(() => {
+          this.userScrolledLyrics = false;
+          if (this.sheetLyricsFollowBtn) this.sheetLyricsFollowBtn.style.display = 'none';
+          this.scrollToActiveLyric();
+        }, 8000);
+      };
+
+      this.sheetLyricsContainer.addEventListener('touchstart', handleUserLyricsScroll, { passive: true });
+      this.sheetLyricsContainer.addEventListener('wheel', handleUserLyricsScroll, { passive: true });
+    }
+
+    if (this.sheetLyricsFollowBtn) {
+      this.sheetLyricsFollowBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.userScrolledLyrics = false;
+        clearTimeout(this.lyricsScrollTimeout);
+        this.sheetLyricsFollowBtn.style.display = 'none';
+        this.scrollToActiveLyric();
+      });
     }
   }
 
@@ -444,8 +475,12 @@ class MobilePlayer {
       window.app.openPlayerSheet();
     }
 
+    this.userScrolledLyrics = false;
+    clearTimeout(this.lyricsScrollTimeout);
+    if (this.sheetLyricsFollowBtn) this.sheetLyricsFollowBtn.style.display = 'none';
+
     if (queueList && Array.isArray(queueList)) {
-      this.queue = queueList.filter(t => t && t.videoId);
+      this.queue = this.filterQueueDuplicates(queueList, track);
       this.queueIndex = this.queue.findIndex(t => t.videoId === track.videoId);
       if (this.queueIndex === -1) {
         this.queue.unshift(track);
@@ -462,6 +497,11 @@ class MobilePlayer {
     } else {
       this.queue = [track];
       this.queueIndex = 0;
+    }
+
+    // Auto-populate upcoming queue with intelligent diverse recommendations if upcoming queue is empty
+    if (this.queue.length - 1 <= this.queueIndex) {
+      this.populateSmartUpcomingQueue(track);
     }
 
     this.currentTrack = track;
@@ -656,6 +696,9 @@ class MobilePlayer {
 
   async loadRelatedTracks(track) {
     if (!this.sheetRelatedList) return;
+    this._relatedRequestId = (this._relatedRequestId || 0) + 1;
+    const currentReq = this._relatedRequestId;
+
     this.sheetRelatedList.innerHTML = `
       <div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 11px;">
         <span style="color: var(--accent-cyan); font-weight: 700;">⚡ FINDING SIMILAR TRACKS...</span>
@@ -665,8 +708,9 @@ class MobilePlayer {
     try {
       if (window.api && typeof window.api.getRelatedTracks === 'function') {
         const data = await window.api.getRelatedTracks(track);
+        if (this._relatedRequestId !== currentReq) return;
         if (this.sheetRelatedTag && data.displayTag) {
-          this.sheetRelatedTag.textContent = `More Like This • ${data.displayTag}`;
+          this.sheetRelatedTag.textContent = `${data.displayTag}`;
         }
         this.renderRelatedTracksList(data.tracks || []);
       }
@@ -748,10 +792,75 @@ class MobilePlayer {
     }
   }
 
+  filterQueueDuplicates(list, currentTrack) {
+    if (!Array.isArray(list)) return [];
+    const seenIds = new Set();
+    const seenTitles = new Set();
+    const filtered = [];
+
+    const normCurrent = window.api ? window.api.normalizeTitle(currentTrack?.title) : (currentTrack?.title || '').toLowerCase().trim();
+
+    if (currentTrack && currentTrack.videoId) {
+      seenIds.add(currentTrack.videoId);
+      if (normCurrent) seenTitles.add(normCurrent);
+      filtered.push(currentTrack);
+    }
+
+    const artistCounts = {};
+    if (currentTrack && currentTrack.artist) {
+      const curArtist = currentTrack.artist.split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+      artistCounts[curArtist] = 1;
+    }
+
+    for (const t of list) {
+      if (!t || !t.videoId || seenIds.has(t.videoId)) continue;
+      const norm = window.api ? window.api.normalizeTitle(t.title) : (t.title || '').toLowerCase().trim();
+      if (norm && (norm === normCurrent || seenTitles.has(norm))) continue;
+
+      const artist = (t.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+      if (artist && (artistCounts[artist] || 0) >= 2) continue;
+
+      seenIds.add(t.videoId);
+      if (norm) seenTitles.add(norm);
+      if (artist) artistCounts[artist] = (artistCounts[artist] || 0) + 1;
+
+      filtered.push(t);
+    }
+    return filtered;
+  }
+
+  async populateSmartUpcomingQueue(track) {
+    if (!track || !track.videoId) return;
+    this._queueRequestId = (this._queueRequestId || 0) + 1;
+    const currentReq = this._queueRequestId;
+
+    try {
+      if (!window.api || typeof window.api.getRelatedTracks !== 'function') return;
+      const data = await window.api.getRelatedTracks(track);
+      if (this._queueRequestId !== currentReq) return;
+      if (this.currentTrack && this.currentTrack.videoId !== track.videoId) return;
+
+      const candidates = (data.tracks || []).filter(t => t && t.videoId);
+      const sanitized = this.filterQueueDuplicates([...this.queue, ...candidates], this.currentTrack);
+
+      if (sanitized.length > this.queue.length) {
+        this.queue = sanitized;
+        this.renderQueueInSheet();
+      }
+    } catch (e) {
+      console.warn('[Player] populateSmartUpcomingQueue notice:', e);
+    }
+  }
+
   async loadLyrics(track) {
     if (!this.sheetLyricsContainer) return;
+    this._lyricsRequestId = (this._lyricsRequestId || 0) + 1;
+    const currentReq = this._lyricsRequestId;
     this.currentLyricsData = null;
     this.lastActiveLyricIdx = -1;
+    this.userScrolledLyrics = false;
+    clearTimeout(this.lyricsScrollTimeout);
+    if (this.sheetLyricsFollowBtn) this.sheetLyricsFollowBtn.style.display = 'none';
 
     if (this.sheetLyricsStatus) {
       this.sheetLyricsStatus.textContent = 'SEARCHING';
@@ -769,6 +878,7 @@ class MobilePlayer {
     try {
       if (!window.api || typeof window.api.getLyrics !== 'function') return;
       const lyrics = await window.api.getLyrics(track.title, track.artist, this.getDuration());
+      if (this._lyricsRequestId !== currentReq) return;
       this.currentLyricsData = lyrics;
 
       if (lyrics.type === 'synced' && Array.isArray(lyrics.lines) && lyrics.lines.length > 0) {
@@ -803,7 +913,7 @@ class MobilePlayer {
       }
     } catch (e) {
       console.warn('[Player] loadLyrics notice:', e);
-      if (this.sheetLyricsContainer) {
+      if (this._lyricsRequestId === currentReq && this.sheetLyricsContainer) {
         this.sheetLyricsContainer.innerHTML = `
           <div class="sheet-lyrics-placeholder">Lyrics unavailable for this track.</div>
         `;
@@ -847,9 +957,8 @@ class MobilePlayer {
       allLines.forEach((el, idx) => {
         if (idx === activeIdx) {
           el.classList.add('active');
-          try {
-            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          } catch (e) {
+          // Purely container-scoped scroll — NEVER call el.scrollIntoView() which jumps the whole player sheet!
+          if (!this.userScrolledLyrics) {
             const containerHeight = this.sheetLyricsContainer.clientHeight;
             const lineOffset = el.offsetTop - this.sheetLyricsContainer.offsetTop;
             this.sheetLyricsContainer.scrollTo({
@@ -860,6 +969,19 @@ class MobilePlayer {
         } else {
           el.classList.remove('active');
         }
+      });
+    }
+  }
+
+  scrollToActiveLyric() {
+    if (!this.sheetLyricsContainer || this.lastActiveLyricIdx < 0) return;
+    const activeEl = this.sheetLyricsContainer.querySelector(`.sheet-lyrics-line[data-index="${this.lastActiveLyricIdx}"]`);
+    if (activeEl) {
+      const containerHeight = this.sheetLyricsContainer.clientHeight;
+      const lineOffset = activeEl.offsetTop - this.sheetLyricsContainer.offsetTop;
+      this.sheetLyricsContainer.scrollTo({
+        top: Math.max(0, lineOffset - containerHeight / 2 + activeEl.clientHeight / 2),
+        behavior: 'smooth'
       });
     }
   }

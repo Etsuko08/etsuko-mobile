@@ -305,8 +305,16 @@ class EtsukoAPI {
     }
   }
 
-  getDailyPicks() {
-    // Generate deterministic daily rotation based on date string (e.g. "2026-09-28")
+  getLikedTracksSync() {
+    try {
+      const raw = localStorage.getItem(this.localLikesKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  getDeterministicDailyPool() {
     const dateStr = new Date().toISOString().slice(0, 10);
     let hash = 0;
     for (let i = 0; i < dateStr.length; i++) {
@@ -320,8 +328,50 @@ class EtsukoAPI {
       const j = (seed + i * 31) % (i + 1);
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
+    return pool;
+  }
 
-    return pool.slice(0, 14);
+  getDailyPicks() {
+    try {
+      const recents = this.getRecentTracks();
+      const likes = this.getLikedTracksSync();
+      const userPool = [...likes, ...recents].filter(t => t && t.videoId);
+
+      // If user has actual listening history or likes, build personalized recommendations
+      if (userPool.length > 0) {
+        const seenIds = new Set();
+        const seenNorms = new Set();
+        const personalPicks = [];
+
+        for (const t of userPool) {
+          const norm = this.normalizeTitle ? this.normalizeTitle(t.title) : (t.title || '').toLowerCase().trim();
+          if (!seenIds.has(t.videoId) && (!norm || !seenNorms.has(norm))) {
+            seenIds.add(t.videoId);
+            if (norm) seenNorms.add(norm);
+            personalPicks.push(t);
+            if (personalPicks.length >= 7) break;
+          }
+        }
+
+        // Backfill with date-seeded fresh rotation from catalog
+        const datePool = this.getDeterministicDailyPool();
+        for (const t of datePool) {
+          const norm = this.normalizeTitle ? this.normalizeTitle(t.title) : (t.title || '').toLowerCase().trim();
+          if (!seenIds.has(t.videoId) && (!norm || !seenNorms.has(norm))) {
+            seenIds.add(t.videoId);
+            if (norm) seenNorms.add(norm);
+            personalPicks.push(t);
+            if (personalPicks.length >= 14) break;
+          }
+        }
+        return personalPicks;
+      }
+    } catch (e) {
+      console.warn('[API] getDailyPicks notice:', e);
+    }
+
+    // Diverse multi-genre discovery fallback for new users (deterministic daily rotation)
+    return this.getDeterministicDailyPool().slice(0, 14);
   }
 
   // --- YouTube Music Universal Search Engine ---
@@ -646,6 +696,54 @@ class EtsukoAPI {
     return true;
   }
 
+  normalizeTitle(title) {
+    if (!title) return '';
+    return title
+      .toLowerCase()
+      .replace(/\s*[\(\[](official\s*(music\s*)?video|video|audio|lyrics|lyric\s*video|visualizer|full\s*song|hd|4k|mv|remix|lofi|slowed(\s*\+\s*reverb)?|reverb|speed\s*up|sped\s*up|cover|acoustic|live|extended|radio\s*edit)[\)\]]/gi, '')
+      .replace(/\s*-\s*(official\s*(music\s*)?video|video|audio|lyrics|lyric\s*video|visualizer|full\s*song|remix|lofi|slowed|cover).*/gi, '')
+      .replace(/[^\w\s\u0600-\u06FF\u0900-\u097F]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  filterDiverseRecommendations(candidates, currentTrack, limit = 12) {
+    if (!Array.isArray(candidates)) return [];
+    const normCurrent = this.normalizeTitle(currentTrack?.title);
+    const seenIds = new Set();
+    if (currentTrack && currentTrack.videoId) seenIds.add(currentTrack.videoId);
+    const seenTitles = new Set();
+    if (normCurrent) seenTitles.add(normCurrent);
+
+    const artistCounts = {};
+    const primaryCurrentArtist = (currentTrack?.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+    if (primaryCurrentArtist) artistCounts[primaryCurrentArtist] = 1;
+
+    const filtered = [];
+    for (const cand of candidates) {
+      if (!cand || !cand.videoId || seenIds.has(cand.videoId)) continue;
+      const normCand = this.normalizeTitle(cand.title);
+      // Discard duplicates of the current track title or already chosen titles
+      if (normCand && (normCand === normCurrent || seenTitles.has(normCand))) continue;
+
+      const candArtist = (cand.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+      // Cap at 2 tracks per artist to guarantee diversity
+      if (candArtist && (artistCounts[candArtist] || 0) >= 2) continue;
+
+      seenIds.add(cand.videoId);
+      if (normCand) seenTitles.add(normCand);
+      if (candArtist) artistCounts[candArtist] = (artistCounts[candArtist] || 0) + 1;
+
+      filtered.push({
+        ...cand,
+        isLiked: this.isLiked(cand.videoId)
+      });
+
+      if (filtered.length >= limit) break;
+    }
+    return filtered;
+  }
+
   // --- Spotify-Style Related / Recommended Songs in Same Language & Genre ---
   async getRelatedTracks(currentTrack) {
     if (!currentTrack) return { category: 'pop', displayTag: 'Recommended', tracks: [] };
@@ -657,31 +755,40 @@ class EtsukoAPI {
 
     let detectedCategory = 'pop';
     let displayTag = 'Global Pop Hits';
+    let searchMoodQuery = 'pop hits';
 
     if (/punjabi|karan aujla|shubh|ikky|diljit|sidhu|ap dhillon|b praak|jassi|amrit|tauba|cheques|softly|baller|one love|winning/.test(combined)) {
       detectedCategory = 'punjabi';
       displayTag = 'Punjabi Hits';
-    } else if (/hindi|arijit|pritam|atif|shreya|jubin|sachin|neha|bollywood|tum hi ho|kesariya|chaleya|channa|apna bana|o maahi|raataan/.test(combined)) {
+      searchMoodQuery = 'punjabi hits';
+    } else if (/hindi|urdu|rahat|fateh|ali khan|nusrat|atif|aslam|zaroori|arijit|pritam|shreya|jubin|neha|bollywood|sufi|ghazal|qawwali|coke studio|mohit chauhan|kk|sonu nigam|shaan|papon|sunidhi|alka yagnik|kumar sanu|udit narayan|lata|kishore|mohammed rafi|anuv jain|prateek kuhad|jasleen|darshan raval|armaan malik|kaifi khalil|ali zafar|afreen|tajdar|pehli dafa|tum hi ho|kesariya|chaleya|channa|apna bana|o maahi|raataan|saiyaan|o re piya|hawaayein|ishq|mohabbat/.test(combined)) {
       detectedCategory = 'hindi';
-      displayTag = 'Bollywood & Hindi Melodies';
+      displayTag = 'Hindi & Urdu Melodies';
+      searchMoodQuery = 'hindi urdu romantic melodies';
     } else if (/phonk|drift|dvrst|kordhell|moondeity|interworld|hensonn|pharmacist|playaphonk|murder in my mind|metamorphosis|neon blade|close eyes/.test(combined)) {
       detectedCategory = 'phonk';
       displayTag = 'Phonk & Drift';
+      searchMoodQuery = 'drift phonk';
     } else if (/rap|hip-hop|hip hop|eminem|kendrick|travis scott|drake|post malone|carti|metro boomin|future|21 savage|not like us|houdini|fe!n|god's plan/.test(combined)) {
       detectedCategory = 'hiphop';
       displayTag = 'Hip-Hop & Rap';
+      searchMoodQuery = 'hip hop rap hits';
     } else if (/rock|metal|linkin park|queen|arctic monkeys|imagine dragons|onerepublic|nirvana|coldplay|in the end|thunder|counting stars|bohemian/.test(combined)) {
       detectedCategory = 'rock';
       displayTag = 'Rock & Alternative';
+      searchMoodQuery = 'rock hits';
     } else if (/lofi|chill|study|sleep|peaceful|lumosound|chilledcow|cozy|beats/.test(combined)) {
       detectedCategory = 'lofi';
       displayTag = 'Lofi & Chill Study';
+      searchMoodQuery = 'lofi chill study beats';
     } else if (/anime|j-pop|japanese|yoasobi|eve|kenshi|lisa|aimer|radwimps/.test(combined)) {
       detectedCategory = 'anime';
       displayTag = 'Anime & J-Pop';
+      searchMoodQuery = 'japanese anime hits';
     } else {
       detectedCategory = 'pop';
       displayTag = 'Pop & Chart Toppers';
+      searchMoodQuery = 'pop chart hits';
     }
 
     const genrePools = {
@@ -695,9 +802,16 @@ class EtsukoAPI {
         { videoId: "vX2cDW8LUWk", title: "Lover", artist: "Diljit Dosanjh", album: "MoonChild Era", duration: "3:07", thumbnail: "https://i.ytimg.com/vi/vX2cDW8LUWk/hqdefault.jpg" }
       ],
       hindi: [
+        { videoId: "kw4tT7SCmaY", title: "Afreen Afreen", artist: "Rahat Fateh Ali Khan, Momina Mustehsan", album: "Coke Studio", duration: "6:44", thumbnail: "https://i.ytimg.com/vi/kw4tT7SCmaY/hqdefault.jpg" },
+        { videoId: "c7TX12j_sY8", title: "Tajdar-e-Haram", artist: "Atif Aslam", album: "Coke Studio", duration: "10:28", thumbnail: "https://i.ytimg.com/vi/c7TX12j_sY8/hqdefault.jpg" },
+        { videoId: "2kfmxHqM_eI", title: "Pehli Dafa", artist: "Atif Aslam", album: "Pehli Dafa", duration: "4:43", thumbnail: "https://i.ytimg.com/vi/2kfmxHqM_eI/hqdefault.jpg" },
         { videoId: "Umqb9KENgmk", title: "Tum Hi Ho", artist: "Arijit Singh", album: "Aashiqui 2", duration: "4:22", thumbnail: "https://i.ytimg.com/vi/Umqb9KENgmk/hqdefault.jpg" },
         { videoId: "BddP6PYo2gs", title: "Kesariya", artist: "Arijit Singh, Pritam", album: "Brahmastra", duration: "4:28", thumbnail: "https://i.ytimg.com/vi/BddP6PYo2gs/hqdefault.jpg" },
         { videoId: "V_jp5_VAzXk", title: "Chaleya", artist: "Arijit Singh, Shilpa Rao", album: "Jawan", duration: "3:20", thumbnail: "https://i.ytimg.com/vi/V_jp5_VAzXk/hqdefault.jpg" },
+        { videoId: "cbqbx7h0p9E", title: "Tum Se Hi", artist: "Mohit Chauhan, Pritam", album: "Jab We Met", duration: "5:21", thumbnail: "https://i.ytimg.com/vi/cbqbx7h0p9E/hqdefault.jpg" },
+        { videoId: "5y_KpD_aUfk", title: "Zara Sa", artist: "KK, Pritam", album: "Jannat", duration: "5:03", thumbnail: "https://i.ytimg.com/vi/5y_KpD_aUfk/hqdefault.jpg" },
+        { videoId: "zJmU2j3O6Wc", title: "Kahani Suno 2.0", artist: "Kaifi Khalil", album: "Kahani Suno", duration: "2:54", thumbnail: "https://i.ytimg.com/vi/zJmU2j3O6Wc/hqdefault.jpg" },
+        { videoId: "2JzQhLqA5Q4", title: "Jhoom", artist: "Ali Zafar", album: "Jhoom", duration: "4:32", thumbnail: "https://i.ytimg.com/vi/2JzQhLqA5Q4/hqdefault.jpg" },
         { videoId: "ElZfdU54Cp8", title: "Apna Bana Le", artist: "Arijit Singh, Sachin-Jigar", album: "Bhediya", duration: "4:21", thumbnail: "https://i.ytimg.com/vi/ElZfdU54Cp8/hqdefault.jpg" },
         { videoId: "gvyUuxdRdR4", title: "O Maahi", artist: "Arijit Singh, Pritam", album: "Dunki", duration: "3:53", thumbnail: "https://i.ytimg.com/vi/gvyUuxdRdR4/hqdefault.jpg" },
         { videoId: "RLzC55ai0eo", title: "Heeriye", artist: "Jasleen Royal, Arijit Singh", album: "Heeriye", duration: "3:14", thumbnail: "https://i.ytimg.com/vi/RLzC55ai0eo/hqdefault.jpg" },
@@ -743,27 +857,36 @@ class EtsukoAPI {
       ]
     };
 
-    let related = (genrePools[detectedCategory] || genrePools.pop).filter(t => t.videoId !== currentTrack.videoId);
+    const primaryArtist = (currentTrack.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim();
+    const candidateList = [];
 
-    // Dynamic search for more related songs by artist if available
+    // 1. Dual-Query Live Search (Artist Radio/Similar + Mood/Genre Discovery)
     try {
-      if (currentTrack.artist && currentTrack.artist !== 'Unknown Artist') {
-        const query = `${currentTrack.artist} songs`;
-        const searchRes = await this.search(query, 'songs');
-        if (searchRes && searchRes.results && searchRes.results.length > 0) {
-          const extra = searchRes.results.filter(t => t.videoId !== currentTrack.videoId && !related.some(r => r.videoId === t.videoId));
-          related = [...related, ...extra.slice(0, 6)];
+      if (primaryArtist && primaryArtist !== 'Unknown Artist') {
+        const resArtist = await this.search(`${primaryArtist} similar songs`, 'songs');
+        if (resArtist && resArtist.results && resArtist.results.length > 0) {
+          candidateList.push(...resArtist.results);
         }
       }
-    } catch (e) {}
+      const resMood = await this.search(searchMoodQuery, 'songs');
+      if (resMood && resMood.results && resMood.results.length > 0) {
+        candidateList.push(...resMood.results);
+      }
+    } catch (e) {
+      console.warn('[API] getRelatedTracks search notice:', e);
+    }
+
+    // 2. Curated Genre Fallback Pool
+    const pool = genrePools[detectedCategory] || genrePools.pop;
+    candidateList.push(...pool);
+
+    // 3. Strict Diversity Filter (removes remixes/duplicates of current track & caps artist repeats)
+    const diverseTracks = this.filterDiverseRecommendations(candidateList, currentTrack, 12);
 
     return {
       category: detectedCategory,
       displayTag: displayTag,
-      tracks: related.map(t => ({
-        ...t,
-        isLiked: this.isLiked(t.videoId)
-      }))
+      tracks: diverseTracks
     };
   }
 

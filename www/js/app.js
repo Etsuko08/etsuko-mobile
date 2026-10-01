@@ -513,7 +513,11 @@ class EtsukoMobileApp {
         this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
       }
 
-      this.renderHorizontalRow(this.trendingHitsRow, feed.trendingHits);
+      const dailySub = document.getElementById('daily-picks-subtitle');
+      if (dailySub) {
+        dailySub.textContent = hasHistory ? 'Fresh music picked for your taste' : 'Daily discovery across genres';
+      }
+
       this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
       this.renderTopMixes(this.topMixesRow, feed.topMixes);
       this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums, true);
@@ -640,7 +644,6 @@ class EtsukoMobileApp {
 
   filterHomeFeed(filter) {
     const jumpSection = document.getElementById('section-jump-back');
-    const trendingSection = document.getElementById('section-trending-hits');
     const dailySection = document.getElementById('section-daily-picks');
     const mixesSection = document.getElementById('section-top-mixes');
     const albumsSection = document.getElementById('section-popular-albums');
@@ -650,13 +653,13 @@ class EtsukoMobileApp {
 
     if (filter === 'all') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      [trendingSection, dailySection, mixesSection, albumsSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
+      [dailySection, mixesSection, albumsSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     } else if (filter === 'music') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      [trendingSection, dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
+      [dailySection, mixesSection, albumsSection].forEach(s => s && (s.style.display = 'block'));
       if (podcastsSection) podcastsSection.style.display = 'none';
     } else { // podcasts
-      [jumpSection, trendingSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
+      [jumpSection, dailySection, albumsSection].forEach(s => s && (s.style.display = 'none'));
       [mixesSection, podcastsSection].forEach(s => s && (s.style.display = 'block'));
     }
   }
