@@ -314,9 +314,9 @@ class OfflineDownloader {
           let actualBytes = 0;
           const items = req.result || [];
           for (const item of items) {
-            if (item.audioBlob && item.audioBlob.size) actualBytes += item.audioBlob.size;
+            const trackBytes = item.size || item.fileSizeBytes || (item.audioBlob ? item.audioBlob.size : 0) || 3200000;
+            actualBytes += trackBytes;
             if (item.thumbnailBlob && item.thumbnailBlob.size) actualBytes += item.thumbnailBlob.size;
-            if (item.fileSizeBytes) actualBytes += item.fileSizeBytes;
           }
           resolve({
             trackCount: items.length,
@@ -333,19 +333,36 @@ class OfflineDownloader {
 
   async getStorageStats() {
     const actual = await this.getActualStorageUsage();
-    let browserEstimateMB = '0.0';
-    let availableQuotaGB = '0.0';
+    let browserEstimateMB = actual.actualMB;
+    let availableQuotaGB = '64.0';
+    let percentage = 0;
+
     if (navigator.storage && navigator.storage.estimate) {
       try {
         const est = await navigator.storage.estimate();
-        browserEstimateMB = ((est.usage || 0) / (1024 * 1024)).toFixed(1);
+        const usageMB = (est.usage || 0) / (1024 * 1024);
+        const quotaMB = (est.quota || 0) / (1024 * 1024);
+        browserEstimateMB = usageMB > 0 ? usageMB.toFixed(1) : actual.actualMB;
         availableQuotaGB = (((est.quota || 0) - (est.usage || 0)) / (1024 * 1024 * 1024)).toFixed(1);
+        if (quotaMB > 0) {
+          percentage = Math.max(1, Math.min(100, Math.round((usageMB / quotaMB) * 100)));
+        }
       } catch (e) {}
     }
+
+    if (!percentage) {
+      const mb = parseFloat(actual.actualMB) || 0;
+      percentage = Math.min(100, Math.max(mb > 0 ? 2 : 0, Math.round((mb / 1024) * 100)));
+    }
+
     return {
-      ...actual,
-      browserEstimateMB,
-      availableQuotaGB
+      trackCount: actual.trackCount || 0,
+      actualBytes: actual.actualBytes || 0,
+      actualMB: actual.actualMB || '0.0',
+      systemEstimateMB: browserEstimateMB,
+      browserEstimateMB: browserEstimateMB,
+      availableQuotaGB: availableQuotaGB,
+      percentage: percentage
     };
   }
 }

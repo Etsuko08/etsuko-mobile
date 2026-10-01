@@ -448,7 +448,15 @@ class MobilePlayer {
         this.queue.unshift(track);
         this.queueIndex = 0;
       }
-    } else if (this.queueIndex === -1 || (this.queue[this.queueIndex] && this.queue[this.queueIndex].videoId !== track.videoId)) {
+    } else if (this.queue && this.queue.length > 0) {
+      const existingIdx = this.queue.findIndex(t => t.videoId === track.videoId);
+      if (existingIdx !== -1) {
+        this.queueIndex = existingIdx;
+      } else {
+        this.queue.push(track);
+        this.queueIndex = this.queue.length - 1;
+      }
+    } else {
       this.queue = [track];
       this.queueIndex = 0;
     }

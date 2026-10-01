@@ -18,12 +18,14 @@ class EtsukoMobileApp {
     this.activeCrateId = null;
     this.likedTracks = [];
     this.downloadedTracks = [];
+    this.previousView = 'view-discover';
     this._lastBackPress = 0;
 
     this.initDOM();
     this.bindEvents();
     this.initPWA();
     this.checkOnboarding();
+    this.initSearchTabState();
     this.loadHomeFeed();
     this.loadLibraryData();
     this.loadDownloadsData();
@@ -247,7 +249,7 @@ class EtsukoMobileApp {
     // Detail Views (Album & Artist) Navigation Events
     if (this.btnBackFromAlbum) {
       this.btnBackFromAlbum.addEventListener('click', () => {
-        this.switchView('view-discover');
+        this.switchView(this.previousView || 'view-discover');
       });
     }
 
@@ -272,7 +274,7 @@ class EtsukoMobileApp {
 
     if (this.btnBackFromArtist) {
       this.btnBackFromArtist.addEventListener('click', () => {
-        this.switchView('view-discover');
+        this.switchView(this.previousView || 'view-discover');
       });
     }
 
@@ -461,6 +463,9 @@ class EtsukoMobileApp {
 
   switchView(viewId) {
     if (!this.views[viewId]) return;
+    if (this.currentView && !this.currentView.includes('detail')) {
+      this.previousView = this.currentView;
+    }
     this.currentView = viewId;
 
     Object.keys(this.views).forEach(key => {
@@ -480,6 +485,7 @@ class EtsukoMobileApp {
     const viewport = document.getElementById('view-viewport');
     if (viewport) viewport.scrollTo({ top: 0, behavior: 'smooth' });
 
+    if (viewId === 'view-search') this.initSearchTabState();
     if (viewId === 'view-library') this.loadLibraryData();
     if (viewId === 'view-downloads') this.loadDownloadsData();
   }
@@ -524,7 +530,12 @@ class EtsukoMobileApp {
     if (!track) return 'assets/default_cover.png';
     if (track.thumbnail && typeof track.thumbnail === 'string') {
       if (track.thumbnail.includes('googleusercontent.com') || track.thumbnail.includes('ggpht.com')) {
-        return track.thumbnail.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
+        if (/=w\d+-h\d+[^"]*/.test(track.thumbnail)) {
+          return track.thumbnail.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
+        } else if (/=s\d+/.test(track.thumbnail)) {
+          return track.thumbnail.replace(/=s\d+/, '=s544');
+        }
+        return track.thumbnail;
       }
       return track.thumbnail;
     }
@@ -609,11 +620,21 @@ class EtsukoMobileApp {
         </div>
       `;
 
-      card.addEventListener('click', () => {
-        if (mix.tracks && mix.tracks.length > 0) {
-          window.player.playTrack(mix.tracks[0], mix.tracks);
-          this.openPlayerSheet();
+      card.addEventListener('click', (e) => {
+        if (e.target.closest('.spotify-mix-play-btn')) {
+          if (mix.tracks && mix.tracks.length > 0) {
+            window.player.playTrack(mix.tracks[0], mix.tracks);
+            this.openPlayerSheet();
+          }
+          return;
         }
+        const mixAlbumItem = {
+          title: mix.title,
+          artist: mix.subtitle,
+          album: mix.title,
+          thumbnail: this.getThumbnailSrc(t1)
+        };
+        this.openAlbumDetail(mixAlbumItem, mix.tracks || []);
       });
 
       container.appendChild(card);
@@ -1009,8 +1030,19 @@ class EtsukoMobileApp {
     const q = (this.librarySearchInput ? this.librarySearchInput.value : '').toLowerCase().trim();
     const filter = this.currentLibFilter || 'all';
 
+    if (filter === 'downloads') {
+      this.switchView('view-downloads');
+      return;
+    }
+
+    if (filter === 'liked') {
+      this.openLikedSongsView();
+      return;
+    }
+
+    if (this.playlistDetailView) this.playlistDetailView.style.display = 'none';
     if (this.cardLikes) {
-      this.cardLikes.style.display = (filter === 'all' || filter === 'liked') && !q ? 'block' : 'none';
+      this.cardLikes.style.display = (filter === 'all' && !q) ? 'block' : 'none';
     }
 
     const cratesHeader = document.getElementById('header-crates-title');
@@ -1019,16 +1051,12 @@ class EtsukoMobileApp {
     }
 
     if (this.playlistsList) {
-      if (filter === 'liked') {
-        this.playlistsList.style.display = 'none';
-      } else {
-        this.playlistsList.style.display = 'flex';
-        const items = this.playlistsList.querySelectorAll('.track-row');
-        items.forEach(item => {
-          const text = item.textContent.toLowerCase();
-          item.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
-        });
-      }
+      this.playlistsList.style.display = 'flex';
+      const items = this.playlistsList.querySelectorAll('.track-row');
+      items.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        item.style.display = (!q || text.includes(q)) ? 'flex' : 'none';
+      });
     }
   }
 
@@ -1195,10 +1223,13 @@ class EtsukoMobileApp {
         const actualMbEl = document.getElementById('storage-actual-mb');
         const fillEl = document.getElementById('storage-meter-fill');
         const detailsEl = document.getElementById('storage-details-text');
-        if (actualMbEl) actualMbEl.textContent = `${stats.actualMB} MB`;
-        if (fillEl) fillEl.style.width = `${Math.min(stats.percentage, 100)}%`;
+        const actualMB = stats.actualMB || '0.0';
+        const pct = Math.max(stats.trackCount > 0 ? 2 : 0, Math.min(100, stats.percentage || 0));
+
+        if (actualMbEl) actualMbEl.textContent = `${actualMB} MB`;
+        if (fillEl) fillEl.style.width = `${pct}%`;
         if (detailsEl) {
-          detailsEl.textContent = `${stats.actualMB} MB used by audio tracks • System estimate: ${stats.systemEstimateMB} MB (${stats.percentage}%)`;
+          detailsEl.textContent = `${actualMB} MB used by ${tracks.length} track${tracks.length === 1 ? '' : 's'} • Storage available: ${stats.availableQuotaGB || '64.0'} GB`;
         }
       }
     } catch (e) {
@@ -1288,18 +1319,18 @@ class EtsukoMobileApp {
   // --- Sheet Player Navigation ---
   openPlayerSheet() {
     if (this.playerSheet) {
-      this.playerSheet.classList.add('active');
+      this.playerSheet.classList.add('active', 'open');
     }
   }
 
   closePlayerSheet() {
     if (this.playerSheet) {
-      this.playerSheet.classList.remove('active');
+      this.playerSheet.classList.remove('active', 'open');
     }
   }
 
   onHardwareBack() {
-    if (this.playerSheet && this.playerSheet.classList.contains('active')) {
+    if (this.playerSheet && (this.playerSheet.classList.contains('active') || this.playerSheet.classList.contains('open'))) {
       this.closePlayerSheet();
       return;
     }
@@ -1309,6 +1340,10 @@ class EtsukoMobileApp {
     }
     if (this.modalOnboarding && this.modalOnboarding.classList.contains('active')) {
       this.modalOnboarding.classList.remove('active');
+      return;
+    }
+    if (this.currentView === 'view-album-detail' || this.currentView === 'view-artist-detail') {
+      this.switchView(this.previousView || 'view-discover');
       return;
     }
     if (this.currentView !== 'view-discover') {
