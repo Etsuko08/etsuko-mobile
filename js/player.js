@@ -394,8 +394,14 @@ class MobilePlayer {
     });
     this.audio.addEventListener('ended', () => this.onEnded());
     this.audio.addEventListener('error', (e) => {
-      console.warn('[Player] HTML5 audio error, falling back to YouTube engine:', e);
-      if (this.currentTrack && this.currentTrack.videoId) {
+      console.warn('[Player] HTML5 audio error:', e);
+      if (this.activeEngine === 'audio' && !navigator.onLine) {
+        this.onPlayState(false);
+        this.stopTimeTicker();
+        if (window.app && window.app.showToast) {
+          window.app.showToast('Offline audio playback failed. File may be unreadable.');
+        }
+      } else if (this.currentTrack && this.currentTrack.videoId && navigator.onLine) {
         this.activeEngine = 'youtube';
         this.playYouTubeTrack(this.currentTrack.videoId);
       } else {
@@ -520,6 +526,8 @@ class MobilePlayer {
     // Save to recents in localStorage
     this.recordRecentTrack(track);
 
+    this.trackPlayStartTime = Date.now();
+
     // 1. Check if track is available in Offline Storage
     let offlineTrack = null;
     if (window.downloader) {
@@ -533,7 +541,7 @@ class MobilePlayer {
       return;
     }
 
-    if (offlineTrack && offlineTrack.streamUrl && offlineTrack.audioBlob && offlineTrack.audioBlob.size > 50000) {
+    if (offlineTrack && offlineTrack.streamUrl) {
       // Offline Playback Engine
       this.activeEngine = 'audio';
       if (this.ytReady && this.ytPlayer && this.ytPlayer.pauseVideo) {
@@ -544,13 +552,21 @@ class MobilePlayer {
       this.userPaused = false;
       this.audio.src = offlineTrack.streamUrl;
       this.audio.currentTime = 0;
-      this.audio.play().catch((err) => {
-        console.warn('[Player] Offline play failed, falling back to YouTube engine:', err);
-        this.activeEngine = 'youtube';
-        this.playYouTubeTrack(track.videoId);
+      this.audio.play().then(() => {
+        this.onPlayState(true);
+        this.updateNativeMedia(track, true);
+      }).catch((err) => {
+        console.warn('[Player] Offline play failed:', err);
+        if (!navigator.onLine) {
+          this.onPlayState(false);
+          if (window.app && window.app.showToast) {
+            window.app.showToast('Offline audio file cannot be played. File may be missing or unreadable.');
+          }
+        } else {
+          this.activeEngine = 'youtube';
+          this.playYouTubeTrack(track.videoId);
+        }
       });
-      this.onPlayState(true);
-      this.updateNativeMedia(track, true);
     } else {
       // Online Invisible 144p YouTube Engine
       this.activeEngine = 'youtube';
@@ -1059,6 +1075,13 @@ class MobilePlayer {
   next() {
     if (this.queue.length === 0) return;
 
+    // Skip tracking: if skipped within 15 seconds, penalize in smart autoplay
+    if (this.currentTrack && (Date.now() - (this.trackPlayStartTime || 0)) < 15000) {
+      if (window.api && typeof window.api.recordSkippedTrack === 'function') {
+        window.api.recordSkippedTrack(this.currentTrack.videoId);
+      }
+    }
+
     if (this.isShuffle) {
       let randIdx = Math.floor(Math.random() * this.queue.length);
       if (this.queue.length > 1 && randIdx === this.queueIndex) {
@@ -1077,6 +1100,9 @@ class MobilePlayer {
       // Repeat All: restart playlist from beginning
       this.queueIndex = 0;
       this.playTrack(this.queue[0]);
+    } else {
+      // Smart Autoplay: Fetch natural continuation of current listening experience
+      this.triggerAutoplay();
     }
   }
 
@@ -1087,11 +1113,42 @@ class MobilePlayer {
       return;
     }
 
+    if (this.currentTrack && (Date.now() - (this.trackPlayStartTime || 0)) < 15000) {
+      if (window.api && typeof window.api.recordSkippedTrack === 'function') {
+        window.api.recordSkippedTrack(this.currentTrack.videoId);
+      }
+    }
+
     if (this.queueIndex > 0) {
       this.queueIndex--;
       this.playTrack(this.queue[this.queueIndex]);
     } else {
       this.seekTo(0);
+    }
+  }
+
+  async triggerAutoplay() {
+    if (!this.currentTrack) return;
+    try {
+      if (window.api && typeof window.api.getRelatedTracks === 'function') {
+        const recs = await window.api.getRelatedTracks(this.currentTrack);
+        if (recs && Array.isArray(recs.tracks) && recs.tracks.length > 0) {
+          const fresh = recs.tracks.filter(t => !this.queue.some(q => q.videoId === t.videoId));
+          if (fresh.length > 0) {
+            const nextSong = fresh[0];
+            this.queue = [...this.queue, ...fresh];
+            this.queueIndex++;
+            this.renderQueueInSheet();
+            this.playTrack(nextSong);
+            if (window.app && window.app.showToast) {
+              window.app.showToast(`Autoplaying: ${nextSong.title}`);
+            }
+            return;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[Player] triggerAutoplay notice:', e);
     }
   }
 
@@ -1102,6 +1159,7 @@ class MobilePlayer {
       if (this.activeEngine === 'youtube' && this.ytPlayer && this.ytPlayer.playVideo) {
         this.ytPlayer.playVideo();
       } else {
+        this.audio.currentTime = 0;
         this.audio.play().catch(() => {});
       }
     } else if (this.queueIndex < this.queue.length - 1) {
@@ -1111,28 +1169,8 @@ class MobilePlayer {
       this.queueIndex = 0;
       this.playTrack(this.queue[0]);
     } else {
-      // Autoplay: Fetch related tracks and append to queue so music never stops
-      try {
-        if (window.api && typeof window.api.getRelatedTracks === 'function' && this.currentTrack) {
-          const recs = await window.api.getRelatedTracks(this.currentTrack);
-          if (recs && Array.isArray(recs.tracks) && recs.tracks.length > 0) {
-            const fresh = recs.tracks.filter(t => !this.queue.some(q => q.videoId === t.videoId));
-            if (fresh.length > 0) {
-              this.queue = [...this.queue, ...fresh];
-              this.queueIndex++;
-              this.renderQueueInSheet();
-              this.playTrack(this.queue[this.queueIndex]);
-              if (window.app && window.app.showToast) {
-                window.app.showToast(`Autoplaying: ${this.queue[this.queueIndex].title}`);
-              }
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('[Player] Autoplay notice:', e);
-      }
-      this.next();
+      // Continuous Smart Autoplay
+      await this.triggerAutoplay();
     }
   }
 
@@ -1157,9 +1195,20 @@ class MobilePlayer {
 
   getDuration() {
     if (this.activeEngine === 'youtube' && this.ytReady && this.ytPlayer && this.ytPlayer.getDuration) {
-      try { return this.ytPlayer.getDuration() || 0; } catch (e) { return 0; }
+      try {
+        const d = this.ytPlayer.getDuration();
+        if (d && !isNaN(d) && d > 0) return d;
+      } catch (e) {}
     }
-    return this.audio.duration || 0;
+    if (this.audio && this.audio.duration && !isNaN(this.audio.duration) && this.audio.duration > 0) {
+      return this.audio.duration;
+    }
+    if (this.currentTrack && this.currentTrack.duration) {
+      const parts = String(this.currentTrack.duration).split(':').map(p => parseInt(p, 10) || 0);
+      if (parts.length === 2) return parts[0] * 60 + parts[1];
+      if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+    return 0;
   }
 
   startTimeTicker() {

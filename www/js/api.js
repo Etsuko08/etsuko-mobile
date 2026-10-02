@@ -14,6 +14,9 @@ function formatHighResThumbnail(videoId, url) {
       return url;
     }
     if (url.startsWith('http')) {
+      if (url.includes('hq720.jpg')) {
+        return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : url;
+      }
       return url;
     }
   }
@@ -355,7 +358,31 @@ class EtsukoAPI {
     this.localLikesKey = 'etsuko_library_likes_v1';
     this.localCratesKey = 'etsuko_library_crates_v1';
     this.localGenresKey = 'etsuko_user_genres';
+    this.localSkippedKey = 'etsuko_skipped_tracks';
     this.initLocalStorage();
+  }
+
+  recordSkippedTrack(videoId) {
+    if (!videoId) return;
+    try {
+      const raw = localStorage.getItem(this.localSkippedKey);
+      let list = raw ? JSON.parse(raw) : [];
+      list = list.filter(id => id !== videoId);
+      list.unshift(videoId);
+      if (list.length > 40) list = list.slice(0, 40);
+      localStorage.setItem(this.localSkippedKey, JSON.stringify(list));
+    } catch (e) {}
+  }
+
+  isSkipped(videoId) {
+    if (!videoId) return false;
+    try {
+      const raw = localStorage.getItem(this.localSkippedKey);
+      const list = raw ? JSON.parse(raw) : [];
+      return list.includes(videoId);
+    } catch (e) {
+      return false;
+    }
   }
 
   initLocalStorage() {
@@ -883,7 +910,111 @@ class EtsukoAPI {
       .trim();
   }
 
-  filterDiverseRecommendations(candidates, currentTrack, limit = 12) {
+  async fetchRadioQueue(videoId) {
+    if (!videoId) return [];
+
+    // 1. Android Native Bridge Radio (Direct HttpURLConnection bypasses all CORS)
+    if (window.AndroidMedia && typeof window.AndroidMedia.nativeRadioAsync === 'function') {
+      try {
+        const rawJson = await new Promise((resolve) => {
+          const cbId = 'rad_' + Math.random().toString(36).substring(2, 10);
+          const timer = setTimeout(() => {
+            delete window['__native_radio_' + cbId];
+            resolve(null);
+          }, 8000);
+
+          window['__native_radio_' + cbId] = (dataStr) => {
+            clearTimeout(timer);
+            delete window['__native_radio_' + cbId];
+            resolve(dataStr);
+          };
+
+          window.AndroidMedia.nativeRadioAsync(videoId, cbId);
+        });
+
+        if (rawJson) {
+          const data = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
+          const tracks = this.parseRadioQueueResponse(data, videoId);
+          if (tracks.length > 0) return tracks;
+        }
+      } catch (e) {
+        console.warn('[API] Native radio fetch notice:', e);
+      }
+    }
+
+    // 2. Client-side fetch to YouTube Music v1/next endpoint
+    try {
+      const res = await fetch('https://music.youtube.com/youtubei/v1/next', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        body: JSON.stringify({
+          context: {
+            client: {
+              clientName: 'WEB_REMIX',
+              clientVersion: '1.20260928.01.00',
+              hl: 'en'
+            }
+          },
+          playlistId: 'RDAMVM' + videoId,
+          videoId: videoId,
+          enablePersistentPlaylistPanel: true,
+          isAudioOnly: true
+        }),
+        signal: AbortSignal.timeout(7000)
+      });
+
+      if (!res.ok) return [];
+      const data = await res.json();
+      return this.parseRadioQueueResponse(data, videoId);
+    } catch (e) {
+      console.warn('[API] fetchRadioQueue notice:', e);
+      return [];
+    }
+  }
+
+  parseRadioQueueResponse(data, originVideoId) {
+    const list = [];
+    try {
+      const playlistPanel = data.contents?.singleColumnMusicWatchNextResultsRenderer?.tabbedRenderer?.watchNextTabbedResultsRenderer?.tabs?.[0]?.tabRenderer?.content?.musicQueueRenderer?.content?.playlistPanelRenderer;
+      const items = playlistPanel?.contents || [];
+
+      for (const item of items) {
+        const renderer = item.playlistPanelVideoRenderer;
+        if (!renderer) continue;
+        const vid = renderer.videoId;
+        if (!vid || vid === originVideoId) continue;
+
+        const title = renderer.title?.runs?.[0]?.text || 'Unknown Title';
+        const artist = renderer.longBylineText?.runs?.map(r => r.text).join('').replace(/\s*•\s*\d+.*$/i, '').trim() || 'Unknown Artist';
+        const duration = renderer.lengthText?.runs?.[0]?.text || '3:30';
+
+        let thumb = `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+        const rawThumbs = renderer.thumbnail?.thumbnails;
+        if (rawThumbs && rawThumbs.length > 0) {
+          thumb = formatHighResThumbnail(vid, rawThumbs[rawThumbs.length - 1].url);
+        }
+
+        list.push({
+          videoId: vid,
+          id: vid,
+          title: title,
+          artist: artist,
+          album: 'Smart Radio',
+          duration: duration,
+          thumbnail: thumb,
+          isLiked: this.isLiked(vid)
+        });
+      }
+    } catch (e) {
+      console.warn('[API] parseRadioQueueResponse notice:', e);
+    }
+    return list;
+  }
+
+  filterDiverseRecommendations(candidates, currentTrack, limit = 15) {
     if (!Array.isArray(candidates)) return [];
     const normCurrent = this.normalizeTitle(currentTrack?.title);
     const seenIds = new Set();
@@ -895,16 +1026,38 @@ class EtsukoAPI {
     const primaryCurrentArtist = (currentTrack?.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
     if (primaryCurrentArtist) artistCounts[primaryCurrentArtist] = 1;
 
+    // Cultural preferences check
+    const userGenres = this.getUserGenres();
+    const allowHindi = userGenres.includes('hindi');
+    const allowUrdu = userGenres.includes('urdu');
+    const allowPunjabi = userGenres.includes('punjabi');
+
     const filtered = [];
     for (const cand of candidates) {
       if (!cand || !cand.videoId || seenIds.has(cand.videoId)) continue;
+      if (this.isSkipped(cand.videoId)) continue; // skip recently skipped
+
       const normCand = this.normalizeTitle(cand.title);
-      // Discard duplicates of the current track title or already chosen titles
+      // Discard duplicates or covers/remixes of the current track
       if (normCand && (normCand === normCurrent || seenTitles.has(normCand))) continue;
 
       const candArtist = (cand.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
-      // Cap at 2 tracks per artist to guarantee diversity
+      // Cap at 2 tracks per artist to guarantee variety
       if (candArtist && (artistCounts[candArtist] || 0) >= 2) continue;
+
+      // Filter regional languages if user hasn't explicitly enabled them and current track isn't regional
+      const candCombined = `${(cand.title || '').toLowerCase()} ${candArtist} ${(cand.album || '').toLowerCase()}`;
+      const isCandUrdu = /rahat\s*fateh|nusrat\s*fateh|atif\s*aslam|sufi|qawwali|ghazal|coke\s*studio|zaroori\s*tha|kaifi\s*khalil|ali\s*zafar/i.test(candCombined);
+      const isCandPunjabi = /punjabi|karan\s*aujla|shubh|ikky|diljit|sidhu\s*moose|ap\s*dhillon|b\s*praak/i.test(candCombined);
+      const isCandHindi = /arijit|pritam|shreya|jubin|bollywood|mohit\s*chauhan|sonu\s*nigam|alka\s*yagnik|kumar\s*sanu/i.test(candCombined);
+
+      const isCurrentRegional = /rahat|nusrat|atif|sufi|qawwali|punjabi|aujla|shubh|arijit|pritam|shreya|bollywood/i.test((currentTrack?.title || '') + ' ' + (currentTrack?.artist || ''));
+
+      if (!isCurrentRegional) {
+        if (isCandUrdu && !allowUrdu) continue;
+        if (isCandPunjabi && !allowPunjabi) continue;
+        if (isCandHindi && !allowHindi) continue;
+      }
 
       seenIds.add(cand.videoId);
       if (normCand) seenTitles.add(normCand);
@@ -912,6 +1065,8 @@ class EtsukoAPI {
 
       filtered.push({
         ...cand,
+        id: cand.videoId,
+        thumbnail: formatHighResThumbnail(cand.videoId, cand.thumbnail),
         isLiked: this.isLiked(cand.videoId)
       });
 
@@ -920,7 +1075,7 @@ class EtsukoAPI {
     return filtered;
   }
 
-  // --- Spotify-Style Related / Recommended Songs in Same Language & Genre ---
+  // --- Spotify-Style Smart Autoplay & Related Songs (YouTube ML Radio + Curated Multi-Vibe Engine) ---
   async getRelatedTracks(currentTrack) {
     if (!currentTrack) return { category: 'english_pop', displayTag: 'Global Pop Hits', tracks: [] };
 
@@ -931,52 +1086,40 @@ class EtsukoAPI {
 
     let detectedCategory = 'english_pop';
     let displayTag = 'Global Pop Hits';
-    let searchMoodQuery = 'pop chart hits';
 
     if (/rahat\s*fateh|nusrat\s*fateh|atif\s*aslam|sufi|qawwali|ghazal|coke\s*studio|zaroori\s*tha|kaifi\s*khalil|ali\s*zafar|afreen|tajdar|o\s*re\s*piya|khudgharz|sabri|farid\s*ayaz|abul\s*hasan/i.test(combined)) {
       detectedCategory = 'urdu_sufi';
       displayTag = 'Urdu & Sufi Melodies';
-      searchMoodQuery = 'urdu sufi qawwali ghazal';
     } else if (/punjabi|karan\s*aujla|shubh|ikky|diljit|sidhu\s*moose|ap\s*dhillon|b\s*praak|jassi\s*gill|amrit\s*maan|tauba|cheques|softly|baller|one\s*love|winning\s*speech|g\.o\.a\.t/i.test(combined)) {
       detectedCategory = 'punjabi';
       displayTag = 'Punjabi Bangers';
-      searchMoodQuery = 'punjabi hits bangers';
     } else if (/arijit\s*singh|pritam|shreya\s*ghoshal|jubin\s*nautiyal|neha\s*kakkar|bollywood|mohit\s*chauhan|k\.?k\.?|sonu\s*nigam|shaan|papon|sunidhi|alka\s*yagnik|kumar\s*sanu|udit\s*narayan|lata|kishore|mohammed\s*rafi|anuv\s*jain|prateek\s*kuhad|jasleen\s*royal|darshan\s*raval|armaan\s*malik|pehli\s*dafa|tum\s*hi\s*ho|kesariya|chaleya|apna\s*bana|o\s*maahi|raataan\s*lambiyan|channa\s*mereya|zara\s*sa/i.test(combined)) {
       detectedCategory = 'hindi_romance';
       displayTag = 'Bollywood & Hindi Romance';
-      searchMoodQuery = 'hindi romantic bollywood songs';
     } else if (/phonk|drift|dvrst|kordhell|moondeity|interworld|hensonn|pharmacist|playaphonk|kslv|murder\s*in\s*my\s*mind|metamorphosis|neon\s*blade|close\s*eyes/i.test(combined)) {
       detectedCategory = 'phonk';
       displayTag = 'Phonk & Midnight Drift';
-      searchMoodQuery = 'drift phonk high bass';
     } else if (/rap|hip-hop|hip\s*hop|eminem|kendrick\s*lamar|travis\s*scott|drake|carti|metro\s*boomin|future|21\s*savage|j\.\s*cole|kanye|not\s*like\s*us|houdini|fe!n|god's\s*plan/i.test(combined)) {
       detectedCategory = 'hiphop';
       displayTag = 'Hip-Hop & Rap';
-      searchMoodQuery = 'hip hop rap bangers';
     } else if (/rock|metal|linkin\s*park|queen|arctic\s*monkeys|imagine\s*dragons|onerepublic|nirvana|coldplay|in\s*the\s*end|thunder|counting\s*stars|bohemian\s*rhapsody|hybrid\s*theory/i.test(combined)) {
       detectedCategory = 'rock';
       displayTag = 'Rock & Alternative';
-      searchMoodQuery = 'rock alternative hits';
     } else if (/lofi|lo-fi|chillhop|lumosound|chilledcow|study\s*beats|cozy\s*beats/i.test(combined)) {
       detectedCategory = 'lofi';
       displayTag = 'Lo-Fi Beats & Study Chill';
-      searchMoodQuery = 'lofi study chill beats';
     } else if (/acoustic|unplugged|guitar\s*session|stripped|piano\s*vocal/i.test(combined)) {
       detectedCategory = 'acoustic';
       displayTag = 'Acoustic Sessions & Unplugged';
-      searchMoodQuery = 'acoustic guitar chill songs';
     } else if (/classical|piano|orchestral|symphony|debussy|chopin|einaudi|beethoven|soundtrack|film\s*score/i.test(combined)) {
       detectedCategory = 'classical';
       displayTag = 'Classical & Instrumental Cinema';
-      searchMoodQuery = 'peaceful classical piano orchestra';
     } else if (/edm|dance|electronic|house|techno|avicii|daft\s*punk|calvin\s*harris|tiesto|david\s*guetta|wake\s*me\s*up|get\s*lucky/i.test(combined)) {
       detectedCategory = 'edm';
       displayTag = 'Electronic & Dance Anthems';
-      searchMoodQuery = 'edm electronic festival anthems';
     } else {
       detectedCategory = 'english_pop';
       displayTag = 'Global Pop Hits';
-      searchMoodQuery = 'global pop chart hits';
     }
 
     const genrePools = {
@@ -993,31 +1136,32 @@ class EtsukoAPI {
       english_pop: CATALOG_POP_HITS
     };
 
-    const primaryArtist = (currentTrack.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim();
     const candidateList = [];
 
-    // 1. Dual-Query Live Search (Artist Radio/Similar + Mood/Genre Discovery)
+    // 1. YouTube Music Official Machine Learning Radio Queue (ZERO keyword spam!)
     try {
-      if (primaryArtist && primaryArtist !== 'Unknown Artist') {
-        const resArtist = await this.search(`${primaryArtist} similar songs`, 'songs');
-        if (resArtist && resArtist.results && resArtist.results.length > 0) {
-          candidateList.push(...resArtist.results);
-        }
-      }
-      const resMood = await this.search(searchMoodQuery, 'songs');
-      if (resMood && resMood.results && resMood.results.length > 0) {
-        candidateList.push(...resMood.results);
+      const radioTracks = await this.fetchRadioQueue(currentTrack.videoId);
+      if (radioTracks && radioTracks.length > 0) {
+        candidateList.push(...radioTracks);
       }
     } catch (e) {
-      console.warn('[API] getRelatedTracks search notice:', e);
+      console.warn('[API] Radio queue fetch notice:', e);
     }
 
-    // 2. Curated Genre Fallback Pool
+    // 2. Curated Genre Pool Backfill
     const pool = genrePools[detectedCategory] || genrePools.english_pop;
     candidateList.push(...pool);
 
-    // 3. Strict Diversity Filter (removes remixes/duplicates of current track & caps artist repeats)
-    const diverseTracks = this.filterDiverseRecommendations(candidateList, currentTrack, 12);
+    // 3. User personalized liked tracks in same vibe
+    try {
+      const likes = this.getLikedTracksSync();
+      for (const lt of likes) {
+        candidateList.push(lt);
+      }
+    } catch (e) {}
+
+    // 4. Strict Diversity Filter (removes remixes/duplicates of current track & caps artist repeats)
+    const diverseTracks = this.filterDiverseRecommendations(candidateList, currentTrack, 16);
 
     return {
       category: detectedCategory,

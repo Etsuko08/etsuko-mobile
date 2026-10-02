@@ -1,5 +1,6 @@
 // Etsuko Mobile Offline Downloader & IndexedDB Storage Engine
-// Provides 100% offline audio playback, YouTube link downloader, live progress & speed tracking
+// Real High-Quality Audio Downloader (AAC / MP4 Audio Streams via VisionOS Neural Pipeline)
+// 100% Offline Audio Playback with Full Timeline Scrubbing, Zero Silence & Zero Fake Progress
 
 class OfflineDownloader {
   constructor() {
@@ -47,8 +48,10 @@ class OfflineDownloader {
       req.onsuccess = () => {
         const records = req.result || [];
         records.forEach(rec => {
-          if (!rec.audioBlob || rec.audioBlob.size < 50000) {
-            console.log('[Downloader] Purged invalid/dummy offline file:', rec.videoId, rec.title);
+          const hasValidBlob = rec.audioBlob && rec.audioBlob.size > 50000;
+          const hasValidNative = rec.filePath && window.AndroidMedia && window.AndroidMedia.nativeCheckAudioFile && window.AndroidMedia.nativeCheckAudioFile(rec.videoId);
+          if (!hasValidBlob && !hasValidNative) {
+            console.log('[Downloader] Purging invalid/empty offline record:', rec.videoId, rec.title);
             store.delete(rec.videoId);
           }
         });
@@ -68,6 +71,10 @@ class OfflineDownloader {
   async isDownloaded(videoId) {
     if (!videoId) return false;
     try {
+      if (window.AndroidMedia && typeof window.AndroidMedia.nativeCheckAudioFile === 'function') {
+        if (window.AndroidMedia.nativeCheckAudioFile(videoId)) return true;
+      }
+
       const db = await this.ensureDB();
       return new Promise((resolve) => {
         const tx = db.transaction(this.storeName, 'readonly');
@@ -75,7 +82,7 @@ class OfflineDownloader {
         const req = store.get(videoId);
         req.onsuccess = () => {
           const rec = req.result;
-          resolve(!!(rec && rec.audioBlob && rec.audioBlob.size > 50000));
+          resolve(!!(rec && ((rec.audioBlob && rec.audioBlob.size > 50000) || rec.filePath)));
         };
         req.onerror = () => resolve(false);
       });
@@ -94,12 +101,24 @@ class OfflineDownloader {
         const req = store.get(videoId);
         req.onsuccess = () => {
           const rec = req.result;
-          if (rec && rec.audioBlob && rec.audioBlob.size > 50000) {
-            let blobUrl = null;
-            try { blobUrl = URL.createObjectURL(rec.audioBlob); } catch (e) {}
+          if (!rec) {
+            resolve(null);
+            return;
+          }
+
+          let streamUrl = null;
+          if (rec.audioBlob && rec.audioBlob.size > 50000) {
+            try {
+              streamUrl = URL.createObjectURL(rec.audioBlob);
+            } catch (err) {}
+          } else if (rec.filePath && window.AndroidMedia && window.AndroidMedia.nativeCheckAudioFile && window.AndroidMedia.nativeCheckAudioFile(videoId)) {
+            streamUrl = rec.fileUrl || `file://${rec.filePath}`;
+          }
+
+          if (streamUrl) {
             resolve({
               ...rec,
-              streamUrl: blobUrl,
+              streamUrl: streamUrl,
               isOffline: true
             });
           } else {
@@ -121,15 +140,27 @@ class OfflineDownloader {
         const store = tx.objectStore(this.storeName);
         const req = store.getAll();
         req.onsuccess = () => {
-          const validRecords = (req.result || []).filter(item => item && item.audioBlob && item.audioBlob.size > 50000);
-          const list = validRecords.map(item => ({
-            ...item,
-            streamUrl: item.audioBlob ? URL.createObjectURL(item.audioBlob) : null,
-            thumbnail: item.thumbnailBlob ? URL.createObjectURL(item.thumbnailBlob) : (item.thumbnail || 'assets/default_cover.png'),
-            isOffline: true
-          }));
-          list.sort((a, b) => (b.downloadedAt || 0) - (a.downloadedAt || 0));
-          resolve(list);
+          const items = req.result || [];
+          const valid = [];
+          for (const item of items) {
+            let streamUrl = null;
+            if (item.audioBlob && item.audioBlob.size > 50000) {
+              try { streamUrl = URL.createObjectURL(item.audioBlob); } catch (e) {}
+            } else if (item.filePath && window.AndroidMedia && window.AndroidMedia.nativeCheckAudioFile && window.AndroidMedia.nativeCheckAudioFile(item.videoId)) {
+              streamUrl = item.fileUrl || `file://${item.filePath}`;
+            }
+
+            if (streamUrl) {
+              valid.push({
+                ...item,
+                streamUrl: streamUrl,
+                thumbnail: item.thumbnailBlob ? URL.createObjectURL(item.thumbnailBlob) : (item.thumbnail || 'assets/default_cover.png'),
+                isOffline: true
+              });
+            }
+          }
+          valid.sort((a, b) => (b.downloadedAt || 0) - (a.downloadedAt || 0));
+          resolve(valid);
         };
         req.onerror = () => resolve([]);
       });
@@ -140,6 +171,10 @@ class OfflineDownloader {
 
   async deleteDownloadedTrack(videoId) {
     try {
+      if (window.AndroidMedia && typeof window.AndroidMedia.nativeDeleteAudioFile === 'function') {
+        try { window.AndroidMedia.nativeDeleteAudioFile(videoId); } catch (e) {}
+      }
+
       const db = await this.ensureDB();
       return new Promise((resolve, reject) => {
         const tx = db.transaction(this.storeName, 'readwrite');
@@ -180,9 +215,9 @@ class OfflineDownloader {
       return;
     }
 
-    let title = 'YouTube Track';
-    let artist = 'YouTube Audio';
-    let thumb = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`;
+    let title = 'YouTube Audio Track';
+    let artist = 'YouTube Music';
+    let thumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
     try {
       const metaRes = await fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${videoId}`, {
@@ -197,13 +232,193 @@ class OfflineDownloader {
 
     const track = {
       videoId: videoId,
+      id: videoId,
       title: title,
       artist: artist,
-      album: 'YouTube 144p Offline',
-      thumbnail: thumb
+      album: 'YouTube Offline Master',
+      thumbnail: thumb,
+      duration: '3:30'
     };
 
     return this.startDownload(track);
+  }
+
+  // --- Real Audio Stream Resolution via VisionOS InnerTube Pipeline ---
+  async resolveAudioStream(videoId) {
+    // 1. Try Android Native Bridge if available
+    if (window.AndroidMedia && typeof window.AndroidMedia.nativeResolveAudioStreamAsync === 'function') {
+      try {
+        const nativeResult = await new Promise((resolve) => {
+          const cbId = 'res_' + Math.random().toString(36).substring(2, 10);
+          const timer = setTimeout(() => {
+            delete window['__native_stream_' + cbId];
+            resolve(null);
+          }, 12000);
+
+          window['__native_stream_' + cbId] = (dataStr) => {
+            clearTimeout(timer);
+            delete window['__native_stream_' + cbId];
+            try {
+              resolve(typeof dataStr === 'string' ? JSON.parse(dataStr) : dataStr);
+            } catch (err) {
+              resolve(null);
+            }
+          };
+
+          window.AndroidMedia.nativeResolveAudioStreamAsync(videoId, cbId);
+        });
+
+        if (nativeResult && nativeResult.success && nativeResult.url) {
+          return nativeResult;
+        }
+      } catch (err) {
+        console.warn('[Downloader] Native stream resolution notice:', err);
+      }
+    }
+
+    // 2. Client-side VisionOS InnerTube Player API
+    try {
+      let visitor = '';
+      let sts = 20725;
+
+      try {
+        const watchRes = await fetch(`https://www.youtube.com/watch?v=${videoId}`, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+          },
+          signal: AbortSignal.timeout(6000)
+        });
+        if (watchRes.ok) {
+          const html = await watchRes.text();
+          const visitorMatch = html.match(/"VISITOR_DATA":"([^"]+)"/);
+          if (visitorMatch) visitor = visitorMatch[1];
+          const stsMatch = html.match(/"signatureTimestamp":(\d+)/);
+          if (stsMatch) sts = parseInt(stsMatch[1], 10);
+        }
+      } catch (e) {}
+
+      const payload = {
+        context: {
+          client: {
+            clientName: 'VISIONOS',
+            clientVersion: '1.02',
+            deviceMake: 'Apple',
+            deviceModel: 'RealityDevice17,1',
+            userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+            osName: 'visionOS',
+            osVersion: '26.5.23O471',
+            hl: 'en',
+            timeZone: 'UTC',
+            utcOffsetMinutes: 0
+          }
+        },
+        videoId: videoId,
+        playbackContext: {
+          contentPlaybackContext: {
+            html5Preference: 'HTML5_PREF_WANTS',
+            signatureTimestamp: sts
+          }
+        },
+        contentCheckOk: true,
+        racyCheckOk: true
+      };
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'X-YouTube-Client-Name': '101',
+        'X-YouTube-Client-Version': '1.02',
+        'Origin': 'https://www.youtube.com',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15'
+      };
+      if (visitor) headers['X-Goog-Visitor-Id'] = visitor;
+
+      const playerRes = await fetch('https://www.youtube.com/youtubei/v1/player?prettyPrint=false', {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(8000)
+      });
+
+      if (!playerRes.ok) return { success: false, error: `HTTP ${playerRes.status}` };
+
+      const pData = await playerRes.json();
+      const adaptiveFormats = pData.streamingData?.adaptiveFormats || [];
+      const audioFormats = adaptiveFormats.filter(f => f.mimeType && f.mimeType.startsWith('audio/') && f.url);
+
+      if (audioFormats.length === 0) {
+        return { success: false, error: 'No playable audio formats found' };
+      }
+
+      // Prefer high-quality audio/mp4 (AAC), else audio/webm (Opus)
+      const best = audioFormats.find(f => f.mimeType.includes('audio/mp4')) || audioFormats[0];
+
+      return {
+        success: true,
+        url: best.url,
+        mimeType: best.mimeType || 'audio/mp4',
+        contentLength: parseInt(best.contentLength || '0', 10) || 3200000
+      };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  // --- Fast Chunked Range Audio Downloader ---
+  async downloadAudioChunks(streamUrl, totalBytes, onProgress, signal) {
+    const chunkSize = 256 * 1024; // 256 KB per range chunk
+    const chunks = [];
+    let loadedBytes = 0;
+    const estTotal = totalBytes > 0 ? totalBytes : 3500000;
+    const startTime = performance.now();
+
+    for (let start = 0; start < estTotal; start += chunkSize) {
+      if (signal && signal.aborted) throw new Error('Cancelled');
+
+      const end = totalBytes > 0 ? Math.min(start + chunkSize - 1, totalBytes - 1) : start + chunkSize - 1;
+      const res = await fetch(streamUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 15_7_3) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Safari/605.1.15',
+          'Range': `bytes=${start}-${end}`
+        },
+        signal: signal
+      });
+
+      if (!res.ok && res.status !== 206) {
+        if (loadedBytes > 100000) break; // Finished reading EOF
+        throw new Error(`Failed to download audio chunk: HTTP ${res.status}`);
+      }
+
+      const buf = await res.arrayBuffer();
+      if (!buf || buf.byteLength === 0) break;
+
+      chunks.push(new Uint8Array(buf));
+      loadedBytes += buf.byteLength;
+
+      const elapsedSec = (performance.now() - startTime) / 1000;
+      const speedBytesPerSec = elapsedSec > 0 ? loadedBytes / elapsedSec : 0;
+      const speedText = this.formatSpeed(speedBytesPerSec);
+      const pct = Math.min(99, Math.round((loadedBytes / estTotal) * 100));
+
+      if (onProgress) {
+        onProgress(pct, loadedBytes, estTotal, speedText);
+      }
+
+      // If response Content-Range indicated total, update estTotal
+      const cr = res.headers.get('content-range');
+      if (cr) {
+        const match = cr.match(/\/(\d+)$/);
+        if (match) {
+          const actualTotal = parseInt(match[1], 10);
+          if (actualTotal > 0 && actualTotal === loadedBytes) break;
+        }
+      }
+    }
+
+    if (loadedBytes < 50000) {
+      throw new Error('Downloaded audio file is too small or incomplete');
+    }
+
+    return new Blob(chunks, { type: 'audio/mp4' });
   }
 
   async startDownload(track) {
@@ -228,9 +443,9 @@ class OfflineDownloader {
       videoId: track.videoId,
       track: track,
       progress: 0,
-      speedText: '1.8 MB/s',
+      speedText: 'Connecting...',
       loadedBytes: 0,
-      totalBytes: 3200000, // ~3.2MB standard 144p audio package
+      totalBytes: 3200000,
       status: 'starting',
       controller: controller
     };
@@ -243,59 +458,111 @@ class OfflineDownloader {
     }
 
     try {
-      // 1. Fetch high-res thumbnail Blob
+      // 1. Fetch artwork Blob in background
       let thumbBlob = null;
       try {
-        const thumbRes = await fetch(track.thumbnail || `https://i.ytimg.com/vi/${track.videoId}/hq720.jpg`, {
-          signal: AbortSignal.timeout(4000)
-        });
+        const thumbUrl = track.thumbnail || `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        const thumbRes = await fetch(thumbUrl, { signal: AbortSignal.timeout(4000) });
         if (thumbRes.ok) thumbBlob = await thumbRes.blob();
       } catch (err) {}
 
-      // 2. Realistic chunk progress tracking (0% -> 100%)
-      const totalSteps = 10;
-      const stepInterval = 250; // ms
-      for (let step = 1; step <= totalSteps; step++) {
-        await new Promise(r => setTimeout(r, stepInterval));
-        if (controller.signal.aborted) throw new Error('Cancelled');
+      // 2. Resolve verified playable audio stream
+      downloadTask.speedText = 'Resolving stream...';
+      downloadTask.progress = 5;
+      window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
 
-        const pct = Math.min(95, step * 10);
-        downloadTask.progress = pct;
-        downloadTask.loadedBytes = Math.round((pct / 100) * downloadTask.totalBytes);
-        downloadTask.speedText = `${(1.6 + Math.random() * 0.8).toFixed(1)} MB/s`;
-
-        window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
+      const streamInfo = await this.resolveAudioStream(track.videoId);
+      if (!streamInfo || !streamInfo.success || !streamInfo.url) {
+        throw new Error(streamInfo?.error || 'Unable to locate playable audio stream');
       }
 
-      // 3. Finalize 100% and save to IndexedDB
+      const totalSize = streamInfo.contentLength || 3200000;
+      downloadTask.totalBytes = totalSize;
+
+      let audioBlob = null;
+      let nativePath = null;
+      let nativeUrl = null;
+
+      // 3. Try Native Android Download if available
+      if (window.AndroidMedia && typeof window.AndroidMedia.nativeDownloadAudioAsync === 'function') {
+        const dlDonePromise = new Promise((resolve, reject) => {
+          const cbId = 'dl_' + Math.random().toString(36).substring(2, 10);
+          const timeout = setTimeout(() => {
+            delete window['__native_dl_done_' + cbId];
+            reject(new Error('Native download timed out'));
+          }, 60000);
+
+          window.__native_dl_progress = (vid, pct) => {
+            if (vid === track.videoId) {
+              downloadTask.progress = pct;
+              downloadTask.speedText = 'Downloading...';
+              window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
+            }
+          };
+
+          window['__native_dl_done_' + cbId] = (resStr) => {
+            clearTimeout(timeout);
+            delete window['__native_dl_done_' + cbId];
+            try {
+              const res = typeof resStr === 'string' ? JSON.parse(resStr) : resStr;
+              resolve(res);
+            } catch (err) {
+              reject(err);
+            }
+          };
+
+          window.AndroidMedia.nativeDownloadAudioAsync(track.videoId, streamInfo.url, cbId);
+        });
+
+        try {
+          const nativeRes = await dlDonePromise;
+          if (nativeRes && nativeRes.success && nativeRes.filePath) {
+            nativePath = nativeRes.filePath;
+            nativeUrl = nativeRes.fileUrl;
+            downloadTask.loadedBytes = nativeRes.size || totalSize;
+          }
+        } catch (nativeErr) {
+          console.warn('[Downloader] Native download notice, falling back to chunked web downloader:', nativeErr);
+        }
+      }
+
+      // 4. If native download didn't run, download via fast chunked range fetcher into real Blob
+      if (!nativePath) {
+        audioBlob = await this.downloadAudioChunks(
+          streamInfo.url,
+          totalSize,
+          (pct, loaded, total, speed) => {
+            downloadTask.progress = pct;
+            downloadTask.loadedBytes = loaded;
+            downloadTask.totalBytes = total;
+            downloadTask.speedText = speed;
+            window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
+          },
+          controller.signal
+        );
+      }
+
+      // 5. Finalize 100% and save to IndexedDB
       downloadTask.progress = 100;
       downloadTask.status = 'saving';
       downloadTask.speedText = 'Finalizing...';
       window.dispatchEvent(new CustomEvent('etsuko:download-progress', { detail: { ...downloadTask } }));
 
-      // Parse track duration in seconds
-      let durSecs = 210;
-      if (track.duration && typeof track.duration === 'string') {
-        const parts = track.duration.split(':').map(p => parseInt(p, 10) || 0);
-        if (parts.length === 2) durSecs = parts[0] * 60 + parts[1];
-        else if (parts.length === 3) durSecs = parts[0] * 3600 + parts[1] * 60 + parts[2];
-      }
-
-      // Generate verified, playable offline audio container
-      const audioBlob = this.createValidAudioBlob(durSecs);
-
       const db = await this.ensureDB();
       const record = {
         videoId: track.videoId,
+        id: track.videoId,
         title: track.title || 'Unknown Title',
         artist: track.artist || 'Unknown Artist',
-        album: track.album || 'YouTube Offline Master',
+        album: track.album || 'Offline Master',
         duration: track.duration || '3:30',
-        thumbnail: track.thumbnail || `https://i.ytimg.com/vi/${track.videoId}/hq720.jpg`,
+        thumbnail: track.thumbnail || `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`,
         thumbnailBlob: thumbBlob,
         audioBlob: audioBlob,
-        mimeType: 'audio/wav',
-        size: audioBlob.size,
+        filePath: nativePath,
+        fileUrl: nativeUrl,
+        mimeType: streamInfo.mimeType || 'audio/mp4',
+        size: audioBlob ? audioBlob.size : (downloadTask.loadedBytes || totalSize),
         downloadedAt: Date.now()
       };
 
@@ -320,44 +587,11 @@ class OfflineDownloader {
       } else {
         console.error('[Downloader] Download error:', err);
         if (window.app && window.app.showToast) {
-          window.app.showToast(`Download failed: ${err.message}`);
+          window.app.showToast(`Download failed: ${err.message || 'Stream error'}`);
         }
       }
       window.dispatchEvent(new CustomEvent('etsuko:download-error', { detail: { videoId: track.videoId, error: err } }));
     }
-  }
-
-  createValidAudioBlob(durationSeconds = 180) {
-    const sampleRate = 22050;
-    const numChannels = 2;
-    const bitsPerSample = 16;
-    const safeSecs = Math.max(10, Math.min(durationSeconds, 420));
-    const numSamples = sampleRate * safeSecs;
-    const blockAlign = (numChannels * bitsPerSample) / 8;
-    const byteRate = sampleRate * blockAlign;
-    const dataSize = numSamples * blockAlign;
-    const buffer = new ArrayBuffer(44 + dataSize);
-    const view = new DataView(buffer);
-
-    function writeString(v, offset, str) {
-      for (let i = 0; i < str.length; i++) v.setUint8(offset + i, str.charCodeAt(i));
-    }
-
-    writeString(view, 0, 'RIFF');
-    view.setUint32(4, 36 + dataSize, true);
-    writeString(view, 8, 'WAVE');
-    writeString(view, 12, 'fmt ');
-    view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true); // PCM Format
-    view.setUint16(22, numChannels, true);
-    view.setUint32(24, sampleRate, true);
-    view.setUint32(28, byteRate, true);
-    view.setUint16(32, blockAlign, true);
-    view.setUint16(34, bitsPerSample, true);
-    writeString(view, 36, 'data');
-    view.setUint32(40, dataSize, true);
-
-    return new Blob([buffer], { type: 'audio/wav' });
   }
 
   formatSpeed(bytesPerSec) {
@@ -378,7 +612,7 @@ class OfflineDownloader {
           let actualBytes = 0;
           const items = req.result || [];
           for (const item of items) {
-            const trackBytes = item.size || item.fileSizeBytes || (item.audioBlob ? item.audioBlob.size : 0) || 3200000;
+            const trackBytes = item.size || (item.audioBlob ? item.audioBlob.size : 0) || 3200000;
             actualBytes += trackBytes;
             if (item.thumbnailBlob && item.thumbnailBlob.size) actualBytes += item.thumbnailBlob.size;
           }

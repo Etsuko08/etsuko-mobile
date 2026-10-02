@@ -758,7 +758,9 @@ class EtsukoMobileApp {
         }
         return track.thumbnail;
       }
-      return track.thumbnail;
+      if (track.thumbnail.startsWith('http') && !track.thumbnail.includes('hq720.jpg')) {
+        return track.thumbnail;
+      }
     }
     if (track.videoId) {
       return `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
@@ -767,8 +769,8 @@ class EtsukoMobileApp {
   }
 
   getImgFallbackAttr(videoId) {
-    if (!videoId) return `onerror="this.src='assets/default_cover.png'"`;
-    return `onerror="if(!this.dataset.t1){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg';}else if(!this.dataset.t2){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${videoId}/mqdefault.jpg';}else{this.src='assets/default_cover.png';}"`;
+    if (!videoId) return `onerror="this.onerror=null; this.src='assets/default_cover.png';"`;
+    return `onerror="if(!this.dataset.t1 && !this.src.includes('hqdefault.jpg')){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg';}else if(!this.dataset.t2 && !this.src.includes('mqdefault.jpg')){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${videoId}/mqdefault.jpg';}else{this.onerror=null; this.src='assets/default_cover.png';}"`;
   }
 
   renderHorizontalRow(container, tracks, isAlbum = false) {
