@@ -60,11 +60,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.3.1
-          name: Etsuko Mobile v1.3.1 — Unified Queue & Recommended Autoplay
+          tag_name: v1.3.2
+          name: Etsuko Mobile v1.3.2 — Permanent Signing Keystore & In-Place Update Compatibility
           body: |
-            ### ⚡ Etsuko Mobile v1.3.1 — Unified Queue & Recommended Autoplay
+            ### ⚡ Etsuko Mobile v1.3.2 — Permanent Signing Keystore & In-Place Update Compatibility
             - **Installable Android APK (`Etsuko.apk`)** ready for direct installation.
+            - **Permanent Keystore Signature:** Signed with dedicated release keystore to ensure 100% cryptographic signature compatibility across all future in-place updates.
             - **Unified Queue & Recommended For You:** Recommended For You is the single source of truth for the queue — zero title or keyword search clutter.
             - **Sequential Recommendation Consumption:** Continuous Spotify-style autoplay consuming the next recommended track with real unthrottled audio.
             - **Instant Search:** Removed artificial latency and added LRU query caching with snappy 160ms debounce.

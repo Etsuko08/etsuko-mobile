@@ -1,9 +1,9 @@
 {
-  "version": "1.3.1",
-  "versionCode": 4,
-  "tagName": "v1.3.1",
-  "name": "Etsuko Mobile v1.3.1 — Unified Queue & Recommended For You Autoplay",
-  "body": "### ⚡ What's New in v1.3.1:\n- **Unified Queue & Recommended For You:** Recommended For You is now the sole source of Smart Autoplay — zero title-matching search results in the queue.\n- **Sequential Pool Consumption:** Songs are consumed directly from the recommendation pool without repeating played tracks.\n- **Blazing Fast Instant Search:** Eliminated artificial delays and added instant LRU query caching with 160ms responsive debounce.\n- **Lockstep Queue Synchronization:** Up Next and Recommended For You share identical track IDs and real unthrottled audio sources.",
-  "downloadUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/download/v1.3.1/Etsuko.apk",
+  "version": "1.3.2",
+  "versionCode": 5,
+  "tagName": "v1.3.2",
+  "name": "Etsuko Mobile v1.3.2 — Permanent Signing Keystore & In-Place Update Compatibility",
+  "body": "### ⚡ What's New in v1.3.2:\n- **Permanent Keystore Signature:** Integrated persistent release keystore so all future in-app updates install seamlessly over existing installations with zero package/signature conflicts.\n- **Unified Queue & Recommended For You:** Recommended For You is the sole source of Smart Autoplay — zero title-matching search results in the queue.\n- **Sequential Pool Consumption:** Songs are consumed directly from the recommendation pool without repeating played tracks.\n- **Instant Search Latency:** Removed artificial delays and added instant LRU query caching with 160ms responsive debounce.\n- **Verified Offline Playback:** Full audio playback, seeking, scrubbing, and duration with zero dummy silence.",
+  "downloadUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/download/v1.3.2/Etsuko.apk",
   "releaseUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/latest"
 }
