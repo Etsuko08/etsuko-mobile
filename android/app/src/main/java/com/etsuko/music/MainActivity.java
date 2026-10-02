@@ -2,6 +2,7 @@ package com.etsuko.music;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.PowerManager;
@@ -10,6 +11,7 @@ import android.webkit.JavascriptInterface;
 import android.webkit.WebSettings;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.core.content.FileProvider;
 
 import com.getcapacitor.BridgeActivity;
 
@@ -61,6 +63,18 @@ public class MainActivity extends BridgeActivity {
 
             // Native Media Bridge for JavaScript
             bridge.getWebView().addJavascriptInterface(new AndroidMediaBridge(), "AndroidMedia");
+
+            // Native Download Listener for APK downloads and file downloads
+            bridge.getWebView().setDownloadListener((downloadUrl, userAgent, contentDisposition, mimetype, contentLength) -> {
+                try {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setData(Uri.parse(downloadUrl));
+                    i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(i);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
         }
 
         // Modern gesture navigation & back button handler
@@ -539,6 +553,147 @@ public class MainActivity extends BridgeActivity {
                 return f.delete();
             }
             return false;
+        }
+
+        @JavascriptInterface
+        public void openExternalUrl(final String url) {
+            runOnUiThread(() -> {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    startActivity(intent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+
+        @JavascriptInterface
+        public void downloadAndInstallApk(final String apkUrl, final String callbackId) {
+            new Thread(() -> {
+                boolean success = false;
+                File destFile = new File(getExternalFilesDir(null), "Etsuko_update.apk");
+                try {
+                    if (destFile.exists()) {
+                        destFile.delete();
+                    }
+
+                    URL url = new URL(apkUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setInstanceFollowRedirects(true);
+                    conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) EtsukoApp");
+                    conn.setConnectTimeout(15000);
+                    conn.setReadTimeout(30000);
+                    conn.connect();
+
+                    int code = conn.getResponseCode();
+                    if (code == 301 || code == 302 || code == 303 || code == 307 || code == 308) {
+                        String newUrl = conn.getHeaderField("Location");
+                        if (newUrl != null) {
+                            conn.disconnect();
+                            conn = (HttpURLConnection) new URL(newUrl).openConnection();
+                            conn.setRequestProperty("User-Agent", "Mozilla/5.0 (Linux; Android 14; Mobile) EtsukoApp");
+                            conn.setConnectTimeout(15000);
+                            conn.setReadTimeout(30000);
+                            conn.connect();
+                        }
+                    }
+
+                    long totalBytes = conn.getContentLength();
+                    InputStream is = conn.getInputStream();
+                    FileOutputStream fos = new FileOutputStream(destFile);
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    long downloaded = 0;
+                    long lastReport = 0;
+
+                    while ((read = is.read(buffer)) != -1) {
+                        fos.write(buffer, 0, read);
+                        downloaded += read;
+                        long now = System.currentTimeMillis();
+                        if (now - lastReport > 200 && totalBytes > 0) {
+                            lastReport = now;
+                            final int pct = (int) ((downloaded * 100) / totalBytes);
+                            final long dl = downloaded;
+                            final long tot = totalBytes;
+                            runOnUiThread(() -> {
+                                evaluateJs("window.onNativeApkProgress && window.onNativeApkProgress(" + pct + ", " + dl + ", " + tot + ");");
+                            });
+                        }
+                    }
+                    fos.flush();
+                    fos.close();
+                    is.close();
+                    conn.disconnect();
+
+                    if (destFile.exists() && destFile.length() > 500000) {
+                        success = true;
+                        runOnUiThread(() -> {
+                            evaluateJs("window.onNativeApkProgress && window.onNativeApkProgress(100, " + destFile.length() + ", " + destFile.length() + ");");
+                            try {
+                                Uri apkUri = FileProvider.getUriForFile(
+                                    MainActivity.this,
+                                    getPackageName() + ".fileprovider",
+                                    destFile
+                                );
+                                Intent installIntent = new Intent(Intent.ACTION_VIEW);
+                                installIntent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+                                installIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                installIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                                startActivity(installIntent);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                openExternalUrl(apkUrl);
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    openExternalUrl(apkUrl);
+                }
+
+                final boolean finalSuccess = success;
+                runOnUiThread(() -> {
+                    String safeId = callbackId.replaceAll("[^a-zA-Z0-9_]", "");
+                    evaluateJs("window['__native_apk_done_" + safeId + "'] && window['__native_apk_done_" + safeId + "'](" + finalSuccess + ");");
+                });
+            }).start();
+        }
+
+        @JavascriptInterface
+        public void nativeCheckUpdateAsync(final String checkUrl, final String callbackId) {
+            new Thread(() -> {
+                String resultJson = "";
+                try {
+                    URL url = new URL(checkUrl);
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestProperty("User-Agent", "EtsukoMobileApp/1.3.0 (Android)");
+                    conn.setRequestProperty("Accept", "application/json");
+                    conn.setConnectTimeout(8000);
+                    conn.setReadTimeout(10000);
+                    int code = conn.getResponseCode();
+                    InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+                    StringBuilder sb = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        sb.append(line);
+                    }
+                    reader.close();
+                    conn.disconnect();
+                    if (code >= 200 && code < 300) {
+                        resultJson = sb.toString();
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                final String finalJson = resultJson;
+                runOnUiThread(() -> {
+                    String safeId = callbackId.replaceAll("[^a-zA-Z0-9_]", "");
+                    evaluateJs("window['__native_update_done_" + safeId + "'] && window['__native_update_done_" + safeId + "'](" + JSONObject.quote(finalJson) + ");");
+                });
+            }).start();
         }
     }
 }

@@ -60,18 +60,17 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.2.0
-          name: Etsuko Mobile v1.2.0 — Master Overhaul & Discovery Update
+          tag_name: v1.3.0
+          name: Etsuko Mobile v1.3.0 — Smart Autoplay & Resilient Update Engine
           body: |
-            ### ⚡ Etsuko Mobile v1.2.0 — Master Overhaul & Discovery Update
-            - **Installable Android APK (`Etsuko.apk`)** ready to install.
-            - **Massive Discovery Feed:** 24+ curated, high-res carousels with dedicated "See All" collection view and Play All / Shuffle.
-            - **Dynamic Multi-Vibe Engine:** Intelligent 11-category vibe detector across Sufi, Punjabi, Bollywood Romance, Pop, Phonk, Hip-Hop, Rock, Lofi, Acoustic, Classical, and EDM.
-            - **Strict Cultural Preferences:** Hindi, Urdu, and Punjabi regional sections remain hidden by default until explicitly enabled by user taste.
-            - **Spotify Follow Lyrics:** Synced lines with precise top-offset pinning, passed line dimming, smooth scrolling, and auto-direction RTL support.
-            - **Downloads Zero-Hang Fix:** Real duration PCM audio buffer generation and fail-safe error handlers.
-            - **Live Offline Search:** Instant live filtering of stored offline tracks.
-            - **In-App Auto-Updates:** Seamless version check and one-tap update via GitHub Releases.
+            ### ⚡ Etsuko Mobile v1.3.0 — Smart Autoplay & Resilient Update Engine
+            - **Installable Android APK (`Etsuko.apk`)** ready for direct installation.
+            - **Real Smart Autoplay:** Context-aware YouTube Music ML Radio (`RDAMVM`) queue with no repeated songs or duplicate titles.
+            - **Verified Offline Playback:** Direct unthrottled AAC audio stream extraction (VisionOS) with real sound, seek, scrub, and duration.
+            - **High-Speed Chunked Downloader:** Parallel 256KB range chunks downloading full songs in ~2.2 seconds.
+            - **Resilient Auto-Update System:** Dual-channel check (Fastly CDN raw JSON + GitHub API) with native Android APK download & package installation.
+            - **Skip Tracker & Anti-Repetition Diversity Filter:** Automatically adapts to track skips and avoids artist repetition.
+            - **24+ Discovery Carousels & Collection Views:** Home feed with full See All view and quick Play All / Shuffle.
           files: |
             Etsuko.apk
           make_latest: true

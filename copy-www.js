@@ -29,5 +29,6 @@ copyRecursive(path.join(root, 'css'), path.join(www, 'css'));
 copyRecursive(path.join(root, 'js'), path.join(www, 'js'));
 copyRecursive(path.join(root, 'assets'), path.join(www, 'assets'));
 copyRecursive(path.join(root, 'curated_trending.json'), path.join(www, 'curated_trending.json'));
+copyRecursive(path.join(root, 'version.json'), path.join(www, 'version.json'));
 
 console.log('Synchronized web assets to www/ directory!');
