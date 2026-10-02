@@ -582,15 +582,22 @@ class EtsukoAPI {
     if (!query || !query.trim()) return { results: [] };
     const q = query.trim();
 
-    // 1. If native bridge is initializing on first launch, wait briefly
-    if (!window.AndroidMedia) {
-      for (let i = 0; i < 4; i++) {
-        await new Promise(r => setTimeout(r, 150));
-        if (window.AndroidMedia) break;
-      }
+    const cacheKey = `${q.toLowerCase()}_${filter}`;
+    if (!this._searchCache) this._searchCache = new Map();
+    if (this._searchCache.has(cacheKey)) {
+      return { results: this._searchCache.get(cacheKey) };
     }
 
-    // 2. Android Native Bridge Search (100% bypass of CORS, unlimited YouTube Music catalog!)
+    const setCache = (resList) => {
+      if (this._searchCache.size > 80) {
+        const firstKey = this._searchCache.keys().next().value;
+        this._searchCache.delete(firstKey);
+      }
+      this._searchCache.set(cacheKey, resList);
+      return { results: resList };
+    };
+
+    // 1. Android Native Bridge Search (100% bypass of CORS, fast multi-threaded)
     if (window.AndroidMedia && typeof window.AndroidMedia.nativeSearchAsync === 'function') {
       try {
         const rawJson = await new Promise((resolve) => {
@@ -598,7 +605,7 @@ class EtsukoAPI {
           const timer = setTimeout(() => {
             delete window['__native_search_' + cbId];
             resolve(null);
-          }, 8000);
+          }, 6000);
 
           window['__native_search_' + cbId] = (dataStr) => {
             clearTimeout(timer);
@@ -613,12 +620,11 @@ class EtsukoAPI {
           const parsedData = typeof rawJson === 'string' ? JSON.parse(rawJson) : rawJson;
           const items = this.parseInnerTubeResults(parsedData);
           if (items && items.length > 0) {
-            return {
-              results: items.map(t => ({
-                ...t,
-                isLiked: this.isLiked(t.videoId)
-              }))
-            };
+            const mapped = items.map(t => ({
+              ...t,
+              isLiked: this.isLiked(t.videoId)
+            }));
+            return setCache(mapped);
           }
         }
       } catch (err) {
@@ -630,13 +636,12 @@ class EtsukoAPI {
     try {
       const ytResults = await this.searchInnerTube(q, filter, signal);
       if (ytResults && ytResults.length > 0) {
-        return {
-          results: ytResults.map(r => ({
-            ...r,
-            thumbnail: formatHighResThumbnail(r.videoId, r.thumbnail),
-            isLiked: this.isLiked(r.videoId)
-          }))
-        };
+        const mapped = ytResults.map(r => ({
+          ...r,
+          thumbnail: formatHighResThumbnail(r.videoId, r.thumbnail),
+          isLiked: this.isLiked(r.videoId)
+        }));
+        return setCache(mapped);
       }
     } catch (err) {
       if (err.name === 'AbortError') throw err;
@@ -644,7 +649,7 @@ class EtsukoAPI {
 
     // 4. Fallback: filter local curated catalog
     const local = this.searchLocalCatalog(q);
-    return { results: local };
+    return setCache(local);
   }
 
   async searchInnerTube(query, filter = 'songs', signal = null) {

@@ -35,6 +35,9 @@ class MobilePlayer {
     this.currentTrack = null;
     this.queue = [];
     this.queueIndex = -1;
+    this.recommendedTracks = [];
+    this.playedTrackHistory = new Set();
+    this.isExplicitQueue = false;
     this.isPlaying = false;
     this.userPaused = false;
     this.repeatMode = 0; // 0: off, 1: all, 2: one
@@ -475,7 +478,7 @@ class MobilePlayer {
     }
   }
 
-  async playTrack(track, queueList = null) {
+  async playTrack(track, queueList = null, isExplicit = false) {
     if (!track || !track.videoId) return;
 
     this._playRequestId = (this._playRequestId || 0) + 1;
@@ -490,29 +493,22 @@ class MobilePlayer {
     clearTimeout(this.lyricsScrollTimeout);
     if (this.sheetLyricsFollowBtn) this.sheetLyricsFollowBtn.style.display = 'none';
 
-    if (queueList && Array.isArray(queueList)) {
+    // Record played history to avoid immediate repetition
+    this.playedTrackHistory.add(track.videoId);
+
+    if (isExplicit && Array.isArray(queueList) && queueList.length > 1) {
+      this.isExplicitQueue = true;
       this.queue = this.filterQueueDuplicates(queueList, track);
       this.queueIndex = this.queue.findIndex(t => t.videoId === track.videoId);
       if (this.queueIndex === -1) {
         this.queue.unshift(track);
         this.queueIndex = 0;
       }
-    } else if (this.queue && this.queue.length > 0) {
-      const existingIdx = this.queue.findIndex(t => t.videoId === track.videoId);
-      if (existingIdx !== -1) {
-        this.queueIndex = existingIdx;
-      } else {
-        this.queue.push(track);
-        this.queueIndex = this.queue.length - 1;
-      }
     } else {
+      this.isExplicitQueue = false;
+      // Single track playback: Recommended For You is the single source of truth for the queue
       this.queue = [track];
       this.queueIndex = 0;
-    }
-
-    // Auto-populate upcoming queue with intelligent diverse recommendations if upcoming queue is empty
-    if (this.queue.length - 1 <= this.queueIndex) {
-      this.populateSmartUpcomingQueue(track);
     }
 
     this.currentTrack = track;
@@ -711,8 +707,17 @@ class MobilePlayer {
       `;
 
       item.addEventListener('click', () => {
-        this.queueIndex = idx;
-        this.playTrack(this.queue[idx]);
+        if (idx === this.queueIndex) return;
+        const selected = this.queue[idx];
+        if (this.isExplicitQueue) {
+          this.queueIndex = idx;
+          this.playTrack(selected, this.queue, true);
+        } else {
+          this.recommendedTracks = this.recommendedTracks.filter(t => t.videoId !== selected.videoId);
+          this.queue = [selected, ...this.recommendedTracks];
+          this.queueIndex = 0;
+          this.playTrack(selected);
+        }
       });
 
       this.sheetQueueList.appendChild(item);
@@ -726,7 +731,7 @@ class MobilePlayer {
 
     this.sheetRelatedList.innerHTML = `
       <div style="padding: 12px; text-align: center; color: var(--text-muted); font-size: 11px;">
-        <span style="color: var(--accent-cyan); font-weight: 700;">⚡ FINDING SIMILAR TRACKS...</span>
+        <span style="color: var(--accent-cyan); font-weight: 700;">⚡ DISCOVERING MATCHING VIBES...</span>
       </div>
     `;
 
@@ -737,7 +742,40 @@ class MobilePlayer {
         if (this.sheetRelatedTag && data.displayTag) {
           this.sheetRelatedTag.textContent = `${data.displayTag}`;
         }
-        this.renderRelatedTracksList(data.tracks || []);
+
+        const normCurrent = window.api ? window.api.normalizeTitle(track.title) : (track.title || '').toLowerCase().trim();
+        const seenIds = new Set([track.videoId]);
+        const seenTitles = new Set([normCurrent]);
+        const artistCounts = {};
+        const curArtist = (track.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+        if (curArtist) artistCounts[curArtist] = 1;
+
+        const freshRecs = [];
+        for (const t of (data.tracks || [])) {
+          if (!t || !t.videoId || seenIds.has(t.videoId)) continue;
+          if (this.playedTrackHistory && this.playedTrackHistory.has(t.videoId)) continue;
+
+          const norm = window.api ? window.api.normalizeTitle(t.title) : (t.title || '').toLowerCase().trim();
+          if (norm && (norm === normCurrent || seenTitles.has(norm))) continue;
+
+          const artist = (t.artist || '').split(',')[0].replace(/\s*-\s*Topic/i, '').trim().toLowerCase();
+          if (artist && (artistCounts[artist] || 0) >= 2) continue;
+
+          seenIds.add(t.videoId);
+          if (norm) seenTitles.add(norm);
+          if (artist) artistCounts[artist] = (artistCounts[artist] || 0) + 1;
+          freshRecs.push(t);
+        }
+
+        this.recommendedTracks = freshRecs;
+        this.renderRelatedTracksList(this.recommendedTracks);
+
+        // SINGLE SOURCE OF TRUTH: Sync Up Next queue directly with Recommended For You pool
+        if (!this.isExplicitQueue) {
+          this.queue = [track, ...this.recommendedTracks];
+          this.queueIndex = 0;
+          this.renderQueueInSheet();
+        }
       }
     } catch (e) {
       console.warn('[Player] loadRelatedTracks notice:', e);
@@ -773,9 +811,13 @@ class MobilePlayer {
       `;
 
       el.addEventListener('click', () => {
-        // Play selected related song and populate queue
-        const remaining = tracks.filter(t => t.videoId !== item.videoId);
-        this.playTrack(item, [item, ...remaining]);
+        // User clicked a recommended track:
+        // Remove it from the recommendation pool
+        this.recommendedTracks = this.recommendedTracks.filter(t => t.videoId !== item.videoId);
+        this.queue = [item, ...this.recommendedTracks];
+        this.queueIndex = 0;
+        this.isExplicitQueue = false;
+        this.playTrack(item);
       });
 
       this.sheetRelatedList.appendChild(el);
@@ -808,10 +850,11 @@ class MobilePlayer {
   }
 
   clearUpcomingQueue() {
-    if (!this.queue || this.queue.length <= 1) return;
+    this.recommendedTracks = [];
     this.queue = [this.currentTrack];
     this.queueIndex = 0;
     this.renderQueueInSheet();
+    this.renderRelatedTracksList([]);
     if (window.app && window.app.showToast) {
       window.app.showToast('Cleared upcoming queue');
     }
@@ -852,29 +895,6 @@ class MobilePlayer {
       filtered.push(t);
     }
     return filtered;
-  }
-
-  async populateSmartUpcomingQueue(track) {
-    if (!track || !track.videoId) return;
-    this._queueRequestId = (this._queueRequestId || 0) + 1;
-    const currentReq = this._queueRequestId;
-
-    try {
-      if (!window.api || typeof window.api.getRelatedTracks !== 'function') return;
-      const data = await window.api.getRelatedTracks(track);
-      if (this._queueRequestId !== currentReq) return;
-      if (this.currentTrack && this.currentTrack.videoId !== track.videoId) return;
-
-      const candidates = (data.tracks || []).filter(t => t && t.videoId);
-      const sanitized = this.filterQueueDuplicates([...this.queue, ...candidates], this.currentTrack);
-
-      if (sanitized.length > this.queue.length) {
-        this.queue = sanitized;
-        this.renderQueueInSheet();
-      }
-    } catch (e) {
-      console.warn('[Player] populateSmartUpcomingQueue notice:', e);
-    }
   }
 
   async loadLyrics(track) {
@@ -1073,7 +1093,7 @@ class MobilePlayer {
   }
 
   next() {
-    if (this.queue.length === 0) return;
+    if (this.queue.length === 0 && (!this.recommendedTracks || this.recommendedTracks.length === 0)) return;
 
     // Skip tracking: if skipped within 15 seconds, penalize in smart autoplay
     if (this.currentTrack && (Date.now() - (this.trackPlayStartTime || 0)) < 15000) {
@@ -1082,28 +1102,30 @@ class MobilePlayer {
       }
     }
 
-    if (this.isShuffle) {
-      let randIdx = Math.floor(Math.random() * this.queue.length);
-      if (this.queue.length > 1 && randIdx === this.queueIndex) {
-        randIdx = (randIdx + 1) % this.queue.length;
+    // 1. If explicit album/playlist queue is running and not at the end
+    if (this.isExplicitQueue && this.queueIndex < this.queue.length - 1) {
+      if (this.isShuffle) {
+        let randIdx = Math.floor(Math.random() * this.queue.length);
+        if (this.queue.length > 1 && randIdx === this.queueIndex) {
+          randIdx = (randIdx + 1) % this.queue.length;
+        }
+        this.queueIndex = randIdx;
+      } else {
+        this.queueIndex++;
       }
-      this.queueIndex = randIdx;
-      this.playTrack(this.queue[this.queueIndex]);
+      this.playTrack(this.queue[this.queueIndex], this.queue, true);
       return;
     }
 
-    // Play next strictly in sequential order (1 -> 2 -> 3...)
-    if (this.queueIndex < this.queue.length - 1) {
-      this.queueIndex++;
-      this.playTrack(this.queue[this.queueIndex]);
-    } else if (this.repeatMode === 1) {
-      // Repeat All: restart playlist from beginning
+    // 2. Repeat All on explicit album/playlist
+    if (this.repeatMode === 1 && this.isExplicitQueue && this.queue.length > 0) {
       this.queueIndex = 0;
-      this.playTrack(this.queue[0]);
-    } else {
-      // Smart Autoplay: Fetch natural continuation of current listening experience
-      this.triggerAutoplay();
+      this.playTrack(this.queue[0], this.queue, true);
+      return;
     }
+
+    // 3. SMART AUTOPLAY: Consume the next track directly from Recommended For You pool
+    this.triggerAutoplayFromRecommendations();
   }
 
   prev() {
@@ -1121,34 +1143,104 @@ class MobilePlayer {
 
     if (this.queueIndex > 0) {
       this.queueIndex--;
-      this.playTrack(this.queue[this.queueIndex]);
+      this.playTrack(this.queue[this.queueIndex], this.isExplicitQueue ? this.queue : null, this.isExplicitQueue);
     } else {
       this.seekTo(0);
     }
   }
 
-  async triggerAutoplay() {
-    if (!this.currentTrack) return;
+  async triggerAutoplayFromRecommendations() {
+    // 1. Consume from existing Recommended For You pool
+    if (this.recommendedTracks && this.recommendedTracks.length > 0) {
+      let nextTrack = null;
+      if (this.isShuffle) {
+        const randIdx = Math.floor(Math.random() * this.recommendedTracks.length);
+        nextTrack = this.recommendedTracks.splice(randIdx, 1)[0];
+      } else {
+        nextTrack = this.recommendedTracks.shift();
+      }
+
+      if (nextTrack) {
+        this.playedTrackHistory.add(nextTrack.videoId);
+        this.renderRelatedTracksList(this.recommendedTracks);
+
+        this.queue = [nextTrack, ...this.recommendedTracks];
+        this.queueIndex = 0;
+        this.isExplicitQueue = false;
+        this.renderQueueInSheet();
+
+        this.playTrack(nextTrack);
+
+        if (window.app && window.app.showToast) {
+          window.app.showToast(`Autoplaying: ${nextTrack.title}`);
+        }
+
+        // Replenish in background if pool is running low
+        if (this.recommendedTracks.length < 5) {
+          this.replenishRecommendations(nextTrack);
+        }
+        return;
+      }
+    }
+
+    // 2. Fallback: Fetch fresh recommendation pool from current track
+    if (this.currentTrack) {
+      try {
+        if (window.api && typeof window.api.getRelatedTracks === 'function') {
+          const recs = await window.api.getRelatedTracks(this.currentTrack);
+          const fresh = (recs.tracks || []).filter(t => 
+            t && t.videoId &&
+            t.videoId !== this.currentTrack.videoId &&
+            !this.playedTrackHistory.has(t.videoId)
+          );
+
+          if (fresh.length > 0) {
+            this.recommendedTracks = fresh;
+            const nextTrack = this.recommendedTracks.shift();
+            this.playedTrackHistory.add(nextTrack.videoId);
+            this.renderRelatedTracksList(this.recommendedTracks);
+
+            this.queue = [nextTrack, ...this.recommendedTracks];
+            this.queueIndex = 0;
+            this.isExplicitQueue = false;
+            this.renderQueueInSheet();
+
+            this.playTrack(nextTrack);
+
+            if (window.app && window.app.showToast) {
+              window.app.showToast(`Autoplaying: ${nextTrack.title}`);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('[Player] triggerAutoplayFromRecommendations notice:', e);
+      }
+    }
+  }
+
+  async replenishRecommendations(seedTrack) {
+    if (!seedTrack || !seedTrack.videoId) return;
     try {
       if (window.api && typeof window.api.getRelatedTracks === 'function') {
-        const recs = await window.api.getRelatedTracks(this.currentTrack);
-        if (recs && Array.isArray(recs.tracks) && recs.tracks.length > 0) {
-          const fresh = recs.tracks.filter(t => !this.queue.some(q => q.videoId === t.videoId));
-          if (fresh.length > 0) {
-            const nextSong = fresh[0];
-            this.queue = [...this.queue, ...fresh];
-            this.queueIndex++;
+        const data = await window.api.getRelatedTracks(seedTrack);
+        const candidates = (data.tracks || []).filter(t => 
+          t && t.videoId &&
+          t.videoId !== this.currentTrack?.videoId &&
+          !this.playedTrackHistory.has(t.videoId) &&
+          !this.recommendedTracks.some(r => r.videoId === t.videoId)
+        );
+
+        if (candidates.length > 0) {
+          this.recommendedTracks.push(...candidates);
+          this.renderRelatedTracksList(this.recommendedTracks);
+          if (!this.isExplicitQueue) {
+            this.queue = [this.currentTrack, ...this.recommendedTracks];
             this.renderQueueInSheet();
-            this.playTrack(nextSong);
-            if (window.app && window.app.showToast) {
-              window.app.showToast(`Autoplaying: ${nextSong.title}`);
-            }
-            return;
           }
         }
       }
     } catch (e) {
-      console.warn('[Player] triggerAutoplay notice:', e);
+      console.warn('[Player] replenishRecommendations notice:', e);
     }
   }
 
@@ -1162,16 +1254,22 @@ class MobilePlayer {
         this.audio.currentTime = 0;
         this.audio.play().catch(() => {});
       }
-    } else if (this.queueIndex < this.queue.length - 1) {
-      this.next();
-    } else if (this.repeatMode === 1) {
-      // Repeat All
-      this.queueIndex = 0;
-      this.playTrack(this.queue[0]);
-    } else {
-      // Continuous Smart Autoplay
-      await this.triggerAutoplay();
+      return;
     }
+
+    if (this.isExplicitQueue && this.queueIndex < this.queue.length - 1) {
+      this.next();
+      return;
+    }
+
+    if (this.repeatMode === 1 && this.isExplicitQueue) {
+      this.queueIndex = 0;
+      this.playTrack(this.queue[0], this.queue, true);
+      return;
+    }
+
+    // Continuous Smart Autoplay directly from Recommended For You
+    await this.triggerAutoplayFromRecommendations();
   }
 
   seekTo(seconds) {

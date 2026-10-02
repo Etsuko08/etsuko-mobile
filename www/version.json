@@ -1,9 +1,9 @@
 {
-  "version": "1.3.0",
-  "versionCode": 3,
-  "tagName": "v1.3.0",
-  "name": "Etsuko Mobile v1.3.0 — Smart Autoplay & YouTube ML Radio",
-  "body": "### ⚡ What's New in v1.3.0:\n- **Real Smart Autoplay:** YouTube Music ML Radio (`RDAMVM`) context-aware queue without repeated titles.\n- **Zero-Silence Offline Audio:** VisionOS direct unthrottled AAC audio stream extraction with real sound playback.\n- **High-Speed Chunked Downloader:** Parallel 256KB range chunks downloading in ~2.2s.\n- **Resilient Auto-Update Engine:** Dual-channel check (Fastly CDN raw JSON + GitHub API) with native APK download & package installation.\n- **Skip Tracker & Anti-Repetition Diversity Filter:** Keeps recommendations fresh and varied.",
-  "downloadUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/download/v1.3.0/Etsuko.apk",
+  "version": "1.3.1",
+  "versionCode": 4,
+  "tagName": "v1.3.1",
+  "name": "Etsuko Mobile v1.3.1 — Unified Queue & Recommended For You Autoplay",
+  "body": "### ⚡ What's New in v1.3.1:\n- **Unified Queue & Recommended For You:** Recommended For You is now the sole source of Smart Autoplay — zero title-matching search results in the queue.\n- **Sequential Pool Consumption:** Songs are consumed directly from the recommendation pool without repeating played tracks.\n- **Blazing Fast Instant Search:** Eliminated artificial delays and added instant LRU query caching with 160ms responsive debounce.\n- **Lockstep Queue Synchronization:** Up Next and Recommended For You share identical track IDs and real unthrottled audio sources.",
+  "downloadUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/download/v1.3.1/Etsuko.apk",
   "releaseUrl": "https://github.com/Etsuko08/etsuko-mobile/releases/latest"
 }

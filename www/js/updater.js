@@ -4,7 +4,7 @@
 
 class AppUpdater {
   constructor() {
-    this.currentVersion = 'v1.3.0';
+    this.currentVersion = 'v1.3.1';
     this.repoOwner = 'Etsuko08';
     this.repoName = 'etsuko-mobile';
     this.cdnUrl = `https://raw.githubusercontent.com/${this.repoOwner}/${this.repoName}/main/version.json`;

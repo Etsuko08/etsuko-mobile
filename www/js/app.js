@@ -239,7 +239,7 @@ class EtsukoMobileApp {
         clearTimeout(this.searchDebounceTimer);
         this.searchDebounceTimer = setTimeout(() => {
           this.executeSearch(val);
-        }, 280);
+        }, 160);
       });
     }
 
@@ -799,13 +799,13 @@ class EtsukoMobileApp {
       card.addEventListener('click', (e) => {
         if (isAlbum) {
           if (e.target.closest('.spotify-card-play-btn')) {
-            window.player.playTrack(track, tracks);
+            window.player.playTrack(track, tracks, true);
             this.openPlayerSheet();
           } else {
             this.openAlbumDetail(track, tracks);
           }
         } else {
-          window.player.playTrack(track, tracks);
+          window.player.playTrack(track);
           this.openPlayerSheet();
         }
       });
@@ -846,7 +846,7 @@ class EtsukoMobileApp {
       card.addEventListener('click', (e) => {
         if (e.target.closest('.spotify-mix-play-btn')) {
           if (mix.tracks && mix.tracks.length > 0) {
-            window.player.playTrack(mix.tracks[0], mix.tracks);
+            window.player.playTrack(mix.tracks[0], mix.tracks, true);
             this.openPlayerSheet();
           }
           return;
@@ -1186,7 +1186,7 @@ class EtsukoMobileApp {
       });
 
       row.addEventListener('click', () => {
-        window.player.playTrack(item, items);
+        window.player.playTrack(item);
         this.openPlayerSheet();
       });
 
@@ -1237,7 +1237,7 @@ class EtsukoMobileApp {
             </button>
           `;
           row.addEventListener('click', () => {
-            window.player.playTrack(track, finalTracks);
+            window.player.playTrack(track, finalTracks, true);
             this.openPlayerSheet();
           });
           this.albumTracksList.appendChild(row);
@@ -1281,7 +1281,7 @@ class EtsukoMobileApp {
             </button>
           `;
           row.addEventListener('click', () => {
-            window.player.playTrack(track, finalTracks);
+            window.player.playTrack(track);
             this.openPlayerSheet();
           });
           this.artistTracksList.appendChild(row);

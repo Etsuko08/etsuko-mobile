@@ -60,17 +60,16 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.3.0
-          name: Etsuko Mobile v1.3.0 — Smart Autoplay & Resilient Update Engine
+          tag_name: v1.3.1
+          name: Etsuko Mobile v1.3.1 — Unified Queue & Recommended Autoplay
           body: |
-            ### ⚡ Etsuko Mobile v1.3.0 — Smart Autoplay & Resilient Update Engine
+            ### ⚡ Etsuko Mobile v1.3.1 — Unified Queue & Recommended Autoplay
             - **Installable Android APK (`Etsuko.apk`)** ready for direct installation.
-            - **Real Smart Autoplay:** Context-aware YouTube Music ML Radio (`RDAMVM`) queue with no repeated songs or duplicate titles.
-            - **Verified Offline Playback:** Direct unthrottled AAC audio stream extraction (VisionOS) with real sound, seek, scrub, and duration.
-            - **High-Speed Chunked Downloader:** Parallel 256KB range chunks downloading full songs in ~2.2 seconds.
-            - **Resilient Auto-Update System:** Dual-channel check (Fastly CDN raw JSON + GitHub API) with native Android APK download & package installation.
-            - **Skip Tracker & Anti-Repetition Diversity Filter:** Automatically adapts to track skips and avoids artist repetition.
-            - **24+ Discovery Carousels & Collection Views:** Home feed with full See All view and quick Play All / Shuffle.
+            - **Unified Queue & Recommended For You:** Recommended For You is the single source of truth for the queue — zero title or keyword search clutter.
+            - **Sequential Recommendation Consumption:** Continuous Spotify-style autoplay consuming the next recommended track with real unthrottled audio.
+            - **Instant Search:** Removed artificial latency and added LRU query caching with snappy 160ms debounce.
+            - **Verified Offline Playback:** Full audio playback, seeking, scrubbing, and duration with zero dummy silence.
+            - **Resilient Auto-Update:** Dual-channel check (Fastly CDN + GitHub) with native Android APK installer.
           files: |
             Etsuko.apk
           make_latest: true
