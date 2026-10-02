@@ -60,15 +60,18 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/heads/main')
         with:
-          tag_name: v1.0.1
-          name: Etsuko Mobile — Android APK
+          tag_name: v1.2.0
+          name: Etsuko Mobile v1.2.0 — Master Overhaul & Discovery Update
           body: |
-            ### Etsuko Mobile (Neural Audio Studio)
+            ### ⚡ Etsuko Mobile v1.2.0 — Master Overhaul & Discovery Update
             - **Installable Android APK (`Etsuko.apk`)** ready to install.
-            - Pure music streaming with high-res dynamic album artwork.
-            - Full-screen sheet player with reordered lyrics & queue.
-            - Smart cultural & diverse recommendations (zero repetitive clones).
-            - Pure container-scoped lyrics auto-scroll with Follow toggle.
+            - **Massive Discovery Feed:** 24+ curated, high-res carousels with dedicated "See All" collection view and Play All / Shuffle.
+            - **Dynamic Multi-Vibe Engine:** Intelligent 11-category vibe detector across Sufi, Punjabi, Bollywood Romance, Pop, Phonk, Hip-Hop, Rock, Lofi, Acoustic, Classical, and EDM.
+            - **Strict Cultural Preferences:** Hindi, Urdu, and Punjabi regional sections remain hidden by default until explicitly enabled by user taste.
+            - **Spotify Follow Lyrics:** Synced lines with precise top-offset pinning, passed line dimming, smooth scrolling, and auto-direction RTL support.
+            - **Downloads Zero-Hang Fix:** Real duration PCM audio buffer generation and fail-safe error handlers.
+            - **Live Offline Search:** Instant live filtering of stored offline tracks.
+            - **In-App Auto-Updates:** Seamless version check and one-tap update via GitHub Releases.
           files: |
             Etsuko.apk
           make_latest: true

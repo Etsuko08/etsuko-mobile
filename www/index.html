@@ -47,64 +47,57 @@
         <div class="spotify-section" id="section-jump-back" style="display: none;">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Jump back in</h2>
+            <button class="btn-see-all" data-category="jump_back">See All</button>
           </div>
           <div class="spotify-h-scroll" id="jump-back-row">
             <!-- Dynamically populated from actual history -->
           </div>
         </div>
 
-
         <!-- Section: Recommended For You (Personalized & Fresh Discovery) -->
         <div class="spotify-section" id="section-daily-picks">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Recommended For You</h2>
-            <span class="spotify-daily-tag" id="daily-tag-date">TODAY</span>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <h2 class="spotify-section-title">Recommended For You</h2>
+              <span class="spotify-daily-tag" id="daily-tag-date">TODAY</span>
+            </div>
+            <button class="btn-see-all" data-category="recommended">See All</button>
           </div>
           <div class="spotify-h-scroll" id="daily-picks-row">
             <!-- Dynamically populated from listening preferences & discovery -->
           </div>
         </div>
 
-        <!-- Section: Your top mixes -->
+        <!-- Section: Your Daily Mixes -->
         <div class="spotify-section" id="section-top-mixes">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Your top mixes</h2>
+            <h2 class="spotify-section-title">Your Daily Mixes</h2>
+            <button class="btn-see-all" data-category="mixes">See All</button>
           </div>
           <div class="spotify-h-scroll" id="top-mixes-row">
-            <!-- Pop Mix, 2020s Mix, Phonk Mix, Bollywood, Lo-Fi, Hip-Hop -->
+            <!-- Curated Mixes -->
           </div>
         </div>
 
-        <!-- Section: Bollywood & Hindi Romance -->
-        <div class="spotify-section" id="section-hindi-hits">
+        <!-- Section: Trending Worldwide -->
+        <div class="spotify-section" id="section-trending-worldwide">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Bollywood & Hindi Romance</h2>
-            <span class="spotify-daily-tag" style="background: rgba(236, 72, 153, 0.12); color: var(--accent-pink); border-color: rgba(236, 72, 153, 0.3);">ROMANCE</span>
+            <h2 class="spotify-section-title">Trending Worldwide</h2>
+            <button class="btn-see-all" data-category="trending">See All</button>
           </div>
-          <div class="spotify-h-scroll" id="hindi-hits-row">
-            <!-- Bollywood & Hindi Romance tracks -->
+          <div class="spotify-h-scroll" id="trending-worldwide-row">
+            <!-- Global trending tracks -->
           </div>
         </div>
 
-        <!-- Section: Urdu & Sufi Melodies -->
-        <div class="spotify-section" id="section-urdu-sufi">
+        <!-- Section: New Releases -->
+        <div class="spotify-section" id="section-new-releases">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Urdu & Sufi Melodies</h2>
-            <span class="spotify-daily-tag" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">SUFI</span>
+            <h2 class="spotify-section-title">New Releases & Drops</h2>
+            <button class="btn-see-all" data-category="new_releases">See All</button>
           </div>
-          <div class="spotify-h-scroll" id="urdu-sufi-row">
-            <!-- Urdu & Sufi Melodies tracks -->
-          </div>
-        </div>
-
-        <!-- Section: Punjabi Bangers -->
-        <div class="spotify-section" id="section-punjabi-hits">
-          <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Punjabi Bangers</h2>
-            <span class="spotify-daily-tag" style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">VIRAL</span>
-          </div>
-          <div class="spotify-h-scroll" id="punjabi-hits-row">
-            <!-- Punjabi Bangers tracks -->
+          <div class="spotify-h-scroll" id="new-releases-row">
+            <!-- Freshly released tracks -->
           </div>
         </div>
 
@@ -112,21 +105,10 @@
         <div class="spotify-section" id="section-pop-hits">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Global Pop Hits</h2>
-            <span class="spotify-daily-tag" style="background: rgba(0, 240, 255, 0.12); color: var(--accent-cyan); border-color: rgba(0, 240, 255, 0.3);">CHARTS</span>
+            <button class="btn-see-all" data-category="pop">See All</button>
           </div>
           <div class="spotify-h-scroll" id="pop-hits-row">
             <!-- Global Pop Hits tracks -->
-          </div>
-        </div>
-
-        <!-- Section: Phonk & Midnight Drift -->
-        <div class="spotify-section" id="section-phonk-hits">
-          <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Phonk & Midnight Drift</h2>
-            <span class="spotify-daily-tag" style="background: rgba(139, 92, 246, 0.12); color: #8b5cf6; border-color: rgba(139, 92, 246, 0.3);">DRIFT</span>
-          </div>
-          <div class="spotify-h-scroll" id="phonk-hits-row">
-            <!-- Phonk & Drift tracks -->
           </div>
         </div>
 
@@ -134,21 +116,109 @@
         <div class="spotify-section" id="section-hiphop-hits">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Hip-Hop & Rap Heavyweights</h2>
-            <span class="spotify-daily-tag" style="background: rgba(234, 88, 12, 0.12); color: #ea580c; border-color: rgba(234, 88, 12, 0.3);">BEATS</span>
+            <button class="btn-see-all" data-category="hiphop">See All</button>
           </div>
           <div class="spotify-h-scroll" id="hiphop-hits-row">
             <!-- Hip-Hop & Rap tracks -->
           </div>
         </div>
 
+        <!-- Section: Phonk & Midnight Drift -->
+        <div class="spotify-section" id="section-phonk-hits">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Phonk & Midnight Drift</h2>
+            <button class="btn-see-all" data-category="phonk">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="phonk-hits-row">
+            <!-- Phonk & Drift tracks -->
+          </div>
+        </div>
+
         <!-- Section: Rock Classics & Alt Anthems -->
         <div class="spotify-section" id="section-rock-hits">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Rock Classics & Alt Anthems</h2>
-            <span class="spotify-daily-tag" style="background: rgba(225, 29, 72, 0.12); color: #e11d48; border-color: rgba(225, 29, 72, 0.3);">ROCK</span>
+            <h2 class="spotify-section-title">Rock & Alternative Anthems</h2>
+            <button class="btn-see-all" data-category="rock">See All</button>
           </div>
           <div class="spotify-h-scroll" id="rock-hits-row">
             <!-- Rock Classics tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Chill & Relax / Late Night Vibes -->
+        <div class="spotify-section" id="section-chill-relax">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Chill & Relax • Late Night Vibes</h2>
+            <button class="btn-see-all" data-category="chill">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="chill-relax-row">
+            <!-- Ambient & Chill tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Workout Music -->
+        <div class="spotify-section" id="section-workout">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Workout & High Energy Beats</h2>
+            <button class="btn-see-all" data-category="workout">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="workout-row">
+            <!-- Gym & High Energy tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Acoustic Sessions & Unplugged -->
+        <div class="spotify-section" id="section-acoustic">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Acoustic Sessions & Unplugged</h2>
+            <button class="btn-see-all" data-category="acoustic">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="acoustic-row">
+            <!-- Acoustic tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Sad Songs & Melancholy -->
+        <div class="spotify-section" id="section-sad-songs">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Melancholy & Deep Emotion</h2>
+            <button class="btn-see-all" data-category="sad">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="sad-songs-row">
+            <!-- Emotional tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Love & Romantic Ballads -->
+        <div class="spotify-section" id="section-love-romance">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Love & Romantic Ballads</h2>
+            <button class="btn-see-all" data-category="romance">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="love-romance-row">
+            <!-- Romance tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Electronic & Dance Anthems -->
+        <div class="spotify-section" id="section-electronic">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Electronic & Dance Anthems</h2>
+            <button class="btn-see-all" data-category="electronic">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="electronic-row">
+            <!-- Dance / EDM tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Classical & Instrumental Cinema -->
+        <div class="spotify-section" id="section-classical">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Classical & Instrumental Cinema</h2>
+            <button class="btn-see-all" data-category="classical">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="classical-row">
+            <!-- Classical / Piano tracks -->
           </div>
         </div>
 
@@ -156,17 +226,40 @@
         <div class="spotify-section" id="section-lofi-hits">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Lo-Fi Beats & Study Chill</h2>
-            <span class="spotify-daily-tag" style="background: rgba(16, 185, 129, 0.12); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">CHILL</span>
+            <button class="btn-see-all" data-category="lofi">See All</button>
           </div>
           <div class="spotify-h-scroll" id="lofi-hits-row">
             <!-- Lo-Fi Beats tracks -->
           </div>
         </div>
 
+        <!-- Section: Trending Soundtracks & Movie Hits -->
+        <div class="spotify-section" id="section-soundtracks">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Trending Soundtracks & Cinema</h2>
+            <button class="btn-see-all" data-category="soundtracks">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="soundtracks-row">
+            <!-- Movie OSTs -->
+          </div>
+        </div>
+
+        <!-- Section: Hidden Gems & Deep Cuts -->
+        <div class="spotify-section" id="section-hidden-gems">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Hidden Gems & Deep Cuts</h2>
+            <button class="btn-see-all" data-category="hidden_gems">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="hidden-gems-row">
+            <!-- Indie & deep cuts -->
+          </div>
+        </div>
+
         <!-- Section: Popular albums and singles -->
         <div class="spotify-section" id="section-popular-albums">
           <div class="spotify-section-header">
-            <h2 class="spotify-section-title">Popular albums and singles</h2>
+            <h2 class="spotify-section-title">Popular Albums and Singles</h2>
+            <button class="btn-see-all" data-category="albums">See All</button>
           </div>
           <div class="spotify-h-scroll" id="popular-albums-row">
             <!-- Curated Album Cards -->
@@ -177,10 +270,44 @@
         <div class="spotify-section" id="section-podcasts">
           <div class="spotify-section-header">
             <h2 class="spotify-section-title">Podcasts & Audio Shows</h2>
-            <span class="spotify-daily-tag" style="background: rgba(168, 85, 247, 0.12); color: #a855f7; border-color: rgba(168, 85, 247, 0.3);">SHOWS</span>
+            <button class="btn-see-all" data-category="podcasts">See All</button>
           </div>
           <div class="spotify-h-scroll" id="podcasts-row">
             <!-- Curated Podcast Cards -->
+          </div>
+        </div>
+
+        <!-- REGIONAL SECTIONS: Respect user's selected languages (NOT shown by default) -->
+        <!-- Section: Bollywood & Hindi Romance (Shown only if user enables Hindi) -->
+        <div class="spotify-section" id="section-hindi-hits" style="display: none;">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Bollywood & Hindi Romance</h2>
+            <button class="btn-see-all" data-category="hindi">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="hindi-hits-row">
+            <!-- Bollywood & Hindi Romance tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Urdu & Sufi Melodies (Shown only if user enables Urdu) -->
+        <div class="spotify-section" id="section-urdu-sufi" style="display: none;">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Urdu & Sufi Melodies</h2>
+            <button class="btn-see-all" data-category="urdu">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="urdu-sufi-row">
+            <!-- Urdu & Sufi Melodies tracks -->
+          </div>
+        </div>
+
+        <!-- Section: Punjabi Bangers (Shown only if user enables Punjabi) -->
+        <div class="spotify-section" id="section-punjabi-hits" style="display: none;">
+          <div class="spotify-section-header">
+            <h2 class="spotify-section-title">Punjabi Bangers</h2>
+            <button class="btn-see-all" data-category="punjabi">See All</button>
+          </div>
+          <div class="spotify-h-scroll" id="punjabi-hits-row">
+            <!-- Punjabi Bangers tracks -->
           </div>
         </div>
       </section>
@@ -412,6 +539,31 @@
           <h3 class="section-title">Popular Tracks</h3>
         </div>
         <div class="track-list" id="artist-tracks-list"></div>
+      </section>
+
+      <!-- 7. See All Category / Flow View -->
+      <section class="page-view" id="view-see-all">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <button class="btn-mobile-pill secondary" id="btn-back-from-see-all" style="padding: 6px 12px;">
+            ← Back
+          </button>
+          <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;" id="see-all-header-tag">COLLECTION</span>
+          <div style="width: 40px;"></div>
+        </div>
+        <div class="see-all-hero" id="see-all-hero" style="text-align: center; margin-bottom: 20px;">
+          <h2 id="see-all-title" style="font-size: 22px; font-weight: 800; color: #fff; margin-bottom: 6px;">Collection Title</h2>
+          <div id="see-all-subtitle" style="font-size: 13px; color: var(--accent-cyan); font-weight: 600; margin-bottom: 14px;">Curated for You</div>
+          <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="btn-mobile-pill primary" id="btn-see-all-play" style="padding: 10px 20px;">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Play All</span>
+            </button>
+            <button class="btn-mobile-pill secondary" id="btn-see-all-shuffle" style="padding: 10px 16px;">
+              <span>Shuffle</span>
+            </button>
+          </div>
+        </div>
+        <div class="track-list" id="see-all-tracks-list"></div>
       </section>
     </main>
 
@@ -674,7 +826,66 @@
               <div style="font-size: 10px; color: var(--text-muted); text-transform: uppercase; margin-top: 2px;">Offline Tracks</div>
             </div>
           </div>
+
+          <!-- App Updates Section -->
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 12px; margin-top: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+              <div>
+                <div style="font-size: 13px; font-weight: 700; color: #fff;">Etsuko Updates</div>
+                <div style="font-size: 11px; color: var(--accent-cyan);" id="label-app-version">v1.2.0 (Latest)</div>
+              </div>
+              <button type="button" class="btn-mobile-pill secondary" id="btn-check-updates" style="padding: 6px 12px; font-size: 11px;">
+                Check Updates
+              </button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 6px;">
+              <span style="font-size: 12px; color: var(--text-sub);">Auto-check on launch</span>
+              <label style="position: relative; display: inline-block; width: 38px; height: 22px;">
+                <input type="checkbox" id="chk-auto-updates" checked style="opacity: 0; width: 0; height: 0;">
+                <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--accent-cyan); transition: .3s; border-radius: 20px;"></span>
+              </label>
+            </div>
+          </div>
+
           <button class="btn-mobile-pill primary" id="btn-save-profile" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px; margin-top: 4px;">Save Profile</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Update Modal -->
+    <div class="mobile-modal" id="modal-app-update">
+      <div class="modal-card" style="max-height: 85vh; overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(0,240,255,0.15); display: flex; align-items: center; justify-content: center; color: var(--accent-cyan);">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            </div>
+            <h3 class="modal-title" style="font-size: 17px; margin: 0;">Update Available</h3>
+          </div>
+          <button class="btn-icon-top" id="btn-close-app-update"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        </div>
+        <div style="margin-bottom: 14px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <span style="font-size: 15px; font-weight: 800; color: #fff;" id="update-modal-version">v1.2.1</span>
+            <span style="font-size: 11px; background: rgba(0,240,255,0.15); color: var(--accent-cyan); padding: 2px 8px; border-radius: 12px; font-weight: 700;">NEW RELEASE</span>
+          </div>
+          <p style="font-size: 12px; color: var(--text-sub); margin: 0;" id="update-modal-date">Released just now</p>
+        </div>
+        <div class="update-notes-box" id="update-modal-notes" style="background: rgba(255,255,255,0.04); border: 1px solid var(--border-subtle); border-radius: 10px; padding: 12px; font-size: 12px; color: var(--text-sub); line-height: 1.5; max-height: 160px; overflow-y: auto; margin-bottom: 16px;">
+          <!-- Release notes inserted dynamically -->
+        </div>
+        <div id="update-progress-container" style="display: none; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-sub); margin-bottom: 6px;">
+            <span id="update-status-label">Downloading update...</span>
+            <span id="update-progress-percent">0%</span>
+          </div>
+          <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden;">
+            <div id="update-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--accent-cyan), #10b981); transition: width 0.2s ease;"></div>
+          </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <button class="btn-mobile-pill secondary" id="btn-update-later" style="flex: 1; justify-content: center; padding: 12px;">Later</button>
+          <button class="btn-mobile-pill primary" id="btn-update-now" style="flex: 2; justify-content: center; padding: 12px; font-weight: 700;">Update Now</button>
         </div>
       </div>
     </div>
@@ -694,6 +905,7 @@
   <!-- Scripts -->
   <script src="js/api.js"></script>
   <script src="js/downloader.js"></script>
+  <script src="js/updater.js"></script>
   <script src="js/touch.js"></script>
   <script src="js/player.js"></script>
   <script src="js/app.js"></script>

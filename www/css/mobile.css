@@ -1412,18 +1412,25 @@ body {
   color: var(--text-main);
 }
 
+.btn-see-all,
 .spotify-see-all-btn {
-  background: transparent;
-  border: none;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
   color: var(--text-sub);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
+  padding: 4px 10px;
   cursor: pointer;
-  transition: color 0.15s ease;
+  transition: all 0.15s ease;
+  white-space: nowrap;
 }
 
+.btn-see-all:active,
 .spotify-see-all-btn:active {
-  color: var(--accent-cyan);
+  background: var(--accent-cyan);
+  color: #07080d;
+  border-color: var(--accent-cyan);
 }
 
 .spotify-daily-tag {
@@ -2216,3 +2223,58 @@ body {
   50% { transform: scale(1.22); filter: drop-shadow(0 0 12px var(--accent-cyan)); }
   100% { transform: scale(1); filter: drop-shadow(0 0 2px var(--accent-cyan)); }
 }
+
+/* --- See All Collection View Styling --- */
+#view-see-all {
+  padding-bottom: calc(var(--nav-height) + var(--mini-player-height) + var(--safe-bottom) + 30px);
+}
+
+.see-all-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 10px 0 22px 0;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 16px;
+}
+
+/* --- Toggle Slider Component --- */
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #07080d;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .toggle-slider {
+  background-color: var(--accent-cyan) !important;
+}
+
+input:checked + .toggle-slider:before {
+  transform: translateX(16px);
+}
+
+/* --- Release Notes Markdown View --- */
+.update-notes-box h1,
+.update-notes-box h2,
+.update-notes-box h3 {
+  color: #fff;
+  font-size: 13px;
+  margin: 6px 0 4px 0;
+}
+
+.update-notes-box ul {
+  padding-left: 18px;
+  margin: 4px 0;
+}
+
+.update-notes-box li {
+  margin-bottom: 4px;
+}
+

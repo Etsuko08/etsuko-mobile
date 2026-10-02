@@ -30,6 +30,11 @@ class EtsukoMobileApp {
     this.loadLibraryData();
     this.loadDownloadsData();
     this.loadUserProfileOnStartup();
+    setTimeout(() => {
+      if (localStorage.getItem('etsuko_auto_update_check') !== 'false' && window.updater) {
+        window.updater.checkForUpdates(true);
+      }
+    }, 2500);
   }
 
   initDOM() {
@@ -40,7 +45,8 @@ class EtsukoMobileApp {
       'view-library': document.getElementById('view-library'),
       'view-downloads': document.getElementById('view-downloads'),
       'view-album-detail': document.getElementById('view-album-detail'),
-      'view-artist-detail': document.getElementById('view-artist-detail')
+      'view-artist-detail': document.getElementById('view-artist-detail'),
+      'view-see-all': document.getElementById('view-see-all')
     };
     this.navBtns = document.querySelectorAll('.nav-tab-btn');
 
@@ -54,6 +60,8 @@ class EtsukoMobileApp {
     this.trendingHitsRow = document.getElementById('trending-hits-row');
     this.dailyPicksRow = document.getElementById('daily-picks-row');
     this.topMixesRow = document.getElementById('top-mixes-row');
+    this.trendingWorldwideRow = document.getElementById('trending-worldwide-row');
+    this.newReleasesRow = document.getElementById('new-releases-row');
     this.hindiHitsRow = document.getElementById('hindi-hits-row');
     this.urduSufiRow = document.getElementById('urdu-sufi-row');
     this.punjabiHitsRow = document.getElementById('punjabi-hits-row');
@@ -61,10 +69,36 @@ class EtsukoMobileApp {
     this.phonkHitsRow = document.getElementById('phonk-hits-row');
     this.hiphopHitsRow = document.getElementById('hiphop-hits-row');
     this.rockHitsRow = document.getElementById('rock-hits-row');
+    this.chillRelaxRow = document.getElementById('chill-relax-row');
+    this.workoutRow = document.getElementById('workout-row');
+    this.acousticRow = document.getElementById('acoustic-row');
+    this.sadSongsRow = document.getElementById('sad-songs-row');
+    this.loveRomanceRow = document.getElementById('love-romance-row');
+    this.electronicRow = document.getElementById('electronic-row');
+    this.classicalRow = document.getElementById('classical-row');
     this.lofiHitsRow = document.getElementById('lofi-hits-row');
+    this.soundtracksRow = document.getElementById('soundtracks-row');
+    this.hiddenGemsRow = document.getElementById('hidden-gems-row');
     this.popularAlbumsRow = document.getElementById('popular-albums-row');
     this.podcastsRow = document.getElementById('podcasts-row');
     this.dailyTagDate = document.getElementById('daily-tag-date');
+
+    // See All View Elements
+    this.btnBackFromSeeAll = document.getElementById('btn-back-from-see-all');
+    this.seeAllTitle = document.getElementById('see-all-title');
+    this.seeAllSubtitle = document.getElementById('see-all-subtitle');
+    this.seeAllHeaderTag = document.getElementById('see-all-header-tag');
+    this.btnSeeAllPlay = document.getElementById('btn-see-all-play');
+    this.btnSeeAllShuffle = document.getElementById('btn-see-all-shuffle');
+    this.seeAllTracksList = document.getElementById('see-all-tracks-list');
+    this.activeSeeAllTracks = [];
+
+    // App Update Elements
+    this.btnCheckUpdates = document.getElementById('btn-check-updates');
+    this.chkAutoUpdates = document.getElementById('chk-auto-updates');
+    this.modalAppUpdate = document.getElementById('modal-app-update');
+    this.btnCloseAppUpdate = document.getElementById('btn-close-app-update');
+    this.downloadsSearchInput = document.getElementById('downloads-search-input');
 
     // Search
     this.btnSearchBack = document.getElementById('btn-search-back');
@@ -399,6 +433,79 @@ class EtsukoMobileApp {
       this.loadDownloadsData();
     });
 
+    window.addEventListener('etsuko:download-error', (e) => {
+      this.hideActiveDownloadCard();
+      const err = e.detail?.error || 'Download error';
+      this.showToast(err);
+    });
+
+    // See All View controls
+    if (this.btnBackFromSeeAll) {
+      this.btnBackFromSeeAll.addEventListener('click', () => {
+        this.switchView(this.previousView || 'view-discover');
+      });
+    }
+
+    if (this.btnSeeAllPlay) {
+      this.btnSeeAllPlay.addEventListener('click', () => {
+        if (this.activeSeeAllTracks && this.activeSeeAllTracks.length > 0) {
+          window.player.playTrack(this.activeSeeAllTracks[0], this.activeSeeAllTracks);
+          this.openPlayerSheet();
+        }
+      });
+    }
+
+    if (this.btnSeeAllShuffle) {
+      this.btnSeeAllShuffle.addEventListener('click', () => {
+        if (this.activeSeeAllTracks && this.activeSeeAllTracks.length > 0) {
+          const shuffled = [...this.activeSeeAllTracks].sort(() => Math.random() - 0.5);
+          window.player.playTrack(shuffled[0], shuffled);
+          this.openPlayerSheet();
+        }
+      });
+    }
+
+    // See All buttons across all feed carousels
+    document.querySelectorAll('.btn-see-all').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const cat = btn.getAttribute('data-category');
+        this.handleSeeAllCategory(cat);
+      });
+    });
+
+    // Downloads search live filtering
+    if (this.downloadsSearchInput) {
+      this.downloadsSearchInput.addEventListener('input', (e) => {
+        const q = (e.target.value || '').trim().toLowerCase();
+        this.filterDownloadsList(q);
+      });
+    }
+
+    // App Update controls
+    if (this.btnCheckUpdates) {
+      this.btnCheckUpdates.addEventListener('click', () => {
+        if (window.updater) {
+          window.updater.checkForUpdates(false);
+        } else {
+          this.showToast('Update engine not ready');
+        }
+      });
+    }
+
+    if (this.chkAutoUpdates) {
+      const savedAuto = localStorage.getItem('etsuko_auto_update_check');
+      this.chkAutoUpdates.checked = savedAuto !== 'false';
+      this.chkAutoUpdates.addEventListener('change', (e) => {
+        localStorage.setItem('etsuko_auto_update_check', e.target.checked ? 'true' : 'false');
+      });
+    }
+
+    if (this.btnCloseAppUpdate) {
+      this.btnCloseAppUpdate.addEventListener('click', () => {
+        if (this.modalAppUpdate) this.modalAppUpdate.classList.remove('active');
+      });
+    }
+
     window.addEventListener('etsuko:download-deleted', () => {
       this.loadDownloadsData();
     });
@@ -507,7 +614,7 @@ class EtsukoMobileApp {
         this.onboardChips.forEach(c => {
           if (c.classList.contains('selected')) selected.push(c.getAttribute('data-genre'));
         });
-        if (window.api) window.api.saveUserGenres(selected.length > 0 ? selected : ['english', 'hindi', 'phonk']);
+        if (window.api) window.api.saveUserGenres(selected.length > 0 ? selected : ['english', 'pop', 'hiphop', 'electronic', 'rock', 'chill']);
         this.modalOnboarding.classList.remove('active');
         this.showToast('Preferences saved! Refreshing your daily feed.');
         this.loadHomeFeed();
@@ -577,6 +684,7 @@ class EtsukoMobileApp {
     try {
       this.updateGreetingHeader();
       const feed = await window.api.getHomeFeed();
+      this.cachedFeed = feed;
 
       // Today date tag
       if (this.dailyTagDate) {
@@ -590,7 +698,6 @@ class EtsukoMobileApp {
       const hasHistory = feed.jumpBackIn && feed.jumpBackIn.length > 0;
 
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-
       if (hasHistory) {
         this.renderHorizontalRow(this.jumpBackRow, feed.jumpBackIn);
       }
@@ -600,18 +707,41 @@ class EtsukoMobileApp {
         dailySub.textContent = hasHistory ? 'Fresh music picked for your taste' : 'Daily discovery across genres';
       }
 
+      // Render standard feed carousels
       this.renderHorizontalRow(this.dailyPicksRow, feed.dailyPicks);
       this.renderTopMixes(this.topMixesRow, feed.topMixes);
+      this.renderHorizontalRow(this.trendingWorldwideRow, feed.trendingWorldwide);
+      this.renderHorizontalRow(this.newReleasesRow, feed.newReleases);
+      this.renderHorizontalRow(this.popHitsRow, feed.popHits);
+      this.renderHorizontalRow(this.hiphopHitsRow, feed.hiphopHits);
+      this.renderHorizontalRow(this.phonkHitsRow, feed.phonkHits);
+      this.renderHorizontalRow(this.rockHitsRow, feed.rockHits);
+      this.renderHorizontalRow(this.chillRelaxRow, feed.chillRelax);
+      this.renderHorizontalRow(this.workoutRow, feed.workout);
+      this.renderHorizontalRow(this.acousticRow, feed.acoustic);
+      this.renderHorizontalRow(this.sadSongsRow, feed.sadSongs);
+      this.renderHorizontalRow(this.loveRomanceRow, feed.loveRomance);
+      this.renderHorizontalRow(this.electronicRow, feed.electronic);
+      this.renderHorizontalRow(this.classicalRow, feed.classical);
+      this.renderHorizontalRow(this.lofiHitsRow, feed.lofiHits);
+      this.renderHorizontalRow(this.soundtracksRow, feed.soundtracks);
+      this.renderHorizontalRow(this.hiddenGemsRow, feed.hiddenGems);
+      this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums, true);
+      this.renderHorizontalRow(this.podcastsRow, feed.podcasts);
+
+      // Render regional carousels (hidden by default unless user has selected them)
       this.renderHorizontalRow(this.hindiHitsRow, feed.hindiHits);
       this.renderHorizontalRow(this.urduSufiRow, feed.urduSufi);
       this.renderHorizontalRow(this.punjabiHitsRow, feed.punjabiHits);
-      this.renderHorizontalRow(this.popHitsRow, feed.popHits);
-      this.renderHorizontalRow(this.phonkHitsRow, feed.phonkHits);
-      this.renderHorizontalRow(this.hiphopHitsRow, feed.hiphopHits);
-      this.renderHorizontalRow(this.rockHitsRow, feed.rockHits);
-      this.renderHorizontalRow(this.lofiHitsRow, feed.lofiHits);
-      this.renderHorizontalRow(this.popularAlbumsRow, feed.popularAlbums, true);
-      this.renderHorizontalRow(this.podcastsRow, feed.podcasts);
+
+      const userGenres = window.api ? window.api.getUserGenres() || [] : [];
+      const secHindi = document.getElementById('section-hindi-hits');
+      const secUrdu = document.getElementById('section-urdu-sufi');
+      const secPunjabi = document.getElementById('section-punjabi-hits');
+
+      if (secHindi) secHindi.style.display = userGenres.includes('hindi') ? 'block' : 'none';
+      if (secUrdu) secUrdu.style.display = userGenres.includes('urdu') ? 'block' : 'none';
+      if (secPunjabi) secPunjabi.style.display = userGenres.includes('punjabi') ? 'block' : 'none';
     } catch (e) {
       console.warn('[HomeFeed] Error:', e);
     }
@@ -734,38 +864,58 @@ class EtsukoMobileApp {
 
   filterHomeFeed(filter) {
     const jumpSection = document.getElementById('section-jump-back');
-    const dailySection = document.getElementById('section-daily-picks');
-    const mixesSection = document.getElementById('section-top-mixes');
-    const albumsSection = document.getElementById('section-popular-albums');
     const podcastsSection = document.getElementById('section-podcasts');
+    const userGenres = window.api ? window.api.getUserGenres() || [] : [];
 
-    const musicSections = [
-      dailySection,
-      mixesSection,
-      document.getElementById('section-hindi-hits'),
-      document.getElementById('section-urdu-sufi'),
-      document.getElementById('section-punjabi-hits'),
+    const secHindi = document.getElementById('section-hindi-hits');
+    const secUrdu = document.getElementById('section-urdu-sufi');
+    const secPunjabi = document.getElementById('section-punjabi-hits');
+
+    const standardMusicSections = [
+      document.getElementById('section-daily-picks'),
+      document.getElementById('section-top-mixes'),
+      document.getElementById('section-trending-worldwide'),
+      document.getElementById('section-new-releases'),
       document.getElementById('section-pop-hits'),
-      document.getElementById('section-phonk-hits'),
       document.getElementById('section-hiphop-hits'),
+      document.getElementById('section-phonk-hits'),
       document.getElementById('section-rock-hits'),
+      document.getElementById('section-chill-relax'),
+      document.getElementById('section-workout'),
+      document.getElementById('section-acoustic'),
+      document.getElementById('section-sad-songs'),
+      document.getElementById('section-love-romance'),
+      document.getElementById('section-electronic'),
+      document.getElementById('section-classical'),
       document.getElementById('section-lofi-hits'),
-      albumsSection
+      document.getElementById('section-soundtracks'),
+      document.getElementById('section-hidden-gems'),
+      document.getElementById('section-popular-albums')
     ];
 
     const hasHistory = window.api && window.api.getRecentTracks().length > 0;
 
     if (filter === 'all') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      musicSections.forEach(s => s && (s.style.display = 'block'));
+      standardMusicSections.forEach(s => s && (s.style.display = 'block'));
       if (podcastsSection) podcastsSection.style.display = 'block';
+      if (secHindi) secHindi.style.display = userGenres.includes('hindi') ? 'block' : 'none';
+      if (secUrdu) secUrdu.style.display = userGenres.includes('urdu') ? 'block' : 'none';
+      if (secPunjabi) secPunjabi.style.display = userGenres.includes('punjabi') ? 'block' : 'none';
     } else if (filter === 'music') {
       if (jumpSection) jumpSection.style.display = hasHistory ? 'block' : 'none';
-      musicSections.forEach(s => s && (s.style.display = 'block'));
+      standardMusicSections.forEach(s => s && (s.style.display = 'block'));
       if (podcastsSection) podcastsSection.style.display = 'none';
+      if (secHindi) secHindi.style.display = userGenres.includes('hindi') ? 'block' : 'none';
+      if (secUrdu) secUrdu.style.display = userGenres.includes('urdu') ? 'block' : 'none';
+      if (secPunjabi) secPunjabi.style.display = userGenres.includes('punjabi') ? 'block' : 'none';
     } else { // podcasts
       if (jumpSection) jumpSection.style.display = 'none';
-      musicSections.forEach(s => s && (s.style.display = 'none'));
+      standardMusicSections.forEach(s => s && (s.style.display = 'none'));
+      if (secHindi) secHindi.style.display = 'none';
+      if (secUrdu) secUrdu.style.display = 'none';
+      if (secPunjabi) secPunjabi.style.display = 'none';
+      const mixesSection = document.getElementById('section-top-mixes');
       if (mixesSection) mixesSection.style.display = 'block';
       if (podcastsSection) podcastsSection.style.display = 'block';
     }
@@ -1443,6 +1593,158 @@ class EtsukoMobileApp {
     }
   }
 
+  openSeeAllView(title, tag, tracks) {
+    if (!this.views['view-see-all']) return;
+    this.activeSeeAllTracks = tracks || [];
+    if (this.seeAllTitle) this.seeAllTitle.textContent = title || 'Collection';
+    if (this.seeAllSubtitle) this.seeAllSubtitle.textContent = tag || `${this.activeSeeAllTracks.length} tracks`;
+    if (this.seeAllHeaderTag) this.seeAllHeaderTag.textContent = (tag || 'COLLECTION').toUpperCase();
+
+    if (this.seeAllTracksList) {
+      this.seeAllTracksList.innerHTML = '';
+      this.activeSeeAllTracks.forEach((track, index) => {
+        const item = document.createElement('div');
+        item.className = 'track-list-item';
+        const isLiked = window.api ? window.api.isLiked(track.videoId) : false;
+
+        item.innerHTML = `
+          <div class="track-number">${index + 1}</div>
+          <div class="track-cover-box">
+            <img src="${this.getThumbnailSrc(track)}" alt="Cover" class="track-cover" ${this.getImgFallbackAttr(track.videoId)}>
+          </div>
+          <div class="track-meta">
+            <div class="track-title">${this.escapeHtml(track.title)}</div>
+            <div class="track-artist">${this.escapeHtml(track.artist)}</div>
+          </div>
+          <button class="track-btn-action btn-item-like ${isLiked ? 'liked' : ''}" title="Like">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="${isLiked ? 'var(--accent-magenta)' : 'none'}" stroke="${isLiked ? 'var(--accent-magenta)' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          </button>
+          <button class="track-btn-action btn-item-more" title="More">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>
+          </button>
+        `;
+
+        item.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-item-like')) {
+            const nowLiked = window.api.toggleLike(track);
+            const btn = item.querySelector('.btn-item-like');
+            if (btn) {
+              btn.classList.toggle('liked', nowLiked);
+              btn.innerHTML = `<svg viewBox="0 0 24 24" width="18" height="18" fill="${nowLiked ? 'var(--accent-magenta)' : 'none'}" stroke="${nowLiked ? 'var(--accent-magenta)' : 'currentColor'}" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>`;
+            }
+            this.showToast(nowLiked ? 'Added to Liked Songs' : 'Removed from Liked Songs');
+            return;
+          }
+          if (e.target.closest('.btn-item-more')) {
+            this.openAddToPlaylistModal(track);
+            return;
+          }
+          window.player.playTrack(track, this.activeSeeAllTracks);
+          this.openPlayerSheet();
+        });
+
+        this.seeAllTracksList.appendChild(item);
+      });
+    }
+
+    this.switchView('view-see-all');
+  }
+
+  handleSeeAllCategory(category) {
+    const feed = this.cachedFeed || {};
+    switch (category) {
+      case 'jump_back':
+        this.openSeeAllView('Jump back in', 'Recently Played', feed.jumpBackIn || []);
+        break;
+      case 'recommended':
+        this.openSeeAllView('Recommended For You', 'Daily Discovery', feed.dailyPicks || []);
+        break;
+      case 'mixes':
+        const mixTracks = feed.topMixes && feed.topMixes[0] ? feed.topMixes[0].tracks : [];
+        this.openSeeAllView('Your Daily Mixes', 'Personalized Flow', mixTracks);
+        break;
+      case 'trending':
+        this.openSeeAllView('Trending Worldwide', 'Global Charts', feed.trendingWorldwide || []);
+        break;
+      case 'new_releases':
+        this.openSeeAllView('New Releases & Drops', 'Fresh Music', feed.newReleases || []);
+        break;
+      case 'pop':
+        this.openSeeAllView('Global Pop Hits', 'Chart Toppers', feed.popHits || []);
+        break;
+      case 'hiphop':
+        this.openSeeAllView('Hip-Hop & Rap Heavyweights', 'Beats & Rhymes', feed.hiphopHits || []);
+        break;
+      case 'phonk':
+        this.openSeeAllView('Phonk & Midnight Drift', 'Drift & High Bass', feed.phonkHits || []);
+        break;
+      case 'rock':
+        this.openSeeAllView('Rock & Alternative Anthems', 'Rock Classics', feed.rockHits || []);
+        break;
+      case 'chill':
+        this.openSeeAllView('Chill & Relax • Late Night Vibes', 'Chill & Ambient', feed.chillRelax || []);
+        break;
+      case 'workout':
+        this.openSeeAllView('Workout & High Energy Beats', 'Gym Energy', feed.workout || []);
+        break;
+      case 'acoustic':
+        this.openSeeAllView('Acoustic Sessions & Unplugged', 'Unplugged Guitar', feed.acoustic || []);
+        break;
+      case 'sad':
+        this.openSeeAllView('Melancholy & Deep Emotion', 'Deep Emotion', feed.sadSongs || []);
+        break;
+      case 'romance':
+        this.openSeeAllView('Love & Romantic Ballads', 'Romantic Melodies', feed.loveRomance || []);
+        break;
+      case 'electronic':
+        this.openSeeAllView('Electronic & Dance Anthems', 'EDM & Dance', feed.electronic || []);
+        break;
+      case 'classical':
+        this.openSeeAllView('Classical & Instrumental Cinema', 'Piano & Strings', feed.classical || []);
+        break;
+      case 'lofi':
+        this.openSeeAllView('Lo-Fi Beats & Study Chill', 'Study & Relax', feed.lofiHits || []);
+        break;
+      case 'soundtracks':
+        this.openSeeAllView('Trending Soundtracks & Cinema', 'Cinema Scores', feed.soundtracks || []);
+        break;
+      case 'hidden_gems':
+        this.openSeeAllView('Hidden Gems & Deep Cuts', 'Indie & Deep Cuts', feed.hiddenGems || []);
+        break;
+      case 'albums':
+        this.openSeeAllView('Popular Albums and Singles', 'Hit Albums', feed.popularAlbums || []);
+        break;
+      case 'podcasts':
+        this.openSeeAllView('Podcasts & Audio Shows', 'Podcasts', feed.podcasts || []);
+        break;
+      case 'hindi':
+        this.openSeeAllView('Bollywood & Hindi Romance', 'Bollywood Hits', feed.hindiHits || []);
+        break;
+      case 'urdu':
+        this.openSeeAllView('Urdu & Sufi Melodies', 'Sufi & Ghazal', feed.urduSufi || []);
+        break;
+      case 'punjabi':
+        this.openSeeAllView('Punjabi Bangers', 'Punjabi Heat', feed.punjabiHits || []);
+        break;
+      default:
+        this.openSeeAllView('Music Collection', 'Curated', feed.dailyPicks || []);
+        break;
+    }
+  }
+
+  filterDownloadsList(query) {
+    if (!query) {
+      this.renderDownloadedTracksList(this.downloadedTracks);
+      return;
+    }
+    const filtered = (this.downloadedTracks || []).filter(t => {
+      const matchTitle = (t.title || '').toLowerCase().includes(query);
+      const matchArtist = (t.artist || '').toLowerCase().includes(query);
+      return matchTitle || matchArtist;
+    });
+    this.renderDownloadedTracksList(filtered);
+  }
+
   onHardwareBack() {
     if (this.playerSheet && (this.playerSheet.classList.contains('active') || this.playerSheet.classList.contains('open'))) {
       this.closePlayerSheet();
@@ -1456,7 +1758,11 @@ class EtsukoMobileApp {
       this.modalOnboarding.classList.remove('active');
       return;
     }
-    if (this.currentView === 'view-album-detail' || this.currentView === 'view-artist-detail') {
+    if (this.modalAppUpdate && this.modalAppUpdate.classList.contains('active')) {
+      this.modalAppUpdate.classList.remove('active');
+      return;
+    }
+    if (this.currentView === 'view-album-detail' || this.currentView === 'view-artist-detail' || this.currentView === 'view-see-all') {
       this.switchView(this.previousView || 'view-discover');
       return;
     }
