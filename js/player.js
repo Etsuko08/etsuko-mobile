@@ -724,7 +724,7 @@ class MobilePlayer {
       const vid = track.videoId || '';
 
       item.innerHTML = `
-        <img src="${thumb}" class="sheet-queue-item-thumb" alt="" onerror="if(!this.dataset.t1 && '${vid}'){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${vid}/hqdefault.jpg';}else if(!this.dataset.t2 && '${vid}'){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg';}else{this.onerror=null;this.src='assets/default_cover.png';}">
+        <img src="${thumb}" class="sheet-queue-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}" onerror="window.handleEtsukoImgError(this)">
         <div class="sheet-queue-item-info">
           <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${this.escapeHtml(track.title || 'Unknown Title')}</div>
           <div class="sheet-queue-item-artist">${this.escapeHtml(track.artist || 'Unknown Artist')}</div>
@@ -828,7 +828,7 @@ class MobilePlayer {
       const vid = item.videoId || '';
 
       el.innerHTML = `
-        <img src="${thumb}" class="sheet-related-item-thumb" alt="" onerror="if(!this.dataset.t1 && '${vid}'){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${vid}/hqdefault.jpg';}else if(!this.dataset.t2 && '${vid}'){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg';}else{this.onerror=null;this.src='assets/default_cover.png';}">
+        <img src="${thumb}" class="sheet-related-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}" onerror="window.handleEtsukoImgError(this)">
         <div class="sheet-related-item-info">
           <div class="sheet-related-item-title">${this.escapeHtml(item.title || 'Unknown Title')}</div>
           <div class="sheet-related-item-artist">${this.escapeHtml(item.artist || 'Unknown Artist')} • ${this.escapeHtml(item.duration || '3:30')}</div>
@@ -967,22 +967,23 @@ class MobilePlayer {
           this.sheetLyricsStatus.style.borderColor = 'rgba(255, 255, 255, 0.3)';
           this.sheetLyricsStatus.style.color = '#fff';
         }
-        this.sheetLyricsContainer.innerHTML = `
-          <div style="font-size: 15px; font-weight: 600; line-height: 1.6; color: rgba(255,255,255,0.75); white-space: pre-wrap; padding: 6px;">
-            ${lyrics.text}
-          </div>
-        `;
+        this.sheetLyricsContainer.innerHTML = '';
+        const plainDiv = document.createElement('div');
+        plainDiv.style.cssText = 'font-size: 15px; font-weight: 600; line-height: 1.6; color: rgba(255,255,255,0.75); white-space: pre-wrap; padding: 6px;';
+        plainDiv.textContent = lyrics.text;
+        this.sheetLyricsContainer.appendChild(plainDiv);
       } else {
         if (this.sheetLyricsStatus) {
           this.sheetLyricsStatus.textContent = lyrics.type === 'instrumental' ? 'AUDIO' : 'OFFLINE';
           this.sheetLyricsStatus.style.borderColor = 'rgba(255,255,255,0.15)';
           this.sheetLyricsStatus.style.color = 'var(--text-muted)';
         }
-        this.sheetLyricsContainer.innerHTML = `
-          <div class="sheet-lyrics-placeholder">
-            ${lyrics.message || 'Lyrics unavailable for this track.'}
-          </div>
-        `;
+        this.sheetLyricsContainer.innerHTML = '';
+        const placeDiv = document.createElement('div');
+        placeDiv.className = 'sheet-lyrics-placeholder';
+        placeDiv.textContent = lyrics.message || 'Lyrics unavailable for this track.';
+        this.sheetLyricsContainer.appendChild(placeDiv);
+      }
       }
     } catch (e) {
       console.warn('[Player] loadLyrics notice:', e);

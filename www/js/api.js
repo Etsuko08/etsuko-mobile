@@ -3,27 +3,35 @@
 // True Daily-Seeded Recommendations, Dynamic Podcasts & Standalone Offline Storage
 
 function formatHighResThumbnail(videoId, url) {
+  const safeVid = (videoId && typeof videoId === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) ? videoId : null;
+
   if (url && typeof url === 'string') {
+    const trimmed = url.trim();
+    // Protocol guard: reject script or unsafe protocols
+    if (/^(javascript|vbscript|data:text):/i.test(trimmed)) {
+      return safeVid ? `https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg` : 'assets/default_cover.png';
+    }
+
     // If it's a Google/YouTube Music CDN square album cover, upgrade to 544x544 HD
-    if (url.includes('googleusercontent.com') || url.includes('ggpht.com')) {
-      if (/=w\d+-h\d+[^"]*/.test(url)) {
-        return url.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
-      } else if (/=s\d+/.test(url)) {
-        return url.replace(/=s\d+/, '=s544');
+    if (trimmed.includes('googleusercontent.com') || trimmed.includes('ggpht.com')) {
+      if (/=w\d+-h\d+[^"]*/.test(trimmed)) {
+        return trimmed.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
+      } else if (/=s\d+/.test(trimmed)) {
+        return trimmed.replace(/=s\d+/, '=s544');
       }
-      return url;
+      return trimmed;
     }
-    if (url.startsWith('http')) {
-      if (url.includes('hq720.jpg')) {
-        return videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : url;
+    if (trimmed.startsWith('http')) {
+      if (trimmed.includes('hq720.jpg')) {
+        return safeVid ? `https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg` : trimmed;
       }
-      return url;
+      return trimmed;
     }
   }
-  if (videoId) {
-    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  if (safeVid) {
+    return `https://i.ytimg.com/vi/${safeVid}/hqdefault.jpg`;
   }
-  return url || 'assets/default_cover.png';
+  return (url && typeof url === 'string' && (url.startsWith('assets/') || url.startsWith('./assets/'))) ? url : 'assets/default_cover.png';
 }
 
 window.formatHighResThumbnail = formatHighResThumbnail;
@@ -31,6 +39,24 @@ window.getEtsukoArtwork = (track) => {
   if (!track) return 'assets/default_cover.png';
   if (typeof track === 'string') return formatHighResThumbnail(null, track);
   return formatHighResThumbnail(track.videoId, track.thumbnail);
+};
+
+window.handleEtsukoImgError = function(img) {
+  if (!img) return;
+  const vid = img.dataset.vid;
+  const step = parseInt(img.dataset.step || '0', 10);
+  const isValidVid = typeof vid === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(vid);
+
+  if (step === 0 && isValidVid) {
+    img.dataset.step = '1';
+    img.src = 'https://i.ytimg.com/vi/' + vid + '/hqdefault.jpg';
+  } else if (step === 1 && isValidVid) {
+    img.dataset.step = '2';
+    img.src = 'https://i.ytimg.com/vi/' + vid + '/mqdefault.jpg';
+  } else {
+    img.onerror = null;
+    img.src = 'assets/default_cover.png';
+  }
 };
 
 // Master Curated Catalogs (Guaranteed 100% Active YouTube IDs & Static Edge Covers)

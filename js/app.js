@@ -766,8 +766,8 @@ class EtsukoMobileApp {
   }
 
   getImgFallbackAttr(videoId) {
-    if (!videoId) return `onerror="this.onerror=null; this.src='assets/default_cover.png';"`;
-    return `onerror="if(!this.dataset.t1 && !this.src.includes('hqdefault.jpg')){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${videoId}/hqdefault.jpg';}else if(!this.dataset.t2 && !this.src.includes('mqdefault.jpg')){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${videoId}/mqdefault.jpg';}else{this.onerror=null; this.src='assets/default_cover.png';}"`;
+    const safeVid = (videoId && typeof videoId === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) ? videoId : '';
+    return `data-vid="${safeVid}" onerror="window.handleEtsukoImgError(this)"`;
   }
 
   renderHorizontalRow(container, tracks, isAlbum = false) {
@@ -1846,8 +1846,13 @@ class EtsukoMobileApp {
 
   updateTopBarAvatar(avatarData, name) {
     if (!this.topAvatarInitial) return;
-    if (avatarData) {
-      this.topAvatarInitial.innerHTML = `<img src="${avatarData}" alt="Avatar">`;
+    if (avatarData && typeof avatarData === 'string' && (avatarData.startsWith('data:image/') || avatarData.startsWith('https://') || avatarData.startsWith('http://'))) {
+      const img = document.createElement('img');
+      img.src = avatarData;
+      img.alt = 'Avatar';
+      img.onerror = () => this.setDefaultAvatar();
+      this.topAvatarInitial.innerHTML = '';
+      this.topAvatarInitial.appendChild(img);
     } else if (name && name.trim()) {
       this.topAvatarInitial.textContent = name.trim().charAt(0).toUpperCase();
     } else {
