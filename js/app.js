@@ -20,6 +20,11 @@ class EtsukoMobileApp {
     this.downloadedTracks = [];
     this.previousView = 'view-discover';
     this._lastBackPress = 0;
+    this.lastCalendarDay = window.api && typeof window.api.getLocalTodayString === 'function'
+      ? window.api.getLocalTodayString()
+      : new Date().toLocaleDateString('en-CA');
+    this.lastFeedRefreshTime = Date.now();
+    this.isRefreshingFeed = false;
 
     this.initDOM();
     this.bindEvents();
@@ -27,6 +32,8 @@ class EtsukoMobileApp {
     this.checkOnboarding();
     this.initSearchTabState();
     this.loadHomeFeed();
+    this.initPullToRefresh();
+    this.initLifecycleAndBack();
     this.loadLibraryData();
     this.loadDownloadsData();
     this.loadUserProfileOnStartup();
@@ -749,18 +756,8 @@ class EtsukoMobileApp {
 
   getThumbnailSrc(track) {
     if (!track) return 'assets/default_cover.png';
-    if (track.thumbnail && typeof track.thumbnail === 'string') {
-      if (track.thumbnail.includes('googleusercontent.com') || track.thumbnail.includes('ggpht.com')) {
-        if (/=w\d+-h\d+[^"]*/.test(track.thumbnail)) {
-          return track.thumbnail.replace(/=w\d+-h\d+[^"]*/, '=w544-h544-l90-rj');
-        } else if (/=s\d+/.test(track.thumbnail)) {
-          return track.thumbnail.replace(/=s\d+/, '=s544');
-        }
-        return track.thumbnail;
-      }
-      if (track.thumbnail.startsWith('http') && !track.thumbnail.includes('hq720.jpg')) {
-        return track.thumbnail;
-      }
+    if (window.getEtsukoArtwork) {
+      return window.getEtsukoArtwork(track);
     }
     if (track.videoId) {
       return `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
@@ -1866,6 +1863,172 @@ class EtsukoMobileApp {
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
       `;
+    }
+  }
+
+  initPullToRefresh() {
+    const viewport = this.viewViewport || document.getElementById('view-viewport');
+    const discover = this.views['view-discover'];
+    const indicator = document.getElementById('pull-refresh-indicator');
+    if (!viewport || !discover || !indicator) return;
+
+    let startY = 0;
+    let isPulling = false;
+    let pullDistance = 0;
+
+    discover.addEventListener('touchstart', (e) => {
+      if (viewport.scrollTop <= 2 && this.currentView === 'view-discover' && !this.isRefreshingFeed) {
+        startY = e.touches[0].clientY;
+        isPulling = true;
+        pullDistance = 0;
+      } else {
+        isPulling = false;
+      }
+    }, { passive: true });
+
+    discover.addEventListener('touchmove', (e) => {
+      if (!isPulling || this.isRefreshingFeed) return;
+      const currentY = e.touches[0].clientY;
+      const diffY = currentY - startY;
+      if (diffY > 0 && viewport.scrollTop <= 2) {
+        pullDistance = Math.min(diffY * 0.45, 75);
+        indicator.style.transform = `translateX(-50%) translateY(${pullDistance}px)`;
+        indicator.style.opacity = `${Math.min(pullDistance / 50, 1)}`;
+        if (pullDistance > 55) {
+          indicator.classList.add('ready');
+        } else {
+          indicator.classList.remove('ready');
+        }
+      } else {
+        indicator.style.transform = 'translateX(-50%) translateY(0)';
+        indicator.style.opacity = '0';
+      }
+    }, { passive: true });
+
+    const endPull = () => {
+      if (!isPulling) return;
+      isPulling = false;
+      if (pullDistance > 55 && !this.isRefreshingFeed) {
+        indicator.classList.add('refreshing');
+        indicator.style.transform = 'translateX(-50%) translateY(55px)';
+        if (window.touch) window.touch.vibrate(20);
+        this.refreshHomeFeed(true).finally(() => {
+          setTimeout(() => {
+            indicator.classList.remove('refreshing', 'ready');
+            indicator.style.transform = 'translateX(-50%) translateY(0)';
+            indicator.style.opacity = '0';
+          }, 350);
+        });
+      } else {
+        indicator.style.transform = 'translateX(-50%) translateY(0)';
+        indicator.style.opacity = '0';
+        indicator.classList.remove('ready', 'refreshing');
+      }
+      pullDistance = 0;
+    };
+
+    discover.addEventListener('touchend', endPull, { passive: true });
+    discover.addEventListener('touchcancel', endPull, { passive: true });
+  }
+
+  initLifecycleAndBack() {
+    // Native Capacitor Back Button listener
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      window.Capacitor.Plugins.App.addListener('backButton', () => {
+        this.onHardwareBack();
+      });
+    }
+
+    // App Resume listener (Capacitor & Web standard visibilitychange)
+    const handleResume = () => {
+      const today = window.api && typeof window.api.getLocalTodayString === 'function'
+        ? window.api.getLocalTodayString()
+        : new Date().toLocaleDateString('en-CA');
+      const now = Date.now();
+      // If calendar day rolled over OR session is older than 45 mins, refresh feed
+      if (this.lastCalendarDay !== today || (now - this.lastFeedRefreshTime > 45 * 60 * 1000)) {
+        console.log('[Etsuko] Foreground restoration detected date/session change. Refreshing home feed...');
+        this.lastCalendarDay = today;
+        this.refreshHomeFeed(false);
+      }
+    };
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        handleResume();
+      }
+    });
+
+    if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+      window.Capacitor.Plugins.App.addListener('appStateChange', (state) => {
+        if (state && state.isActive) {
+          handleResume();
+        }
+      });
+    }
+  }
+
+  async refreshHomeFeed(force = false) {
+    if (this.isRefreshingFeed) return;
+    this.isRefreshingFeed = true;
+    try {
+      if (force && window.api && typeof window.api.clearFeedCache === 'function') {
+        window.api.clearFeedCache();
+      }
+      await this.loadHomeFeed();
+      this.lastFeedRefreshTime = Date.now();
+      const today = window.api && typeof window.api.getLocalTodayString === 'function'
+        ? window.api.getLocalTodayString()
+        : new Date().toLocaleDateString('en-CA');
+      this.lastCalendarDay = today;
+      if (force) {
+        this.showToast('Daily soundspace refreshed');
+      }
+    } catch (err) {
+      console.warn('[Etsuko] Feed refresh failed:', err);
+    } finally {
+      this.isRefreshingFeed = false;
+    }
+  }
+
+  onHardwareBack() {
+    const now = Date.now();
+
+    // 1. If Full-Screen Player Sheet is open, collapse it smoothly
+    if (this.playerSheet && this.playerSheet.classList.contains('open')) {
+      this.closePlayerSheet();
+      return;
+    }
+
+    // 2. If Profile modal is open, close it
+    if (this.modalProfile && this.modalProfile.classList.contains('active')) {
+      this.modalProfile.classList.remove('active');
+      return;
+    }
+
+    // 3. If in detail views (Album, Artist, See-All, Search), return to previous view or discover
+    if (this.currentView === 'view-album-detail' ||
+        this.currentView === 'view-artist-detail' ||
+        this.currentView === 'view-see-all' ||
+        this.currentView === 'view-search') {
+      this.switchView(this.previousView && this.previousView !== this.currentView ? this.previousView : 'view-discover');
+      return;
+    }
+
+    // 4. If in another tab (Library, Settings), switch back to discover
+    if (this.currentView !== 'view-discover') {
+      this.switchView('view-discover');
+      return;
+    }
+
+    // 5. If already on Home (view-discover): double-press back within 2 seconds to exit app
+    if (now - (this._lastBackPress || 0) < 2000) {
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+        window.Capacitor.Plugins.App.exitApp();
+      }
+    } else {
+      this._lastBackPress = now;
+      this.showToast('Press back again to exit');
     }
   }
 

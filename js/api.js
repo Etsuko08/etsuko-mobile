@@ -26,6 +26,13 @@ function formatHighResThumbnail(videoId, url) {
   return url || 'assets/default_cover.png';
 }
 
+window.formatHighResThumbnail = formatHighResThumbnail;
+window.getEtsukoArtwork = (track) => {
+  if (!track) return 'assets/default_cover.png';
+  if (typeof track === 'string') return formatHighResThumbnail(null, track);
+  return formatHighResThumbnail(track.videoId, track.thumbnail);
+};
+
 // Master Curated Catalogs (Guaranteed 100% Active YouTube IDs & Static Edge Covers)
 const CATALOG_TRENDING_HITS = [
   { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", album: "Die With A Smile", duration: "4:12", tag: "Single", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" },
@@ -517,8 +524,13 @@ class EtsukoAPI {
     }
   }
 
+  getLocalTodayString() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
   getDeterministicDailyPool() {
-    const dateStr = new Date().toISOString().slice(0, 10);
+    const dateStr = this.getLocalTodayString();
     let hash = 0;
     for (let i = 0; i < dateStr.length; i++) {
       hash = (hash << 5) - hash + dateStr.charCodeAt(i);
@@ -694,7 +706,7 @@ class EtsukoAPI {
           if (vid) {
             const cardTitle = card.title?.runs?.[0]?.text || card.header?.musicCardShelfHeaderBasicRenderer?.title?.runs?.[0]?.text || 'Top Result';
             const cardArtist = card.subtitle?.runs?.map(r => r.text).join('') || 'Featured Artist';
-            let cardThumb = `https://i.ytimg.com/vi/${vid}/hq720.jpg`;
+            let cardThumb = `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
             const cardThumbs = card.thumbnailRenderer?.musicThumbnailRenderer?.thumbnail?.thumbnails;
             if (cardThumbs && cardThumbs.length > 0) {
               cardThumb = formatHighResThumbnail(vid, cardThumbs[cardThumbs.length - 1].url);
@@ -764,7 +776,7 @@ class EtsukoAPI {
             duration = col3Runs[0].text.trim();
           }
 
-          let itemThumb = `https://i.ytimg.com/vi/${videoId}/hq720.jpg`;
+          let itemThumb = `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
           const rawThumbs = renderer.thumbnail?.musicThumbnailRenderer?.thumbnail?.thumbnails;
           if (rawThumbs && rawThumbs.length > 0) {
             itemThumb = formatHighResThumbnail(videoId, rawThumbs[rawThumbs.length - 1].url);

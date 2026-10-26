@@ -600,18 +600,33 @@ class MobilePlayer {
     }
   }
 
+  escapeHtml(text) {
+    if (!text) return '';
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+  }
+
   updateTrackUI(track) {
-    const thumb = track.thumbnail || 'assets/default_cover.png';
+    const thumb = window.getEtsukoArtwork ? window.getEtsukoArtwork(track) : (track.thumbnail || 'assets/default_cover.png');
     const title = track.title || 'Unknown Title';
     const artist = track.artist || 'Unknown Artist';
+    const vid = track.videoId || '';
 
     // Mini Player
     if (this.miniCover) {
+      this.miniCover.dataset.vid = vid;
+      this.miniCover.dataset.fallbackStep = '0';
       this.miniCover.onerror = () => {
-        this.miniCover.onerror = () => { this.miniCover.src = 'assets/default_cover.png'; };
-        if (track.videoId) {
-          this.miniCover.src = `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        if (this.miniCover.dataset.vid !== vid) return;
+        const step = parseInt(this.miniCover.dataset.fallbackStep || '0', 10);
+        if (step === 0 && vid) {
+          this.miniCover.dataset.fallbackStep = '1';
+          this.miniCover.src = `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+        } else if (step === 1 && vid) {
+          this.miniCover.dataset.fallbackStep = '2';
+          this.miniCover.src = `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
         } else {
+          this.miniCover.onerror = null;
           this.miniCover.src = 'assets/default_cover.png';
         }
       };
@@ -623,11 +638,19 @@ class MobilePlayer {
 
     // Full Player Sheet (Pure Album Art Cover, ZERO Video UI)
     if (this.sheetCover) {
+      this.sheetCover.dataset.vid = vid;
+      this.sheetCover.dataset.fallbackStep = '0';
       this.sheetCover.onerror = () => {
-        this.sheetCover.onerror = () => { this.sheetCover.src = 'assets/default_cover.png'; };
-        if (track.videoId) {
-          this.sheetCover.src = `https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg`;
+        if (this.sheetCover.dataset.vid !== vid) return;
+        const step = parseInt(this.sheetCover.dataset.fallbackStep || '0', 10);
+        if (step === 0 && vid) {
+          this.sheetCover.dataset.fallbackStep = '1';
+          this.sheetCover.src = `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
+        } else if (step === 1 && vid) {
+          this.sheetCover.dataset.fallbackStep = '2';
+          this.sheetCover.src = `https://i.ytimg.com/vi/${vid}/mqdefault.jpg`;
         } else {
+          this.sheetCover.onerror = null;
           this.sheetCover.src = 'assets/default_cover.png';
         }
       };
@@ -697,11 +720,14 @@ class MobilePlayer {
       const isCurrent = idx === this.queueIndex;
       const item = document.createElement('div');
       item.className = `sheet-queue-item${isCurrent ? ' current' : ''}`;
+      const thumb = window.getEtsukoArtwork ? window.getEtsukoArtwork(track) : (track.thumbnail || 'assets/default_cover.png');
+      const vid = track.videoId || '';
+
       item.innerHTML = `
-        <img src="${track.thumbnail || 'assets/default_cover.png'}" class="sheet-queue-item-thumb" alt="" onerror="this.onerror=function(){this.src='assets/default_cover.png'}; if ('${track.videoId}') this.src='https://i.ytimg.com/vi/${track.videoId}/hqdefault.jpg'; else this.src='assets/default_cover.png';">
+        <img src="${thumb}" class="sheet-queue-item-thumb" alt="" onerror="if(!this.dataset.t1 && '${vid}'){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${vid}/hqdefault.jpg';}else if(!this.dataset.t2 && '${vid}'){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg';}else{this.onerror=null;this.src='assets/default_cover.png';}">
         <div class="sheet-queue-item-info">
-          <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${track.title || 'Unknown Title'}</div>
-          <div class="sheet-queue-item-artist">${track.artist || 'Unknown Artist'}</div>
+          <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${this.escapeHtml(track.title || 'Unknown Title')}</div>
+          <div class="sheet-queue-item-artist">${this.escapeHtml(track.artist || 'Unknown Artist')}</div>
         </div>
         ${isCurrent ? '<span style="font-size: 10px; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase;">NOW</span>' : ''}
       `;
@@ -798,12 +824,14 @@ class MobilePlayer {
     tracks.forEach((item) => {
       const el = document.createElement('div');
       el.className = 'sheet-related-item';
-      const thumb = item.thumbnail || (item.videoId ? `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg` : 'assets/default_cover.png');
+      const thumb = window.getEtsukoArtwork ? window.getEtsukoArtwork(item) : (item.thumbnail || 'assets/default_cover.png');
+      const vid = item.videoId || '';
+
       el.innerHTML = `
-        <img src="${thumb}" class="sheet-related-item-thumb" alt="" onerror="this.onerror=function(){this.src='assets/default_cover.png'}; if ('${item.videoId}') this.src='https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg'; else this.src='assets/default_cover.png';">
+        <img src="${thumb}" class="sheet-related-item-thumb" alt="" onerror="if(!this.dataset.t1 && '${vid}'){this.dataset.t1='1';this.src='https://i.ytimg.com/vi/${vid}/hqdefault.jpg';}else if(!this.dataset.t2 && '${vid}'){this.dataset.t2='1';this.src='https://i.ytimg.com/vi/${vid}/mqdefault.jpg';}else{this.onerror=null;this.src='assets/default_cover.png';}">
         <div class="sheet-related-item-info">
-          <div class="sheet-related-item-title">${item.title || 'Unknown Title'}</div>
-          <div class="sheet-related-item-artist">${item.artist || 'Unknown Artist'} • ${item.duration || '3:30'}</div>
+          <div class="sheet-related-item-title">${this.escapeHtml(item.title || 'Unknown Title')}</div>
+          <div class="sheet-related-item-artist">${this.escapeHtml(item.artist || 'Unknown Artist')} • ${this.escapeHtml(item.duration || '3:30')}</div>
         </div>
         <button class="sheet-related-item-play-btn" title="Play">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
