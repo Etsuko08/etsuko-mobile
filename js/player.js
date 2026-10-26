@@ -724,7 +724,7 @@ class MobilePlayer {
       const vid = track.videoId || '';
 
       item.innerHTML = `
-        <img src="${thumb}" class="sheet-queue-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}" onerror="window.handleEtsukoImgError(this)">
+        <img src="${thumb}" class="sheet-queue-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}">
         <div class="sheet-queue-item-info">
           <div class="sheet-queue-item-title" style="color: ${isCurrent ? 'var(--accent-cyan)' : '#fff'};">${this.escapeHtml(track.title || 'Unknown Title')}</div>
           <div class="sheet-queue-item-artist">${this.escapeHtml(track.artist || 'Unknown Artist')}</div>
@@ -828,7 +828,7 @@ class MobilePlayer {
       const vid = item.videoId || '';
 
       el.innerHTML = `
-        <img src="${thumb}" class="sheet-related-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}" onerror="window.handleEtsukoImgError(this)">
+        <img src="${thumb}" class="sheet-related-item-thumb" alt="" data-vid="${/^[a-zA-Z0-9_-]{11}$/.test(vid) ? vid : ''}">
         <div class="sheet-related-item-info">
           <div class="sheet-related-item-title">${this.escapeHtml(item.title || 'Unknown Title')}</div>
           <div class="sheet-related-item-artist">${this.escapeHtml(item.artist || 'Unknown Artist')} • ${this.escapeHtml(item.duration || '3:30')}</div>
@@ -983,7 +983,6 @@ class MobilePlayer {
         placeDiv.className = 'sheet-lyrics-placeholder';
         placeDiv.textContent = lyrics.message || 'Lyrics unavailable for this track.';
         this.sheetLyricsContainer.appendChild(placeDiv);
-      }
       }
     } catch (e) {
       console.warn('[Player] loadLyrics notice:', e);

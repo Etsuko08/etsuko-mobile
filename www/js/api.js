@@ -59,6 +59,17 @@ window.handleEtsukoImgError = function(img) {
   }
 };
 
+// Global capture-phase listener: intercepts image errors without requiring inline onerror attributes
+if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  window.addEventListener('error', function(e) {
+    if (e && e.target && e.target.tagName === 'IMG') {
+      if (typeof window.handleEtsukoImgError === 'function') {
+        window.handleEtsukoImgError(e.target);
+      }
+    }
+  }, true);
+}
+
 // Master Curated Catalogs (Guaranteed 100% Active YouTube IDs & Static Edge Covers)
 const CATALOG_TRENDING_HITS = [
   { videoId: "DlFXDl_ROAM", title: "Die With A Smile", artist: "Lady Gaga, Bruno Mars", album: "Die With A Smile", duration: "4:12", tag: "Single", thumbnail: "https://yt3.googleusercontent.com/RFK4wHeGqwI3DndbARbRJB21IC0TcmqnrlyjxYK7T-nC8wlIVbfxNaCIFKNvSpchDKmYyVLe1RN36w=w544-h544-l90-rj" },
@@ -729,7 +740,7 @@ class EtsukoAPI {
         if (section.musicCardShelfRenderer) {
           const card = section.musicCardShelfRenderer;
           const vid = card.onTap?.watchEndpoint?.videoId || card.buttons?.[0]?.buttonRenderer?.command?.watchEndpoint?.videoId;
-          if (vid) {
+          if (vid && /^[a-zA-Z0-9_-]{11}$/.test(vid)) {
             const cardTitle = card.title?.runs?.[0]?.text || card.header?.musicCardShelfHeaderBasicRenderer?.title?.runs?.[0]?.text || 'Top Result';
             const cardArtist = card.subtitle?.runs?.map(r => r.text).join('') || 'Featured Artist';
             let cardThumb = `https://i.ytimg.com/vi/${vid}/hqdefault.jpg`;
@@ -763,7 +774,7 @@ class EtsukoAPI {
           if (!videoId && renderer.overlay?.musicItemThumbnailOverlayRenderer?.content?.musicPlayButtonRenderer?.playNavigationEndpoint?.watchEndpoint?.videoId) {
             videoId = renderer.overlay.musicItemThumbnailOverlayRenderer.content.musicPlayButtonRenderer.playNavigationEndpoint.watchEndpoint.videoId;
           }
-          if (!videoId) continue;
+          if (!videoId || !/^[a-zA-Z0-9_-]{11}$/.test(videoId)) continue;
 
           // Avoid duplicates
           if (results.some(r => r.videoId === videoId)) continue;
@@ -1028,7 +1039,7 @@ class EtsukoAPI {
         const renderer = item.playlistPanelVideoRenderer;
         if (!renderer) continue;
         const vid = renderer.videoId;
-        if (!vid || vid === originVideoId) continue;
+        if (!vid || vid === originVideoId || !/^[a-zA-Z0-9_-]{11}$/.test(vid)) continue;
 
         const title = renderer.title?.runs?.[0]?.text || 'Unknown Title';
         const artist = renderer.longBylineText?.runs?.map(r => r.text).join('').replace(/\s*•\s*\d+.*$/i, '').trim() || 'Unknown Artist';

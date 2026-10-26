@@ -767,7 +767,7 @@ class EtsukoMobileApp {
 
   getImgFallbackAttr(videoId) {
     const safeVid = (videoId && typeof videoId === 'string' && /^[a-zA-Z0-9_-]{11}$/.test(videoId)) ? videoId : '';
-    return `data-vid="${safeVid}" onerror="window.handleEtsukoImgError(this)"`;
+    return `data-vid="${safeVid}"`;
   }
 
   renderHorizontalRow(container, tracks, isAlbum = false) {
