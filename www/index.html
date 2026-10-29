@@ -18,6 +18,15 @@
 </head>
 <body>
   <div id="app-root">
+    <!-- Ambient Mesh Canvas (Convx Style Animated Liquid Background) -->
+    <div class="ambient-mesh-canvas" id="ambient-mesh-canvas" aria-hidden="true">
+      <div class="mesh-orb orb-1"></div>
+      <div class="mesh-orb orb-2"></div>
+      <div class="mesh-orb orb-3"></div>
+      <div class="mesh-orb orb-4"></div>
+      <div class="mesh-glass-grain"></div>
+    </div>
+
     <!-- Top Mobile Navigation (Spotify Style) -->
     <header class="mobile-top-bar spotify-top-bar" id="mobile-top-bar">
       <div class="user-avatar-badge" id="btn-open-profile" title="Profile">
@@ -320,14 +329,14 @@
       <!-- 2. Search View -->
       <section class="page-view" id="view-search">
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-          <button class="btn-icon-top" id="btn-search-back" title="Back to Home" style="flex-shrink: 0; width: 40px; height: 40px; background: rgba(255,255,255,0.06); border-radius: 12px;">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+          <button class="btn-icon-top btn-bounce" id="btn-search-back" title="Back to Home" style="flex-shrink: 0; width: 40px; height: 40px; background: rgba(255,255,255,0.08); border-radius: 50%; border: 1px solid rgba(255,255,255,0.12); display: flex; align-items: center; justify-content: center;">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M15.25 4.25L7.75 12l7.5 7.75"/></svg>
           </button>
           <div class="mobile-search-box" style="flex: 1; margin-bottom: 0;">
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--text-sub)" stroke-width="2.2"><circle cx="11" cy="11" r="7.5"></circle><line x1="21" y1="21" x2="16.5" y2="16.5" stroke-linecap="round"></line></svg>
             <input type="text" class="mobile-search-input" id="mobile-search-input" placeholder="What do you want to listen to?" autocomplete="off">
-            <button class="btn-icon-top" id="btn-search-clear" style="display:none; width: 28px; height: 28px;">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            <button class="btn-icon-top btn-bounce" id="btn-search-clear" style="display:none; width: 28px; height: 28px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
             </button>
           </div>
         </div>
@@ -581,38 +590,46 @@
         <div class="mini-artist" id="mini-artist">Etsuko Studio</div>
       </div>
       <div class="mini-controls">
-        <button class="btn-mini-control" id="btn-mini-like" title="Like Track">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+        <button class="btn-mini-control btn-bounce" id="btn-mini-like" title="Like Track">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35z"></path></svg>
         </button>
-        <button class="btn-mini-control" id="btn-mini-download" title="Download Offline">
-          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        <button class="btn-mini-control btn-bounce" id="btn-mini-download" title="Download Offline">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"/></svg>
         </button>
-        <button class="btn-mini-control" id="btn-mini-play" title="Play/Pause">
-          <svg id="icon-mini-play" viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-          <svg id="icon-mini-pause" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        <button class="btn-mini-control btn-bounce" id="btn-mini-play" title="Play/Pause">
+          <svg id="icon-mini-play" viewBox="0 0 960 960" width="22" height="22" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
+          <svg id="icon-mini-pause" viewBox="0 0 960 960" width="22" height="22" fill="currentColor" style="display:none;"><path d="M595,720Q562,720 538.5,696.5Q515,673 515,640L515,320Q515,287 538.5,263.5Q562,240 595,240L595,240Q628,240 651.5,263.5Q675,287 675,320L675,640Q675,673 651.5,696.5Q628,720 595,720ZM365,720Q332,720 308.5,696.5Q285,673 285,640L285,320Q285,287 308.5,263.5Q332,240 365,240L365,240Q398,240 421.5,263.5Q445,287 445,320L445,640Q445,673 421.5,696.5Q398,720 365,720Z"/></svg>
         </button>
-        <button class="btn-mini-control" id="btn-mini-next" title="Next Track">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2.5"></line></svg>
+        <button class="btn-mini-control btn-bounce" id="btn-mini-next" title="Next Track">
+          <svg viewBox="0 0 960 960" width="20" height="20" fill="currentColor" stroke="currentColor" stroke-width="40" stroke-linejoin="round" stroke-linecap="round"><path d="M85.93,732.51L85.93,227.49L455.49,480L85.93,732.51ZM505.18,732.51L505.18,227.49L874.74,480L505.18,732.51Z"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Bottom Navigation Bar -->
-    <nav class="mobile-nav-bar">
-      <button class="nav-tab-btn active" data-view="view-discover">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+    <!-- Floating Liquid Glass Bottom Navigation Bar (Convx Style) -->
+    <nav class="mobile-nav-bar" id="mobile-nav-bar">
+      <button class="nav-tab-btn btn-bounce active" data-view="view-discover">
+        <svg viewBox="0 0 56 56" width="22" height="22" fill="currentColor">
+          <path d="M11.035,50C9.436,50 8.197,49.574 7.318,48.722C6.439,47.87 6,46.686 6,45.17L6,25.242C6,24.344 6.14,23.598 6.419,23.005C6.698,22.412 7.187,21.828 7.886,21.254L25.189,7.097C25.642,6.732 26.097,6.457 26.554,6.274C27.011,6.091 27.493,6 28,6C28.507,6 28.989,6.091 29.446,6.274C29.903,6.457 30.359,6.732 30.812,7.097L48.114,21.254C48.813,21.828 49.302,22.412 49.581,23.005C49.86,23.598 50,24.344 50,25.242L50,45.17C50,46.686 49.561,47.87 48.682,48.722C47.803,49.574 46.564,50 44.965,50L35.709,50C35.279,50 34.921,49.863 34.637,49.59C34.353,49.316 34.211,48.966 34.211,48.539L34.211,35.506C34.211,35.057 34.068,34.693 33.782,34.414C33.496,34.135 33.117,33.995 32.646,33.995L23.354,33.995C22.89,33.995 22.513,34.135 22.223,34.414C21.934,34.693 21.789,35.057 21.789,35.506L21.789,48.539C21.789,48.966 21.648,49.316 21.368,49.59C21.088,49.863 20.729,50 20.291,50L11.035,50Z"/>
+        </svg>
         <span>Home</span>
       </button>
-      <button class="nav-tab-btn" data-view="view-search">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      <button class="nav-tab-btn btn-bounce" data-view="view-search">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path d="M3.028,10.269c0,4.041 3.288,7.328 7.328,7.328 1.598,0 3.058,-0.514 4.261,-1.377l4.518,4.527c0.211,0.211 0.487,0.312 0.781,0.312 0.624,0 1.056,-0.468 1.056,-1.084 0,-0.294 -0.11,-0.56 -0.303,-0.753L16.178,14.704C17.124,13.474 17.684,11.94 17.684,10.269 17.684,6.228 14.397,2.941 10.356,2.941 6.316,2.941 3.028,6.228 3.028,10.269ZM5.028,10.269c0,-2.937 2.391,-5.328 5.328,-5.328 2.937,0 5.328,2.391 5.328,5.328 0,2.937 -2.391,5.328 -5.328,5.328 -2.937,0 -5.328,-2.391 -5.328,-5.328Z"/>
+        </svg>
         <span>Search</span>
       </button>
-      <button class="nav-tab-btn" data-view="view-library">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+      <button class="nav-tab-btn btn-bounce" data-view="view-library">
+        <svg viewBox="0 0 56 56" width="22" height="22" fill="currentColor">
+          <path d="M37.3076,2.402C37.2092,0.8448 36.3236,0 34.6671,0L19.9721,0C18.3156,0 17.43,0.8448 17.3316,2.402L37.3076,2.402ZM40.7846,8.0341C40.5386,6.3942 39.7349,5.4334 37.9473,5.4334L16.5443,5.4334C14.7566,5.4334 13.953,6.3942 13.707,8.0341L40.7846,8.0341ZM40.1121,49C43.8515,49 46,46.83 46,42.6058L46,18.0064C46,13.7989 43.8351,11.6288 39.6037,11.6288L15.3799,11.6288C11.1485,11.6288 9,13.7657 9,18.0064L9,42.6058C9,46.8465 11.1485,49 15.3799,49L40.1121,49ZM20.2673,41.9763C18.4304,41.9763 17.1348,40.7671 17.1348,39.0609C17.1348,37.3215 18.2172,36.1951 20.3657,35.7644L22.055,35.4165C22.465,35.3337 22.6618,35.0686 22.6618,34.5717L22.6126,22.2637C22.6126,21.6011 23.039,21.187 23.777,21.0213L33.9947,18.8844C35.2411,18.6193 35.766,18.9838 35.766,20.0605L35.766,35.2508C35.766,38.4645 33.3387,39.5909 31.7642,39.5909C29.9109,39.5909 28.566,38.3651 28.566,36.6755C28.566,34.9858 29.6649,33.9422 31.8626,33.4452L33.4699,33.0974C33.9455,32.998 34.1915,32.6667 34.1915,32.1863L34.1423,25.3283C34.1423,24.9141 33.9455,24.8147 33.4535,24.9141L24.8103,26.7197C24.3675,26.8191 24.3183,26.8854 24.3183,27.3824L24.3183,37.5865C24.3183,40.7671 21.8418,41.9763 20.2673,41.9763Z"/>
+        </svg>
         <span>Library</span>
       </button>
-      <button class="nav-tab-btn" data-view="view-downloads">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+      <button class="nav-tab-btn btn-bounce" data-view="view-downloads">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"/>
+        </svg>
         <span>Downloads</span>
       </button>
     </nav>
@@ -622,10 +639,10 @@
       <div class="sheet-drag-handle" id="sheet-drag-pill"></div>
 
       <div class="sheet-header">
-        <button class="btn-icon-top" id="btn-sheet-dismiss" title="Minimize">
-          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+        <button class="btn-icon-top btn-bounce" id="btn-sheet-dismiss" title="Minimize">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
         </button>
-        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">PLAYING FROM FLOW</div>
+        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1.2px;">PLAYING FROM FLOW</div>
         <div style="width: 36px;"></div>
       </div>
 
@@ -642,11 +659,11 @@
           <div class="sheet-album" id="sheet-album">Master Audio</div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="sheet-btn-action" id="sheet-download-btn" title="Download Offline">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <button class="sheet-btn-action btn-bounce" id="sheet-download-btn" title="Download Offline">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"/></svg>
           </button>
-          <button class="sheet-btn-action" id="sheet-like-btn" title="Like Song">
-            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <button class="sheet-btn-action btn-bounce" id="sheet-like-btn" title="Like Song">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35z"/></svg>
           </button>
         </div>
       </div>
@@ -665,21 +682,21 @@
 
       <!-- Playback Controls -->
       <div class="sheet-controls-row">
-        <button class="sheet-control-btn" id="btn-sheet-shuffle" title="Shuffle">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        <button class="sheet-control-btn btn-bounce" id="btn-sheet-shuffle" title="Shuffle">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 3h5v5M4 20l17-17M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
         </button>
-        <button class="sheet-control-btn" id="btn-sheet-prev" title="Previous Track">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="4" x2="5" y2="20" stroke="currentColor" stroke-width="3"></line></svg>
+        <button class="sheet-control-btn btn-bounce" id="btn-sheet-prev" title="Previous Track">
+          <svg viewBox="0 0 960 960" width="28" height="28" fill="currentColor" stroke="currentColor" stroke-width="40" stroke-linejoin="round" stroke-linecap="round"><path d="M874.07,227.49L874.07,732.51L504.51,480L874.07,227.49ZM454.82,227.49L454.82,732.51L85.26,480L454.82,227.49Z"/></svg>
         </button>
-        <button class="sheet-btn-play-pause" id="btn-sheet-play" title="Play/Pause">
-          <svg id="icon-sheet-play" viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
-          <svg id="icon-sheet-pause" viewBox="0 0 24 24" width="32" height="32" fill="currentColor" style="display:none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+        <button class="sheet-btn-play-pause btn-bounce" id="btn-sheet-play" title="Play/Pause">
+          <svg id="icon-sheet-play" viewBox="0 0 960 960" width="34" height="34" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
+          <svg id="icon-sheet-pause" viewBox="0 0 960 960" width="34" height="34" fill="currentColor" style="display:none;"><path d="M595,720Q562,720 538.5,696.5Q515,673 515,640L515,320Q515,287 538.5,263.5Q562,240 595,240L595,240Q628,240 651.5,263.5Q675,287 675,320L675,640Q675,673 651.5,696.5Q628,720 595,720ZM365,720Q332,720 308.5,696.5Q285,673 285,640L285,320Q285,287 308.5,263.5Q332,240 365,240L365,240Q398,240 421.5,263.5Q445,287 445,320L445,640Q445,673 421.5,696.5Q398,720 365,720Z"/></svg>
         </button>
-        <button class="sheet-control-btn" id="btn-sheet-next" title="Next Track">
-          <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="4" x2="19" y2="20" stroke="currentColor" stroke-width="3"></line></svg>
+        <button class="sheet-control-btn btn-bounce" id="btn-sheet-next" title="Next Track">
+          <svg viewBox="0 0 960 960" width="28" height="28" fill="currentColor" stroke="currentColor" stroke-width="40" stroke-linejoin="round" stroke-linecap="round"><path d="M85.93,732.51L85.93,227.49L455.49,480L85.93,732.51ZM505.18,732.51L505.18,227.49L874.74,480L505.18,732.51Z"/></svg>
         </button>
-        <button class="sheet-control-btn" id="btn-sheet-repeat" title="Repeat">
-          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg>
+        <button class="sheet-control-btn btn-bounce" id="btn-sheet-repeat" title="Repeat">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
           <span class="sheet-badge-repeat" id="sheet-repeat-badge"></span>
         </button>
       </div>
@@ -688,7 +705,7 @@
       <div class="sheet-lyrics-section" id="sheet-lyrics-section">
         <div class="sheet-lyrics-header">
           <div style="display: flex; align-items: center; gap: 8px;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--accent-cyan)" stroke-width="2.5"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--accent-cyan)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="14" y2="13"/></svg>
             <span class="sheet-lyrics-title">Lyrics</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
@@ -759,7 +776,7 @@
       <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <h3 class="modal-title">Add Track to Crate</h3>
-          <button class="btn-icon-top" id="btn-close-playlist-modal"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <button class="btn-icon-top btn-bounce" id="btn-close-playlist-modal" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
         <div class="track-list" id="modal-crates-list"></div>
       </div>
@@ -769,12 +786,12 @@
       <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
           <h3 class="modal-title">Create New Crate</h3>
-          <button class="btn-icon-top" id="btn-close-create-modal"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <button class="btn-icon-top btn-bounce" id="btn-close-create-modal" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <input type="text" id="input-crate-name" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%;" placeholder="Crate title (e.g. Night Cruise)">
           <input type="text" id="input-crate-desc" class="mobile-search-input" style="background: rgba(255,255,255,0.06); padding: 12px; border-radius: 10px; border: 1px solid var(--border-subtle); width: 100%;" placeholder="Description (optional)">
-          <button class="btn-mobile-pill primary" id="btn-confirm-create-crate" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px;">Create Crate</button>
+          <button class="btn-mobile-pill primary btn-bounce" id="btn-confirm-create-crate" style="width: 100%; justify-content: center; padding: 12px; border-radius: 10px;">Create Crate</button>
         </div>
       </div>
     </div>
@@ -784,7 +801,7 @@
       <div class="modal-card">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <h3 class="modal-title">Your Profile</h3>
-          <button class="btn-icon-top" id="btn-close-profile"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <button class="btn-icon-top btn-bounce" id="btn-close-profile" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <!-- Profile Avatar Section -->
@@ -867,7 +884,7 @@
             </div>
             <h3 class="modal-title" style="font-size: 17px; margin: 0;">Update Available</h3>
           </div>
-          <button class="btn-icon-top" id="btn-close-app-update"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+          <button class="btn-icon-top btn-bounce" id="btn-close-app-update" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></button>
         </div>
         <div style="margin-bottom: 14px;">
           <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">

@@ -782,8 +782,8 @@ class EtsukoMobileApp {
       card.innerHTML = `
         <div class="spotify-card-cover-box">
           <img src="${this.getThumbnailSrc(track)}" class="spotify-card-cover" alt="Cover" ${this.getImgFallbackAttr(track.videoId)}>
-          <button class="spotify-card-play-btn" title="Play">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <button class="spotify-card-play-btn btn-bounce" title="Play">
+            <svg viewBox="0 0 960 960" width="20" height="20" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
           </button>
         </div>
         <div class="spotify-card-meta">
@@ -832,8 +832,8 @@ class EtsukoMobileApp {
           <img src="${this.getThumbnailSrc(t4)}" class="spotify-mix-art-thumb" alt="" ${this.getImgFallbackAttr(t4?.videoId)}>
         </div>
         <div class="spotify-mix-info-box" style="border-top: 3px solid ${mix.bannerColor || '#10b981'};">
-          <button class="spotify-mix-play-btn" title="Play Mix">
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+          <button class="spotify-mix-play-btn btn-bounce" title="Play Mix">
+            <svg viewBox="0 0 960 960" width="20" height="20" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
           </button>
           <div class="spotify-mix-banner">${this.escapeHtml(mix.title)}</div>
           <div class="spotify-mix-sub">${this.escapeHtml(mix.subtitle)}</div>
@@ -1103,8 +1103,8 @@ class EtsukoMobileApp {
             <div class="track-row-artist" style="color: var(--accent-cyan); font-weight: 700;">Verified Artist • Popular: ${this.escapeHtml(item.title)}</div>
           </div>
           <div class="track-row-actions">
-            <button class="btn-track-action" title="Open Artist Profile" style="color: var(--accent-cyan);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            <button class="btn-track-action btn-bounce" title="Open Artist Profile" style="color: var(--accent-cyan);">
+              <svg viewBox="0 0 960 960" width="18" height="18" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
             </button>
           </div>
         `;
@@ -1127,8 +1127,8 @@ class EtsukoMobileApp {
             <div class="track-row-artist">Album • ${this.escapeHtml(item.artist)}</div>
           </div>
           <div class="track-row-actions">
-            <button class="btn-track-action" title="Open Album" style="color: var(--accent-cyan);">
-              <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+            <button class="btn-track-action btn-bounce" title="Open Album" style="color: var(--accent-cyan);">
+              <svg viewBox="0 0 960 960" width="18" height="18" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
             </button>
           </div>
         `;
@@ -1153,11 +1153,11 @@ class EtsukoMobileApp {
           <div class="track-row-artist">${this.escapeHtml(item.artist)} • ${this.escapeHtml(item.album || 'Single')}</div>
         </div>
         <div class="track-row-actions">
-          <button class="btn-track-action btn-dl-row" title="Download Offline">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+          <button class="btn-track-action btn-bounce btn-dl-row" title="Download Offline">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path fill-rule="evenodd" clip-rule="evenodd" d="M12 2.25a.75.75 0 0 1 .75.75v11.69l3.22-3.22a.75.75 0 1 1 1.06 1.06l-4.5 4.5a.75.75 0 0 1-1.06 0l-4.5-4.5a.75.75 0 1 1 1.06-1.06l3.22 3.22V3a.75.75 0 0 1 .75-.75Zm-9 13.5a.75.75 0 0 1 .75.75v2.25a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V16.5a.75.75 0 0 1 1.5 0v2.25a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V16.5a.75.75 0 0 1 .75-.75Z"/></svg>
           </button>
-          <button class="btn-track-action btn-like-row ${isLiked ? 'liked' : ''}" title="Like">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path></svg>
+          <button class="btn-track-action btn-bounce btn-like-row ${isLiked ? 'liked' : ''}" title="Like">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="${isLiked ? '#ec4899' : 'none'}" stroke="currentColor" stroke-width="2.2"><path d="M12,21.35l-1.45,-1.32C5.4,15.36 2,12.28 2,8.5 2,5.42 4.42,3 7.5,3c1.74,0 3.41,0.81 4.5,2.09C13.09,3.81 14.76,3 16.5,3 19.58,3 22,5.42 22,8.5c0,3.78 -3.4,6.86 -8.55,11.54L12,21.35z"/></svg>
           </button>
         </div>
       `;

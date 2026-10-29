@@ -833,8 +833,8 @@ class MobilePlayer {
           <div class="sheet-related-item-title">${this.escapeHtml(item.title || 'Unknown Title')}</div>
           <div class="sheet-related-item-artist">${this.escapeHtml(item.artist || 'Unknown Artist')} • ${this.escapeHtml(item.duration || '3:30')}</div>
         </div>
-        <button class="sheet-related-item-play-btn" title="Play">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><polygon points="6 4 20 12 6 20 6 4"></polygon></svg>
+        <button class="sheet-related-item-play-btn btn-bounce" title="Play">
+          <svg viewBox="0 0 960 960" width="16" height="16" fill="currentColor"><path d="M320,687L320,273Q320,256 332,244.5Q344,233 360,233Q365,233 370.5,234.5Q376,236 381,239L707,446Q716,452 720.5,461Q725,470 725,480Q725,490 720.5,499Q716,508 707,514L381,721Q376,724 370.5,725.5Q365,727 360,727Q344,727 332,715.5Q320,704 320,687Z"/></svg>
         </button>
       `;
 

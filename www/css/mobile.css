@@ -47,20 +47,145 @@ body {
   height: 100%;
   width: 100%;
   position: relative;
-  background: radial-gradient(circle at 50% 0%, rgba(139, 92, 246, 0.12) 0%, transparent 60%),
-              radial-gradient(circle at 100% 100%, rgba(0, 240, 255, 0.08) 0%, transparent 50%),
-              var(--bg-core);
+  background: var(--bg-core);
+  overflow: hidden;
 }
 
-/* Top Navigation Bar */
+/* Ambient Mesh Canvas — Convx Style Liquid Animated Background */
+.ambient-mesh-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+  background: var(--bg-core);
+}
+
+.mesh-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.38;
+  will-change: transform;
+}
+
+.mesh-orb.orb-1 {
+  width: 340px;
+  height: 340px;
+  background: radial-gradient(circle, rgba(0, 240, 255, 0.45) 0%, rgba(0, 240, 255, 0) 70%);
+  top: -60px;
+  left: -40px;
+  animation: meshFloat1 20s ease-in-out infinite alternate;
+}
+
+.mesh-orb.orb-2 {
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(139, 92, 246, 0) 70%);
+  top: 32%;
+  right: -90px;
+  animation: meshFloat2 26s ease-in-out infinite alternate;
+}
+
+.mesh-orb.orb-3 {
+  width: 360px;
+  height: 360px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.32) 0%, rgba(236, 72, 153, 0) 70%);
+  bottom: -60px;
+  left: 10%;
+  animation: meshFloat3 22s ease-in-out infinite alternate;
+}
+
+.mesh-orb.orb-4 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.35) 0%, rgba(14, 165, 233, 0) 70%);
+  top: 62%;
+  left: -60px;
+  animation: meshFloat4 28s ease-in-out infinite alternate;
+}
+
+@keyframes meshFloat1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(70px, 110px, 0) scale(1.15); }
+  100% { transform: translate3d(130px, 30px, 0) scale(0.92); }
+}
+
+@keyframes meshFloat2 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-90px, 80px, 0) scale(1.12); }
+  100% { transform: translate3d(-50px, -70px, 0) scale(0.9); }
+}
+
+@keyframes meshFloat3 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(100px, -60px, 0) scale(1.2); }
+  100% { transform: translate3d(-40px, -100px, 0) scale(0.95); }
+}
+
+@keyframes meshFloat4 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(80px, -110px, 0) scale(1.1); }
+  100% { transform: translate3d(30px, 50px, 0) scale(0.92); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh-orb {
+    animation: none !important;
+  }
+}
+
+/* Convx Spring Bounce Physics */
+.btn-bounce,
+.btn-mini-control,
+.sheet-control-btn,
+.sheet-btn-action,
+.sheet-btn-play-pause,
+.btn-mobile-pill,
+.btn-icon-top,
+.top-filter-pill,
+.chip-btn,
+.search-genre-card,
+.spotify-card,
+.nav-tab-btn {
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, opacity 0.2s ease;
+  will-change: transform;
+}
+
+.btn-bounce:active,
+.btn-mini-control:active,
+.sheet-control-btn:active,
+.sheet-btn-action:active,
+.btn-mobile-pill:active,
+.btn-icon-top:active,
+.top-filter-pill:active,
+.chip-btn:active {
+  transform: scale(0.9);
+}
+
+.sheet-btn-play-pause:active {
+  transform: scale(0.88);
+}
+
+.search-genre-card:active,
+.spotify-card:active {
+  transform: scale(0.95);
+}
+
+/* Top Navigation Bar — Liquid Frosted Glass */
 .mobile-top-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: calc(var(--safe-top) + 12px) 16px 12px 16px;
-  background: var(--bg-glass);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(10, 12, 22, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(28px) saturate(190%) contrast(105%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   z-index: 100;
 }
 
@@ -564,33 +689,44 @@ body {
   border-color: var(--accent-cyan);
 }
 
-/* Floating Mini-Player */
+/* Floating Liquid Glass Mini-Player (Convx Style) */
 .mini-player {
   position: fixed;
-  bottom: calc(var(--nav-height) + var(--safe-bottom) + 8px);
-  left: 12px;
-  right: 12px;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 20px);
+  left: 14px;
+  right: 14px;
   height: var(--mini-player-height);
-  background: var(--bg-glass);
-  backdrop-filter: blur(24px);
-  border: 1px solid var(--border-active);
-  border-radius: 16px;
+  background: rgba(14, 16, 26, 0.78);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(32px) saturate(190%) contrast(105%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 22px;
   display: none;
   align-items: center;
   padding: 0 12px;
   gap: 10px;
   z-index: 150;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.65), 0 0 16px var(--accent-glow);
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+    0 14px 40px rgba(0, 0, 0, 0.75),
+    0 0 18px rgba(0, 240, 255, 0.16);
   overflow: hidden;
   cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+}
+
+.mini-player:active {
+  transform: scale(0.98);
 }
 
 .mini-cover-art {
   width: 42px;
   height: 42px;
-  border-radius: 10px;
+  border-radius: 12px;
   object-fit: cover;
   flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
 }
 
 .mini-info-col {
@@ -604,6 +740,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
 
 .mini-artist {
@@ -630,11 +767,12 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.15s ease, color 0.15s ease;
+  border-radius: 50%;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.15s ease;
 }
 
 .btn-mini-control:active {
-  transform: scale(0.85);
+  transform: scale(0.86);
 }
 
 .btn-mini-control.liked {
@@ -643,7 +781,7 @@ body {
 
 .btn-mini-control.liked svg {
   fill: #ec4899;
-  filter: drop-shadow(0 0 6px rgba(236, 72, 153, 0.6));
+  filter: drop-shadow(0 0 8px rgba(236, 72, 153, 0.65));
 }
 
 .btn-mini-control.downloaded {
@@ -664,42 +802,76 @@ body {
   z-index: 10;
 }
 
-/* Bottom Navigation Bar */
+/* Floating Liquid Glass Bottom Navigation Dock (Convx Style) */
 .mobile-nav-bar {
   position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: calc(var(--nav-height) + var(--safe-bottom));
-  padding-bottom: var(--safe-bottom);
-  background: var(--bg-glass);
-  backdrop-filter: blur(24px);
-  border-top: 1px solid var(--border-subtle);
+  bottom: calc(var(--safe-bottom) + 10px);
+  left: 14px;
+  right: 14px;
+  height: var(--nav-height);
+  background: rgba(12, 14, 24, 0.76);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(32px) saturate(190%) contrast(105%);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 9999px;
   display: flex;
   align-items: center;
   justify-content: space-around;
   z-index: 160;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+    0 12px 36px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
+  padding: 0 8px;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
 }
 
 .nav-tab-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 3px;
   background: transparent;
   border: none;
   color: var(--text-muted);
   cursor: pointer;
-  padding: 6px 12px;
-  transition: color 0.2s ease, transform 0.15s ease;
+  padding: 6px 16px;
+  border-radius: 20px;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.nav-tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  right: 6px;
+  bottom: 3px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(0, 240, 255, 0.18), rgba(139, 92, 246, 0.14));
+  border: 1px solid rgba(0, 240, 255, 0.3);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  z-index: -1;
 }
 
 .nav-tab-btn.active {
   color: var(--accent-cyan);
+  transform: scale(1.05);
+}
+
+.nav-tab-btn.active::before {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 0 14px rgba(0, 240, 255, 0.35);
 }
 
 .nav-tab-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.9);
 }
 
 .nav-tab-icon {
@@ -713,21 +885,23 @@ body {
   letter-spacing: 0.3px;
 }
 
-/* Full-Screen Now-Playing Drawer / Sheet */
+/* Full-Screen Now-Playing Drawer / Sheet (Liquid Glass Overlay) */
 .player-sheet {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at 50% 15%, rgba(139, 92, 246, 0.2) 0%, transparent 65%),
-              #07080d;
+  background: radial-gradient(circle at 50% 12%, rgba(139, 92, 246, 0.25) 0%, transparent 65%),
+              rgba(7, 8, 13, 0.94);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
   z-index: 250;
   display: flex;
   flex-direction: column;
   padding: calc(var(--safe-top) + 8px) 24px calc(var(--safe-bottom) + 20px) 24px;
   transform: translateY(100%);
-  transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
   overflow-y: auto;
 }
 
@@ -1252,16 +1426,21 @@ body {
 .mobile-modal-box {
   width: 100%;
   max-width: 520px;
-  background: var(--bg-surface-elevated);
-  border-top-left-radius: 24px;
-  border-top-right-radius: 24px;
-  border: 1px solid var(--border-subtle);
+  background: rgba(14, 16, 26, 0.88);
+  -webkit-backdrop-filter: blur(36px) saturate(190%) contrast(105%);
+  backdrop-filter: blur(36px) saturate(190%) contrast(105%);
+  border-top-left-radius: 28px;
+  border-top-right-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-bottom: none;
   padding: 22px 20px calc(var(--safe-bottom) + 24px) 20px;
   max-height: 82vh;
   overflow-y: auto;
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
-  animation: slideUpModal 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.28),
+    0 -12px 48px rgba(0, 0, 0, 0.8),
+    0 0 24px rgba(0, 240, 255, 0.1);
+  animation: slideUpModal 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 @keyframes slideUpModal {
@@ -1641,13 +1820,19 @@ body {
   transform: scale(0.9);
 }
 
-/* --- Up Next / Queue Drawer inside Sheet --- */
+/* --- Up Next / Queue Drawer inside Sheet (Convx Liquid Glass) --- */
 .sheet-queue-section {
   margin-top: 22px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 16px;
-  padding: 14px;
+  background: rgba(18, 22, 34, 0.65);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  padding: 16px;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35),
+    0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .sheet-queue-header {
@@ -1752,14 +1937,20 @@ body {
   border-color: rgba(239, 68, 68, 0.4);
 }
 
-/* --- Spotify-Style Synced Lyrics Drawer --- */
+/* --- Spotify-Style Synced Lyrics Drawer (Convx Liquid Glass) --- */
 .sheet-lyrics-section {
-  margin-top: 18px;
-  background: linear-gradient(180deg, rgba(20, 24, 38, 0.85) 0%, rgba(10, 12, 18, 0.95) 100%);
-  border: 1px solid rgba(0, 240, 255, 0.18);
-  border-radius: 20px;
+  margin-top: 20px;
+  background: rgba(16, 20, 32, 0.72);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+  border: 1px solid rgba(0, 240, 255, 0.22);
+  border-radius: 22px;
   padding: 18px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 240, 255, 0.05);
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.4),
+    0 12px 36px rgba(0, 0, 0, 0.65),
+    0 0 20px rgba(0, 240, 255, 0.12);
 }
 
 .sheet-lyrics-header {
@@ -1881,14 +2072,20 @@ body {
   opacity: 0.6;
 }
 
-/* --- Spotify-Style Recommended Songs by Language / Genre --- */
+/* --- Spotify-Style Recommended Songs by Language / Genre (Convx Liquid Glass) --- */
 .sheet-related-section {
-  margin-top: 18px;
-  margin-bottom: 32px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 18px;
+  margin-top: 20px;
+  margin-bottom: 36px;
+  background: rgba(18, 22, 34, 0.65);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
   padding: 16px;
+  box-shadow: 
+    inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.35),
+    0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .sheet-related-header {
